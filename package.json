@@ -1,0 +1,21 @@
+{
+  "name": "nickjewell-ai",
+  "version": "1.0.0",
+  "description": "The Jewell Assessment — AI Implementation Readiness & Taste Framework",
+  "private": true,
+  "scripts": {
+    "dev": "npx wrangler pages dev . --port 8080",
+    "deploy": "npx wrangler pages deploy .",
+    "preview": "npx http-server . -p 8080 -o"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0",
+    "http-server": "^14.0.0"
+  },
+  "author": "Nick Jewell",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_GITHUB_USERNAME/nickjewell-ai"
+  }
+}

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Jewell Assessment Framework — Five Layers of AI Readiness</title>
+  <meta name="description" content="Five layers of AI implementation readiness: Foundation, Architecture, Accountability, Culture, and Taste. Where organizations fail, where they succeed, and what to measure.">
+  <meta property="og:title" content="The Jewell Assessment Framework">
+  <meta property="og:description" content="AI implementation doesn't fail because organizations lack capability. It fails because the people making decisions about AI lack the discernment to deploy it well.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://nickjewell.ai/framework/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">Nick Jewell</a>
+      <ul class="nav-links">
+        <li><a href="/framework/" class="nav-link active">Framework</a></li>
+        <li><a href="/#assessment" class="nav-link">Assessment</a></li>
+        <li><a href="/#writing" class="nav-link">Writing</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Framework Hero -->
+  <section class="framework-hero">
+    <div class="container">
+      <span class="eyebrow">The Jewell Assessment</span>
+      <h1>Five Layers of AI Readiness</h1>
+      <p class="thesis">AI implementation doesn't fail because organizations lack capability. It fails because the people making decisions about AI lack the discernment to deploy it well. Readiness is the table stakes. Taste is the multiplier.</p>
+
+      <div class="framework-diagram fade-in">
+        <div class="diagram-layer">
+          <span class="num">5</span>
+          <span class="label">Taste</span>
+          <span class="note">Judgment &amp; discernment</span>
+        </div>
+        <div class="diagram-layer">
+          <span class="num">4</span>
+          <span class="label">Culture</span>
+          <span class="note">People, honesty, change capacity</span>
+        </div>
+        <div class="diagram-layer">
+          <span class="num">3</span>
+          <span class="label">Accountability</span>
+          <span class="note">Ownership, escalation, kill switches</span>
+        </div>
+        <div class="diagram-layer">
+          <span class="num">2</span>
+          <span class="label">Architecture</span>
+          <span class="note">Process design, integration, workflows</span>
+        </div>
+        <div class="diagram-layer">
+          <span class="num">1</span>
+          <span class="label">Foundation</span>
+          <span class="note">Data, infrastructure, governance</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Layer 1: Foundation -->
+  <div class="layer-section" id="foundation">
+    <div class="container">
+      <div class="layer-intro fade-in">
+        <span class="eyebrow">Layer 1</span>
+        <h2>Foundation</h2>
+        <p class="measures">The raw materials: data quality, accessibility, format consistency, infrastructure readiness, and documented governance policies. This is the layer every other assessment already covers. It's necessary but it's the floor, not the ceiling.</p>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title">Where Companies Fail</div>
+
+        <div class="pattern">
+          <h3>"We have the data somewhere"</h3>
+          <p>Organizations claim data readiness because data <em>exists</em> &mdash; but it's scattered across 14 systems, three cloud providers, and someone's desktop spreadsheet labeled "master_list_FINAL_v3." When an AI model needs to pull 12 months of customer interactions, it finds six months in Salesforce, four months in a legacy CRM, and two months in email threads nobody migrated.</p>
+          <div class="pattern-example">
+            <p>A mid-market insurance company launched an AI claims processing pilot. Three months in, they discovered 40% of their claims data was trapped in scanned PDFs with no OCR pipeline. The AI could read the structured database records but was blind to nearly half the actual claims history. Cost: $200K+ in wasted implementation spend.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Governance by document"</h3>
+          <p>The organization has a 40-page AI governance policy that legal drafted, the board approved, and nobody has read since. Data ownership is defined on paper but not enforced in practice. The CISO signed off on an AI security framework, but the engineering team doesn't know it exists.</p>
+          <div class="pattern-example">
+            <p>A Fortune 500 retailer had a comprehensive data governance policy. When audited, they discovered 60% of their data pipelines had no lineage tracking &mdash; they couldn't trace which customer data fed which AI model. A material GDPR/CCPA violation that the governance document was supposed to prevent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title success">Where Companies Succeed</div>
+
+        <div class="pattern">
+          <h3>"Data as a product"</h3>
+          <p>Organizations that treat data like a product &mdash; with owners, quality standards, SLAs, and consumers &mdash; consistently outperform. They don't just have data; they have data that is <em>maintained</em> for specific use cases.</p>
+          <div class="pattern-example">
+            <p>Spotify's data mesh approach assigns domain teams ownership of their data as a product. When they build AI features like Discover Weekly, the recommendation team doesn't beg the streaming team for clean data &mdash; the streaming team already publishes it with documented schemas, freshness guarantees, and quality scores.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Start with the query, not the warehouse"</h3>
+          <p>Instead of building a massive data infrastructure and hoping AI use cases emerge, successful organizations start with a specific question and work backward to what data they need. This avoids the common trap of spending 18 months on a data lake nobody uses.</p>
+          <div class="pattern-example">
+            <p>Capital One's approach begins with business questions, not data infrastructure. Each AI initiative starts with a clearly defined decision it needs to improve &mdash; credit risk scoring, fraud detection, customer targeting &mdash; and builds only the data pipeline required for that specific decision.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="signals fade-in">
+        <h4>Assessment Signals</h4>
+        <ul>
+          <li>Can the person describe where their critical business data lives without saying "I'd have to check"?</li>
+          <li>Do they know who owns their data governance policy &mdash; not who wrote it, but who enforces it?</li>
+          <li>Can they describe a recent instance where data quality blocked a project?</li>
+          <li>Is there a data catalog or inventory, or does discovery require tribal knowledge?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 2: Architecture -->
+  <div class="layer-section" id="architecture">
+    <div class="container">
+      <div class="layer-intro fade-in">
+        <span class="eyebrow">Layer 2</span>
+        <h2>Architecture</h2>
+        <p class="measures">How the pieces connect. Process design, integration layers, workflow readiness. The question isn't whether you have the technology &mdash; it's whether your processes <em>deserve</em> to be automated or need to be redesigned first.</p>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title">Where Companies Fail</div>
+
+        <div class="pattern">
+          <h3>"Automating the mess"</h3>
+          <p>The most expensive mistake in enterprise AI: taking a broken manual process and layering AI on top of it. The AI runs faster, which means it produces bad outputs faster. Organizations confuse speed with improvement.</p>
+          <div class="pattern-example">
+            <p>A large bank automated their loan approval workflow. The existing process had 23 manual handoffs, six of which existed because of a regulatory requirement repealed in 2019 but never removed. The AI automated all 23 steps, including the six unnecessary ones. 40% faster but still fundamentally wasteful &mdash; and now harder to change because it was embedded in code.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Integration by prayer"</h3>
+          <p>Systems connected through brittle point-to-point integrations, manual CSV exports, or someone running a script on their laptop every Tuesday morning. When the AI needs real-time data from three sources, it gets stale data from two and nothing from the third because Kevin is on vacation.</p>
+          <div class="pattern-example">
+            <p>A hospital network's AI patient flow prediction relied on bed availability data updated via manual nurse entry that synced every 4 hours. The AI predicted patient flow beautifully against reported data, but reported data was always 2&ndash;4 hours behind reality. Technically accurate. Operationally useless.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title success">Where Companies Succeed</div>
+
+        <div class="pattern">
+          <h3>"Redesign then automate"</h3>
+          <p>Organizations that achieve the highest ROI from AI treat implementation as a trigger to redesign workflows first. "If we were building this process from scratch today, what would it look like?" Then they automate the redesigned version.</p>
+          <div class="pattern-example">
+            <p>When Toyota implemented AI-assisted quality inspection, they didn't just point cameras at existing stations. They redesigned the entire quality workflow &mdash; moving inspection earlier, consolidating redundant checks, eliminating steps that existed because human inspectors couldn't see certain defects. Defects dropped 50% while removing inspection steps.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"API-first architecture"</h3>
+          <p>Organizations with clean API layers between systems can plug AI in without re-architecting everything. The AI becomes a new consumer of existing, well-documented interfaces.</p>
+          <div class="pattern-example">
+            <p>Stripe's architecture means any new capability &mdash; AI fraud detection, smart routing, risk scoring &mdash; plugs into the same API infrastructure external customers use. No special integration work needed. This is why they ship AI features in weeks, not quarters.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="signals fade-in">
+        <h4>Assessment Signals</h4>
+        <ul>
+          <li>Can the person map their critical workflow end-to-end, including handoffs between systems and teams?</li>
+          <li>When was the last time a major process was redesigned (not just patched)?</li>
+          <li>How many "Kevin on a laptop" dependencies exist in critical data flows?</li>
+          <li>If a system goes down at 2am, does the workflow stop or degrade gracefully?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 3: Accountability -->
+  <div class="layer-section" id="accountability">
+    <div class="container">
+      <div class="layer-intro fade-in">
+        <span class="eyebrow">Layer 3</span>
+        <h2>Accountability</h2>
+        <p class="measures">Not governance in the abstract compliance sense. Actual human accountability. Who owns AI outcomes? Who decides to kill a failing project? Who gets the call when the agent hallucinates at 2am? Most organizations have governance <em>documents</em> but no governance <em>behavior</em>.</p>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title">Where Companies Fail</div>
+
+        <div class="pattern">
+          <h3>"Everybody owns it, nobody owns it"</h3>
+          <p>AI gets assigned to a Center of Excellence or an AI Council that meets monthly, reviews dashboards, and has no actual decision-making authority. When something goes wrong, there are four people who could theoretically be responsible but none who will actually pick up the phone.</p>
+          <div class="pattern-example">
+            <p>A major retailer's AI pricing engine began recommending prices below cost during a holiday weekend. Engineering assumed business was monitoring. Business assumed engineering had guardrails. The AI team assumed pricing had override authority. Nobody acted for 72 hours. Estimated impact: $2M+ in margin erosion.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"No kill switch"</h3>
+          <p>Organizations invest months and millions into AI projects and create institutional momentum that makes it politically impossible to stop a failing initiative. Nobody wants to be the person who killed the CEO's pet AI project.</p>
+          <div class="pattern-example">
+            <p>IBM's Watson for Oncology recommended cancer treatments worldwide. Internal documents revealed it sometimes recommended unsafe treatments, but organizational momentum behind "AI-powered cancer care" made it extraordinarily difficult for clinicians to push back. Accountability deferred to the technology's reputation rather than clinical outcomes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title success">Where Companies Succeed</div>
+
+        <div class="pattern">
+          <h3>"Named humans, not committees"</h3>
+          <p>A single named individual &mdash; not a team, not a committee &mdash; is personally accountable for each AI deployment's outcomes. This person has the authority to pause or kill the deployment without committee approval.</p>
+          <div class="pattern-example">
+            <p>Airbnb assigns a DRI (Directly Responsible Individual) to every AI feature. When pricing suggestions showed signs of discrimination, the DRI had pre-authorized authority to disable the feature within hours, investigate, and re-enable only after the issue was understood and fixed.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Pre-committed kill criteria"</h3>
+          <p>Before launching an AI initiative, successful organizations define the specific conditions under which they will stop, pause, or pivot &mdash; documented before institutional momentum builds.</p>
+          <div class="pattern-example">
+            <p>Netflix includes pre-registered failure criteria for every model deployment. If a recommendation model's metrics drop below threshold for 48 hours, it automatically rolls back. The decision to stop is made before the emotional investment begins.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="signals fade-in">
+        <h4>Assessment Signals</h4>
+        <ul>
+          <li>Can the person name the single individual accountable for AI outcomes (not a committee)?</li>
+          <li>Has the organization ever killed an AI project mid-flight?</li>
+          <li>Are there pre-defined criteria for when an AI deployment gets paused?</li>
+          <li>When was the last time someone said "no" to an AI initiative, and what happened to them politically?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 4: Culture -->
+  <div class="layer-section" id="culture">
+    <div class="container">
+      <div class="layer-intro fade-in">
+        <span class="eyebrow">Layer 4</span>
+        <h2>Culture</h2>
+        <p class="measures">Talent, change readiness, and organizational honesty. Can your people actually use these tools? Are they willing to change how they work? And most diagnostically &mdash; can your organization be honest about where it actually is versus where it wishes it were?</p>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title">Where Companies Fail</div>
+
+        <div class="pattern">
+          <h3>"Training without transformation"</h3>
+          <p>The organization runs AI literacy training, checks the "upskilled" box, and changes nothing about how work is actually done. Employees attend a 2-hour workshop on prompt engineering, go back to their desks, and continue doing their jobs exactly the same way. Training created <em>awareness</em> but not <em>behavior change</em>.</p>
+          <div class="pattern-example">
+            <p>A Big Four consulting firm gave all consultants access to an internal AI tool for research synthesis. After 6 months, 80% of queries were basic factual lookups &mdash; the equivalent of using a Ferrari to drive to the mailbox. The tool could synthesize 50-page reports, but nobody was trained on those capabilities because the rollout focused on "how to log in" rather than "how this changes what your Tuesday looks like."</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Performative honesty"</h3>
+          <p>Leadership asks "are we ready for AI?" and gets optimistic answers because nobody wants to slow down the CEO's vision. Readiness assessments are gamed &mdash; teams rate themselves 4/5 on data quality because admitting it's a 2 would mean explaining why they haven't fixed it yet.</p>
+          <div class="pattern-example">
+            <p>McKinsey's research found that while 88% of organizations report using AI, only 39% can point to measurable EBIT impact. That delta represents organizations that told leadership "we're doing AI" but couldn't prove it was working &mdash; and nobody asked hard enough.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title success">Where Companies Succeed</div>
+
+        <div class="pattern">
+          <h3>"Redesign the job, not just the toolkit"</h3>
+          <p>Organizations that actually transform don't just give people AI tools &mdash; they redefine what good performance looks like. The performance review, the workflow, the daily standup, the definition of "done" &mdash; all of it shifts.</p>
+          <div class="pattern-example">
+            <p>Klarna eliminated reliance on Salesforce and Workday, replacing significant portions with AI. The key: they simultaneously restructured teams, eliminated middle-management layers, and redefined success metrics. Customer service agents weren't just given an AI assistant &mdash; their role was redefined from "resolve this ticket" to "handle the 15% of cases AI can't."</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Radical candor about readiness"</h3>
+          <p>Organizations where leaders are rewarded for identifying gaps &mdash; not punished for admitting them &mdash; consistently deploy AI more successfully.</p>
+          <div class="pattern-example">
+            <p>GitLab's radically transparent culture means AI readiness gaps get surfaced immediately. When their AI code review tool showed lower accuracy on proprietary Ruby code, the team publicly documented the limitation, proposed a timeline to fix it, and set explicit criteria for when it would be ready. No political cover-up, no inflated metrics.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="signals fade-in">
+        <h4>Assessment Signals</h4>
+        <ul>
+          <li>Has the organization redesigned any job role or workflow around AI (not just added AI to the existing one)?</li>
+          <li>Can the person describe an AI initiative that didn't work, and what they learned?</li>
+          <li>What percentage of employees with AI tool access actually use the tools weekly?</li>
+          <li>Is "we're not ready for this" a safe sentence to say in a meeting?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 5: Taste -->
+  <div class="layer-section" id="taste">
+    <div class="container">
+      <div class="layer-intro fade-in">
+        <span class="eyebrow">Layer 5</span>
+        <h2>Taste</h2>
+        <p class="measures">Strategic judgment &mdash; the ability to distinguish between a good AI decision and a merely popular one. The discernment to know when NOT to deploy AI. This is the dimension no other assessment measures, because it can't be self-reported &mdash; it has to be revealed through choices.</p>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title">The Thesis</div>
+
+        <div class="pattern">
+          <p>Every organization has leaders who can evaluate a spreadsheet. Far fewer have leaders who can evaluate a <em>decision</em>. Taste is the difference between "this AI initiative has good metrics" and "this AI initiative is solving the right problem in the right way at the right time."</p>
+          <p>Taste is not subjective &mdash; it's observable through the quality of decisions an organization makes when certainty is low and stakes are high. It's what separates the 4% of organizations that achieve scaled AI deployment from the 96% that don't.</p>
+        </div>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title">Where Companies Fail</div>
+
+        <div class="pattern">
+          <h3>"Hype-driven deployment"</h3>
+          <p>The organization deploys AI because competitors are, because the board is asking, because the CEO saw a demo at Davos. Use case selection is driven by what sounds most impressive in a press release, not by where AI creates the most value.</p>
+          <div class="pattern-example">
+            <p>Numerous enterprise chatbot deployments in 2023&ndash;2024 launched because "everyone needs a chatbot." Many handled 5% of queries, frustrated customers on the other 95%, and cost more than the human agents they replaced. Companies with taste invested in back-office document processing &mdash; unglamorous, high-ROI, and invisible to the press.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Metric fixation"</h3>
+          <p>Optimizing for the number that's easy to measure rather than the outcome that actually matters. An AI service bot that resolves 85% of tickets but tanks NPS. A recruiting AI that screens 10x more candidates but introduces subtle bias.</p>
+          <div class="pattern-example">
+            <p>Amazon's internal AI recruiting tool was trained on 10 years of hiring data and got very good at predicting which resumes matched historical hires &mdash; which meant it systematically penalized resumes including "women's." The metric (match rate) was excellent. The judgment (training on biased data) was terrible. Amazon killed the project. That kill decision itself was an act of taste.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"AI for everything"</h3>
+          <p>Deploying AI to 15 use cases simultaneously, spreading resources thin, getting mediocre results everywhere, and achieving excellence nowhere. Taste is also about restraint.</p>
+        </div>
+      </div>
+
+      <div class="pattern-group fade-in">
+        <div class="pattern-group-title success">Where Companies Succeed</div>
+
+        <div class="pattern">
+          <h3>"The elegant constraint"</h3>
+          <p>Organizations with taste deploy AI to fewer use cases but deploy it <em>excellently</em>. They choose the use case where AI creates disproportionate leverage.</p>
+          <div class="pattern-example">
+            <p>John Deere didn't try to make AI do everything on a farm. They focused on one problem: identifying and spraying only the weeds, not the entire field. See &amp; Spray reduced herbicide use by 77%. The taste wasn't in the technology &mdash; it was in the restraint.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Knowing when NOT to use AI"</h3>
+          <p>The highest expression of AI taste is recognizing when AI is the wrong solution. When a simpler rule-based system, a process redesign, or even a well-structured spreadsheet solves the problem better.</p>
+          <div class="pattern-example">
+            <p>Basecamp (37signals) has been vocal about NOT deploying AI where simpler solutions work. If a rule-based system solves 95% of cases, don't build a machine learning model to get to 97%. The additional 2% rarely justifies the complexity. This is taste &mdash; knowing where sophistication creates value and where it creates cost.</p>
+          </div>
+        </div>
+
+        <div class="pattern">
+          <h3>"Second-order thinking"</h3>
+          <p>Not just asking "will this AI work?" but "what happens after it works?" If the AI bot handles 80% of queries, what happens to the remaining 20%? Are those the hardest, highest-stakes interactions &mdash; meaning your human agents now handle only angry, complex cases all day?</p>
+          <div class="pattern-example">
+            <p>When Shopify deployed AI for merchant support, they explicitly designed for the second-order effect. They knew AI would handle routine queries, leaving humans with harder cases. So they simultaneously restructured the human support role &mdash; different title, higher pay, different training. They anticipated that "AI handles the easy stuff" would change the human job, and they designed for that change proactively.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="fade-in" style="margin-top: 3rem;">
+        <div class="pattern-group-title" style="color: var(--accent);">How Taste Is Assessed</div>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Taste can't be self-reported. Nobody says "my AI judgment is poor." So instead, it's tested through scenario-based choices where there's no obviously correct answer. The <em>pattern</em> across multiple scenarios reveals whether you default to speed, safety, sophistication, or inertia.</p>
+
+        <div class="scenario">
+          <h4>The Pilot Dilemma</h4>
+          <p>Your AI pilot shows 78% accuracy on a task that humans do at 85%. What's your move?</p>
+          <ul class="scenario-options">
+            <li>A) Kill it &mdash; it underperforms humans.</li>
+            <li>B) Launch it alongside humans as an assist tool.</li>
+            <li>C) Investigate what the 22% failure cases have in common.</li>
+            <li>D) Redefine the success metric &mdash; maybe accuracy isn't what matters.</li>
+          </ul>
+          <p class="scenario-reveal">What it reveals: A is premature. B is safe but incurious. C shows analytical depth. D shows strategic sophistication. The best answer depends on context &mdash; which is why the follow-up "why?" matters more than the choice itself.</p>
+        </div>
+
+        <div class="scenario">
+          <h4>The Shiny Object Test</h4>
+          <p>Your CEO returns from a conference excited about deploying an LLM for internal knowledge management. Your knowledge base is 60% outdated Confluence pages, SharePoint files, and tribal knowledge. First move?</p>
+          <ul class="scenario-options">
+            <li>A) Start evaluating LLM vendors.</li>
+            <li>B) Audit and clean the knowledge base content first.</li>
+            <li>C) Run a pilot with a small team using the messy data.</li>
+            <li>D) Ask the CEO what specific problem they're trying to solve.</li>
+          </ul>
+          <p class="scenario-reveal">What it reveals: A is hype-driven. B is disciplined but assumes the solution. C tests assumptions empirically. D reframes entirely &mdash; the CEO might be solving a problem with a simpler answer.</p>
+        </div>
+
+        <div class="scenario">
+          <h4>The Kill Decision</h4>
+          <p>18 months and $400K in. Mixed results. Passionate team. Invested executive sponsor. Growing usage but unclear ROI. Your call?</p>
+          <ul class="scenario-options">
+            <li>A) Give it 6 more months with a clearer ROI framework.</li>
+            <li>B) Pivot to a related but more measurable use case.</li>
+            <li>C) Kill it and reallocate the budget.</li>
+            <li>D) Commission an independent review before deciding.</li>
+          </ul>
+          <p class="scenario-reveal">What it reveals: A is sunk cost avoidance disguised as patience. B shows creative problem-solving. C shows courage. D shows governance maturity. The pattern across scenarios like this reveals whether the organization defaults to momentum or judgment.</p>
+        </div>
+
+        <div class="scenario">
+          <h4>The Agent Question</h4>
+          <p>Your team proposes an AI agent that autonomously processes customer refunds up to $500. 96% accurate in testing. What's your primary concern?</p>
+          <ul class="scenario-options">
+            <li>A) The 4% error rate on financial transactions.</li>
+            <li>B) Customer reaction to knowing AI handled their refund.</li>
+            <li>C) What the agent does when it encounters a case it wasn't trained on.</li>
+            <li>D) Whether the current refund process should exist at all.</li>
+          </ul>
+          <p class="scenario-reveal">What it reveals: A is risk management (important but table stakes). B is brand awareness. C is edge-case thinking &mdash; the hallmark of implementation maturity. D is first-principles thinking. Taste is revealed in what someone worries about first.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Differentiator Table -->
+  <section style="background: var(--bg-secondary);">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-number">06</span>
+        <h2 class="section-title">How This Is Different</h2>
+      </div>
+      <div class="diff-table-wrap fade-in">
+        <table class="diff-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Traditional Assessment</th>
+              <th>Jewell Assessment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Format</td>
+              <td>Static questionnaire</td>
+              <td>Adaptive conversation</td>
+            </tr>
+            <tr>
+              <td>Measures</td>
+              <td>Capability (can you?)</td>
+              <td>Capability + Judgment (should you?)</td>
+            </tr>
+            <tr>
+              <td>"I don't know"</td>
+              <td>Skip / N/A</td>
+              <td>Diagnostic signal</td>
+            </tr>
+            <tr>
+              <td>Output</td>
+              <td>Score + checklist</td>
+              <td>Constraint diagnosis + taste signature</td>
+            </tr>
+            <tr>
+              <td>Accountability</td>
+              <td>Measures governance docs</td>
+              <td>Measures governance behavior</td>
+            </tr>
+            <tr>
+              <td>Taste</td>
+              <td>Doesn't exist</td>
+              <td>Revealed through scenario choices</td>
+            </tr>
+            <tr>
+              <td>Time to value</td>
+              <td>6&ndash;10 week engagement</td>
+              <td>10 minutes to first insight</td>
+            </tr>
+            <tr>
+              <td>Cost</td>
+              <td>$50K &ndash; $175K consulting</td>
+              <td>Free</td>
+            </tr>
+            <tr>
+              <td>Bias</td>
+              <td>Built by vendors selling implementation</td>
+              <td>Built by an independent practitioner</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <span class="eyebrow fade-in">Ready?</span>
+      <h2 class="fade-in">Take the Assessment</h2>
+      <p class="fade-in">5&ndash;12 minutes. No login. Immediate results with a constraint diagnosis, taste signature, and three prioritized actions.</p>
+      <a href="/#assessment" class="btn-primary fade-in">Start the Assessment</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 Nick Jewell &middot; nickjewell.ai</p>
+  </footer>
+
+  <!-- Scroll Animations -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            entry.target.style.transitionDelay = `${i * 0.08}s`;
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    });
+  </script>
+
+</body>
+</html>

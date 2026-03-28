@@ -1,0 +1,15 @@
+# Cloudflare Pages configuration
+# This file configures the Cloudflare Worker for API proxying
+# The static site is deployed via Cloudflare Pages (connected to GitHub)
+
+name = "nickjewell-ai"
+compatibility_date = "2024-01-01"
+
+# The Anthropic API key is set as an environment variable
+# in the Cloudflare dashboard, NOT in this file.
+# Dashboard path: Workers & Pages → nickjewell-ai → Settings → Variables
+#
+# Variable name: ANTHROPIC_API_KEY
+# Value: sk-ant-... (your key)
+#
+# This keeps the key secure and out of version control.
