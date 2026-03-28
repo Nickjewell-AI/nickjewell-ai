@@ -852,6 +852,11 @@ section {
     padding: 1rem 1.2rem;
   }
 
+  .nav-inner {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
   .nav-links {
     gap: 1.2rem;
   }
@@ -901,5 +906,25 @@ section {
 
   .framework-hero {
     padding-top: 6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-inner {
+    justify-content: center;
+  }
+
+  .nav-logo {
+    width: 100%;
+    text-align: center;
+  }
+
+  .nav-links {
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .nav-links a {
+    font-size: 0.68rem;
   }
 }
