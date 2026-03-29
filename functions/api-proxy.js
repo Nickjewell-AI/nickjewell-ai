@@ -111,13 +111,23 @@ export async function onRequestPost(context) {
   }
 
   // For briefs, enforce per-IP limit first, then the global daily cap
-  if (type === 'brief') {
+  // If D1 is unavailable or errors, skip rate limiting and proceed to Anthropic
+  if (type === 'brief' && context.env.DB) {
     const clientIp = context.request.headers.get('CF-Connecting-IP') || '0.0.0.0';
-    const ipResponse = await checkIpLimit(context.env.DB, clientIp, origin);
-    if (ipResponse) return ipResponse;
 
-    const capResponse = await checkBriefCap(context.env.DB, origin);
-    if (capResponse) return capResponse;
+    try {
+      const ipResponse = await checkIpLimit(context.env.DB, clientIp, origin);
+      if (ipResponse) return ipResponse;
+    } catch (err) {
+      console.error('D1 per-IP rate limit check failed:', err.message);
+    }
+
+    try {
+      const capResponse = await checkBriefCap(context.env.DB, origin);
+      if (capResponse) return capResponse;
+    } catch (err) {
+      console.error('D1 global daily cap check failed:', err.message);
+    }
   }
 
   // Forward to Anthropic Messages API
