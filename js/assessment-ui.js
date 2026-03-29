@@ -81,6 +81,7 @@ function showNextQuestion() {
   options.className = 'options-list';
 
   let selectedOption = null;
+  let selectedBtn = null;
   let advanceTimer = null;
   let locked = false;
 
@@ -90,16 +91,24 @@ function showNextQuestion() {
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
       if (locked) return;
+      // Double-click same option — advance immediately
+      if (selectedBtn === btn) {
+        if (advanceTimer) clearTimeout(advanceTimer);
+        locked = true;
+        handleAnswer(card, question, selectedOption, options);
+        return;
+      }
       selectedOption = opt;
+      selectedBtn = btn;
       // Update highlight — clear all, then mark this one
       options.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
-      // Reset the 1-second advance timer on every selection change
+      // Start 3-second advance timer; resets if a different option is clicked
       if (advanceTimer) clearTimeout(advanceTimer);
       advanceTimer = setTimeout(() => {
         locked = true;
         handleAnswer(card, question, selectedOption, options);
-      }, 1500);
+      }, 3000);
     });
     options.appendChild(btn);
   });
@@ -160,8 +169,32 @@ function showFollowUp(parentCard, parentQuestion) {
   fuOptions.className = 'options-list';
 
   let selectedFuOpt = null;
+  let selectedFuBtn = null;
   let fuAdvanceTimer = null;
   let fuLocked = false;
+
+  function commitFollowUp() {
+    fuLocked = true;
+
+    // Disable all follow-up buttons
+    const fuButtons = fuOptions.querySelectorAll('.option-button');
+    fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
+
+    // Record follow-up
+    recordFollowUp(session, fu.id, selectedFuOpt.key, parentQuestion.id, selectedFuOpt.effect, selectedFuOpt.newScore);
+
+    // Show follow-up insight if applicable
+    const fuInsightKey = 'insightOn' + selectedFuOpt.key;
+    if (fu[fuInsightKey]) {
+      const insight = document.createElement('div');
+      insight.className = 'question-insight fade-in';
+      insight.textContent = fu[fuInsightKey];
+      fuCard.appendChild(insight);
+      requestAnimationFrame(() => insight.classList.add('visible'));
+    }
+
+    setTimeout(() => showNextQuestion(), 400);
+  }
 
   fu.options.forEach((opt) => {
     const btn = document.createElement('button');
@@ -169,34 +202,21 @@ function showFollowUp(parentCard, parentQuestion) {
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
       if (fuLocked) return;
+      // Double-click same option — advance immediately
+      if (selectedFuBtn === btn) {
+        if (fuAdvanceTimer) clearTimeout(fuAdvanceTimer);
+        commitFollowUp();
+        return;
+      }
       selectedFuOpt = opt;
+      selectedFuBtn = btn;
       fuOptions.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
-      // Reset the 1-second advance timer on every selection change
+      // Start 3-second advance timer; resets if a different option is clicked
       if (fuAdvanceTimer) clearTimeout(fuAdvanceTimer);
       fuAdvanceTimer = setTimeout(() => {
-        fuLocked = true;
-
-
-        // Disable all follow-up buttons
-        const fuButtons = fuOptions.querySelectorAll('.option-button');
-        fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
-
-        // Record follow-up
-        recordFollowUp(session, fu.id, selectedFuOpt.key, parentQuestion.id, selectedFuOpt.effect, selectedFuOpt.newScore);
-
-        // Show follow-up insight if applicable
-        const fuInsightKey = 'insightOn' + selectedFuOpt.key;
-        if (fu[fuInsightKey]) {
-          const insight = document.createElement('div');
-          insight.className = 'question-insight fade-in';
-          insight.textContent = fu[fuInsightKey];
-          fuCard.appendChild(insight);
-          requestAnimationFrame(() => insight.classList.add('visible'));
-        }
-
-        setTimeout(() => showNextQuestion(), 400);
-      }, 1500);
+        commitFollowUp();
+      }, 3000);
     });
     fuOptions.appendChild(btn);
   });
