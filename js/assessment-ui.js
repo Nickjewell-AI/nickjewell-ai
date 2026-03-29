@@ -630,8 +630,32 @@ function renderMondayActions(container, bulletLines, animDelay) {
     const text = raw.replace(/^\s*[-*]\s+/, '');
     // Parse **bold** — explanation, or **bold**: explanation, or just plain text
     const boldMatch = text.match(/^\*\*(.+?)\*\*\s*[—–:\-]\s*(.+)$/);
-    const actionTitle = boldMatch ? boldMatch[1] : text.split(/\s*[—–]\s*/)[0];
-    const actionDesc = boldMatch ? boldMatch[2] : (text.includes('—') ? text.split(/\s*[—–]\s*/).slice(1).join(' — ') : '');
+    let actionTitle, actionDesc;
+    if (boldMatch) {
+      actionTitle = boldMatch[1];
+      actionDesc = boldMatch[2];
+    } else if (text.includes('—') || text.includes('–')) {
+      actionTitle = text.split(/\s*[—–]\s*/)[0];
+      actionDesc = text.split(/\s*[—–]\s*/).slice(1).join(' — ');
+    } else {
+      // No dash found — use first sentence as title, rest as description
+      const periodIdx = text.indexOf('.');
+      if (periodIdx > 0 && periodIdx < text.length - 1) {
+        actionTitle = text.slice(0, periodIdx + 1);
+        actionDesc = text.slice(periodIdx + 1).trim();
+      } else {
+        actionTitle = text;
+        actionDesc = '';
+      }
+    }
+    // Cap title at 100 characters, splitting at nearest word boundary
+    if (actionTitle.length > 100) {
+      let cutoff = actionTitle.lastIndexOf(' ', 100);
+      if (cutoff <= 0) cutoff = 100;
+      const overflow = actionTitle.slice(cutoff).trim();
+      actionTitle = actionTitle.slice(0, cutoff);
+      if (overflow) actionDesc = overflow + (actionDesc ? ' — ' + actionDesc : '');
+    }
 
     const card = document.createElement('div');
     card.className = 'monday-action-card fade-in';
@@ -781,7 +805,7 @@ function initExecutiveBrief() {
     freshBtn.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
     briefContainer.classList.remove('hidden');
 
-    const systemPrompt = 'You are a senior AI implementation strategist writing a personalized executive brief for the Jewell Assessment. Write in first-person plural ("we") as if you are the assessment delivering findings. Be direct, specific, and constructive \u2014 like a $500/hour consultant who respects the reader\'s time.\n\nUse this exact structure with markdown headers:\n\n## Verdict Context\n2-3 sentences on what the overall verdict means for THIS specific organization given their industry, role, and maturity stage.\n\n## The Real Story\nOne paragraph on what the pattern of their answers reveals \u2014 not just the scores, but what their specific combination of strengths and gaps means in practice. Reference specific answers where they are revealing.\n\n## Taste Read\n2-3 sentences on what their Taste signature and dimensional profile says about how they make decisions. Be specific to their FR/KD/EC scores.\n\n## The Binding Constraint\nOne paragraph on why their weakest layer is the bottleneck, what failure mode it creates, and why fixing other things first is wasted effort.\n\n## What To Do Monday\nThree bullet points with ultra-specific actions for the next 30 days. Not generic advice \u2014 actions that connect to their actual answers, industry, and gaps. Each bullet should be one concrete sentence.\n\nWrite ~500-700 words total. The reader should feel like someone actually read their answers, not like they got a template.';
+    const systemPrompt = 'You are a senior AI implementation strategist writing a personalized executive brief for the Jewell Assessment. Write in first-person plural ("we") as if you are the assessment delivering findings. Be direct, specific, and constructive \u2014 like a $500/hour consultant who respects the reader\'s time.\n\nUse this exact structure with markdown headers:\n\n## Verdict Context\n2-3 sentences on what the overall verdict means for THIS specific organization given their industry, role, and maturity stage.\n\n## The Real Story\nOne paragraph on what the pattern of their answers reveals \u2014 not just the scores, but what their specific combination of strengths and gaps means in practice. Reference specific answers where they are revealing.\n\n## Taste Read\n2-3 sentences on what their Taste signature and dimensional profile says about how they make decisions. Be specific to their FR/KD/EC scores.\n\n## The Binding Constraint\nOne paragraph on why their weakest layer is the bottleneck, what failure mode it creates, and why fixing other things first is wasted effort.\n\n## What To Do Monday\nThree bullet points with ultra-specific actions for the next 30 days. Not generic advice \u2014 actions that connect to their actual answers, industry, and gaps. Each bullet should be one concrete sentence.\n\nNever reference internal question IDs like CU2, T1, F1, AC1, etc. Reference answers by describing what the user said or the topic, not which question number they answered.\n\nFor What To Do Monday bullets, use this format: a short directive phrase (under 15 words) bolded, then a long dash (\u2014), then the supporting context and rationale. Example: **Rewrite your failure post-mortem** \u2014 take the initiative you described and...\n\nWrite ~500-700 words total. The reader should feel like someone actually read their answers, not like they got a template.';
 
     const contextStr = buildBriefContext(currentSession, currentResults);
 
