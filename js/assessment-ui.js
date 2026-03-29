@@ -449,6 +449,13 @@ function showResults() {
         tag.textContent = 'BINDING CONSTRAINT';
         label.appendChild(tag);
       }
+      // Show subtle note for shallow-assessed layers
+      if (results.moduleDepths && results.moduleDepths[layer] === 'shallow') {
+        const quickNote = document.createElement('span');
+        quickNote.className = 'quick-assessment-note';
+        quickNote.textContent = '(quick assessment)';
+        label.appendChild(quickNote);
+      }
     } else {
       scoreLabel.textContent = 'Not assessed';
       scoreLabel.classList.add('not-assessed');
@@ -553,12 +560,20 @@ function showResults() {
   actionsContainer.appendChild(monthGroup);
   setTimeout(() => monthGroup.classList.add('visible'), delay);
 
-  // Not-assessed note
-  const notAssessed = layers.filter((l) => results.layerScores[l] === null);
+  // Assessment depth note
   const noteEl = document.getElementById('assessed-note');
-  if (notAssessed.length > 0) {
-    noteEl.textContent = `Layers not assessed in this session: ${notAssessed.map((l) => LAYER_NAMES[l]).join(', ')}. A full assessment would evaluate all layers for a complete picture.`;
-    noteEl.classList.remove('hidden');
+  if (results.moduleDepths) {
+    const shallowLayers = Object.entries(results.moduleDepths)
+      .filter(([, d]) => d === 'shallow')
+      .map(([l]) => LAYER_NAMES[l]);
+    if (shallowLayers.length > 0) {
+      noteEl.textContent = `${shallowLayers.join(' and ')} received a quick assessment based on core diagnostic questions. Deeply assessed layers used the full question set for higher confidence scoring.`;
+      noteEl.classList.remove('hidden');
+    } else {
+      noteEl.classList.add('hidden');
+    }
+  } else {
+    noteEl.classList.add('hidden');
   }
 
   // Retake button — replace to avoid stacking listeners on repeated retakes

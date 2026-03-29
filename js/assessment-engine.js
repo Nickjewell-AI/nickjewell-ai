@@ -70,6 +70,7 @@ const FOUNDATION_QUESTIONS = [
   {
     id: 'F1',
     layer: 'foundation',
+    depth: 'core',
     label: 'Data Accessibility',
     text: 'If an AI system needed to pull your last 12 months of customer interactions right now, what would it find?',
     options: [
@@ -92,6 +93,7 @@ const FOUNDATION_QUESTIONS = [
   {
     id: 'F2',
     layer: 'foundation',
+    depth: 'full',
     label: 'Governance Reality',
     text: 'Does your organization have a data governance policy?',
     options: [
@@ -124,6 +126,7 @@ const FOUNDATION_QUESTIONS = [
   {
     id: 'F3',
     layer: 'foundation',
+    depth: 'full',
     label: 'Data Quality Pain',
     text: 'Has data quality ever blocked or significantly slowed an AI or analytics project?',
     options: [
@@ -148,6 +151,7 @@ const ARCHITECTURE_QUESTIONS = [
   {
     id: 'A1',
     layer: 'architecture',
+    depth: 'core',
     label: 'Process Mapping',
     text: 'Could you draw your most critical business workflow end-to-end on a whiteboard right now — including every handoff between teams and systems?',
     options: [
@@ -170,6 +174,7 @@ const ARCHITECTURE_QUESTIONS = [
   {
     id: 'A2',
     layer: 'architecture',
+    depth: 'full',
     label: 'The Redesign Question',
     text: 'When was the last time a major business process was fundamentally redesigned (not just patched or updated)?',
     options: [
@@ -192,6 +197,7 @@ const ARCHITECTURE_QUESTIONS = [
   {
     id: 'A3',
     layer: 'architecture',
+    depth: 'full',
     label: 'The Kevin Test',
     text: 'Are there any critical data flows or processes that depend on a specific person running something manually (a script, an export, a report)?',
     options: [
@@ -229,6 +235,7 @@ const ACCOUNTABILITY_QUESTIONS = [
   {
     id: 'AC1',
     layer: 'accountability',
+    depth: 'core',
     label: 'Named Owner',
     text: 'If your AI system produced a bad outcome at 2am on a Saturday, who specifically gets called?',
     options: [
@@ -251,6 +258,7 @@ const ACCOUNTABILITY_QUESTIONS = [
   {
     id: 'AC2',
     layer: 'accountability',
+    depth: 'full',
     label: 'Kill History',
     text: 'Has your organization ever killed an AI or technology project mid-flight because it wasn\'t working?',
     options: [
@@ -273,6 +281,7 @@ const ACCOUNTABILITY_QUESTIONS = [
   {
     id: 'AC3',
     layer: 'accountability',
+    depth: 'full',
     label: 'Pre-Defined Failure Criteria',
     text: 'Before launching an AI initiative, do you define specific conditions under which you\'d pause or stop it?',
     options: [
@@ -298,6 +307,7 @@ const CULTURE_QUESTIONS = [
   {
     id: 'CU1',
     layer: 'culture',
+    depth: 'full',
     label: 'Workflow Redesign',
     text: "Has any job role or daily workflow at your organization been fundamentally changed because of AI (not just 'now you also have this AI tool')?",
     options: [
@@ -319,6 +329,7 @@ const CULTURE_QUESTIONS = [
   {
     id: 'CU2',
     layer: 'culture',
+    depth: 'full',
     label: 'Honest Failure',
     text: "Can you describe an AI initiative at your organization that didn't work, and what you learned from it?",
     options: [
@@ -339,6 +350,7 @@ const CULTURE_QUESTIONS = [
   {
     id: 'CU3',
     layer: 'culture',
+    depth: 'core',
     label: 'Safety to Dissent',
     text: "If someone in a meeting said 'I don't think we're ready for this AI initiative,' what would happen?",
     options: [
@@ -491,71 +503,81 @@ function recordTasteReasoning(session, scenarioId, reasoningKey) {
 
 // ─── Routing Logic ────────────────────────────────────────
 
-// Determines which Tier 2 layer modules to show based on Tier 1 answers
+// Determines which Tier 2 layer modules to assess deeply vs quickly based on Tier 1 answers
+// Returns { deep: [...], shallow: [...] } — all 4 layers are always included
 function determineModules(pulseAnswers) {
-  const modules = new Set();
+  const deepSet = new Set();
   const p1 = pulseAnswers.P1;
   const p2 = pulseAnswers.P2;
   const p4 = pulseAnswers.P4;
 
   // P1 role routing
   if (p1 === 'A' || p1 === 'B') {
-    modules.add('accountability');
-    modules.add('culture');
+    deepSet.add('accountability');
+    deepSet.add('culture');
   } else if (p1 === 'C') {
-    modules.add('foundation');
-    modules.add('architecture');
+    deepSet.add('foundation');
+    deepSet.add('architecture');
   } else {
     // D — balanced across all layers
-    modules.add('foundation');
-    modules.add('architecture');
-    modules.add('accountability');
-    modules.add('culture');
+    deepSet.add('foundation');
+    deepSet.add('architecture');
+    deepSet.add('accountability');
+    deepSet.add('culture');
   }
 
   // P2 maturity routing
   if (p2 === 'A') {
-    modules.add('foundation');
+    deepSet.add('foundation');
   } else if (p2 === 'B') {
-    modules.add('architecture');
-    modules.add('accountability');
+    deepSet.add('architecture');
+    deepSet.add('accountability');
   } else if (p2 === 'C') {
-    modules.add('foundation');
-    modules.add('architecture');
-    modules.add('accountability');
-    modules.add('culture');
+    deepSet.add('foundation');
+    deepSet.add('architecture');
+    deepSet.add('accountability');
+    deepSet.add('culture');
   } else if (p2 === 'D') {
-    modules.add('culture');
+    deepSet.add('culture');
   }
 
   // P4 concern mapping — the user's self-identified concern gets probed
   const concernMap = { A: 'foundation', B: 'architecture', C: 'accountability', D: 'culture' };
-  if (concernMap[p4]) modules.add(concernMap[p4]);
+  if (concernMap[p4]) deepSet.add(concernMap[p4]);
   // P4=E taste emphasis — assess all layers so taste modifier has full context
   if (p4 === 'E') {
-    modules.add('foundation');
-    modules.add('architecture');
-    modules.add('accountability');
-    modules.add('culture');
+    deepSet.add('foundation');
+    deepSet.add('architecture');
+    deepSet.add('accountability');
+    deepSet.add('culture');
   }
 
-  // Always return at least 2 modules, at most 4
-  if (modules.size < 2) {
-    if (!modules.has('foundation')) modules.add('foundation');
-    if (modules.size < 2) modules.add('culture');
+  // Always at least 2 deep modules, at most 4
+  if (deepSet.size < 2) {
+    if (!deepSet.has('foundation')) deepSet.add('foundation');
+    if (deepSet.size < 2) deepSet.add('culture');
   }
 
-  return [...modules];
+  const allLayers = ['foundation', 'architecture', 'accountability', 'culture'];
+  const deep = allLayers.filter(l => deepSet.has(l));
+  const shallow = allLayers.filter(l => !deepSet.has(l));
+
+  return { deep, shallow };
 }
 
-function getModuleQuestions(moduleName) {
+function getModuleQuestions(moduleName, depthFilter) {
   const map = {
     foundation: FOUNDATION_QUESTIONS,
     architecture: ARCHITECTURE_QUESTIONS,
     accountability: ACCOUNTABILITY_QUESTIONS,
     culture: CULTURE_QUESTIONS,
   };
-  return map[moduleName] || [];
+  const questions = map[moduleName] || [];
+  // For shallow modules, only return core questions
+  if (depthFilter === 'shallow') {
+    return questions.filter(q => q.depth === 'core');
+  }
+  return questions;
 }
 
 // ─── Scoring ──────────────────────────────────────────────
@@ -933,7 +955,8 @@ function createSession() {
     tier: 1,
     currentQuestionIndex: 0,
     pulseAnswers: {},
-    modules: [],
+    modules: [],           // all layer modules in assessment order (deep first, then shallow)
+    moduleDepths: {},       // { foundation: 'deep'|'shallow', ... }
     currentModuleIndex: 0,
     knowledgeDepth: 'high', // set after P5: A/B = 'high', C/D = 'low'
     layerResponses: {
@@ -965,7 +988,12 @@ function getNextQuestion(session) {
       };
     }
     // Done with Tier 1 — determine modules, advance to Tier 2
-    session.modules = determineModules(session.pulseAnswers);
+    const routing = determineModules(session.pulseAnswers);
+    // Serve deep modules first, then shallow
+    session.modules = [...routing.deep, ...routing.shallow];
+    session.moduleDepths = {};
+    for (const m of routing.deep) session.moduleDepths[m] = 'deep';
+    for (const m of routing.shallow) session.moduleDepths[m] = 'shallow';
     session.tier = 2;
     session.currentQuestionIndex = 0;
     session.currentModuleIndex = 0;
@@ -975,7 +1003,8 @@ function getNextQuestion(session) {
   if (session.tier === 2) {
     while (session.currentModuleIndex < session.modules.length) {
       const moduleName = session.modules[session.currentModuleIndex];
-      const questions = getModuleQuestions(moduleName);
+      const depthFilter = session.moduleDepths[moduleName] === 'shallow' ? 'shallow' : null;
+      const questions = getModuleQuestions(moduleName, depthFilter);
       if (session.currentQuestionIndex < questions.length) {
         const baseQ = questions[session.currentQuestionIndex];
         // Apply low-depth variant if applicable
@@ -1110,6 +1139,7 @@ function computeResults(session) {
     verdictFraming,
     actionPlan,
     modulesAssessed: session.modules,
+    moduleDepths: session.moduleDepths,
   };
 }
 
@@ -1117,7 +1147,8 @@ function computeResults(session) {
 function getTotalQuestions(session) {
   let total = TIER1_QUESTIONS.length + TASTE_QUESTIONS.length;
   for (const mod of session.modules) {
-    total += getModuleQuestions(mod).length;
+    const depthFilter = session.moduleDepths[mod] === 'shallow' ? 'shallow' : null;
+    total += getModuleQuestions(mod, depthFilter).length;
   }
   return total;
 }
@@ -1252,11 +1283,21 @@ function buildBriefContext(session, results) {
   }
 
   lines.push('');
+  lines.push('=== ASSESSMENT DEPTH ===');
+  const depths = results.moduleDepths || session.moduleDepths || {};
+  const deepLayers = Object.entries(depths).filter(([, d]) => d === 'deep').map(([l]) => l);
+  const shallowLayers = Object.entries(depths).filter(([, d]) => d === 'shallow').map(([l]) => l);
+  lines.push('Deeply assessed layers (full question set): ' + (deepLayers.length ? deepLayers.join(', ') : 'none'));
+  lines.push('Quickly assessed layers (core questions only, lower confidence): ' + (shallowLayers.length ? shallowLayers.join(', ') : 'none'));
+
+  lines.push('');
   lines.push('=== SCORES ===');
-  lines.push('Foundation: ' + (results.layerScores.foundation !== null ? results.layerScores.foundation + '/100' : 'Not assessed'));
-  lines.push('Architecture: ' + (results.layerScores.architecture !== null ? results.layerScores.architecture + '/100' : 'Not assessed'));
-  lines.push('Accountability: ' + (results.layerScores.accountability !== null ? results.layerScores.accountability + '/100' : 'Not assessed'));
-  lines.push('Culture: ' + (results.layerScores.culture !== null ? results.layerScores.culture + '/100' : 'Not assessed'));
+  const allLayers = ['foundation', 'architecture', 'accountability', 'culture'];
+  for (const layer of allLayers) {
+    const score = results.layerScores[layer];
+    const depthNote = depths[layer] === 'shallow' ? ' (quick assessment)' : '';
+    lines.push(layer.charAt(0).toUpperCase() + layer.slice(1) + ': ' + (score !== null ? score + '/100' + depthNote : 'Not assessed'));
+  }
   lines.push('Composite: ' + results.composite + '/100');
   lines.push('Verdict: ' + results.verdict);
   lines.push('Binding Constraint: ' + (results.bindingConstraint || 'None'));
