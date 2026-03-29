@@ -4,6 +4,7 @@
 
 (function () {
   const API_ENDPOINT = '/api-proxy';
+  const adminKey = new URLSearchParams(window.location.search).get('admin_key');
 
   /**
    * Call the Anthropic API for assessment features (Taste follow-ups, CU2 analysis).
@@ -50,7 +51,8 @@
     let responseStarted = false;
 
     try {
-      const response = await fetch(API_ENDPOINT, {
+      const briefUrl = adminKey ? `${API_ENDPOINT}?admin_key=${adminKey}` : API_ENDPOINT;
+      const response = await fetch(briefUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
