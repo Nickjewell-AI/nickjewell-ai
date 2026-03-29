@@ -110,9 +110,14 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: 'Missing or invalid type field (must be "assessment" or "brief")' }, 400, origin);
   }
 
+  // Admin bypass for rate limiting
+  const url = new URL(context.request.url);
+  const adminKey = url.searchParams.get('admin_key');
+  const isAdmin = adminKey && context.env.ADMIN_KEY && adminKey === context.env.ADMIN_KEY;
+
   // For briefs, enforce per-IP limit first, then the global daily cap
   // If D1 is unavailable or errors, skip rate limiting and proceed to Anthropic
-  if (type === 'brief' && context.env.DB) {
+  if (type === 'brief' && context.env.DB && !isAdmin) {
     const clientIp = context.request.headers.get('CF-Connecting-IP') || '0.0.0.0';
 
     try {
