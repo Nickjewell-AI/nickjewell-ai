@@ -115,9 +115,10 @@ export async function onRequestPatch(context) {
     const name = sanitize(body.name, 200);
     const email = sanitize(body.email, 320);
     const company = sanitize(body.company, 200);
+    const role = sanitize(body.role, 200);
 
     // Only update if at least one field provided
-    if (!name && !email && !company) {
+    if (!name && !email && !company && !role) {
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: CORS_HEADERS,
@@ -128,9 +129,10 @@ export async function onRequestPatch(context) {
       UPDATE assessment_results
       SET name = COALESCE(?, name),
           email = COALESCE(?, email),
-          company = COALESCE(?, company)
+          company = COALESCE(?, company),
+          role = COALESCE(?, role)
       WHERE id = ?
-    `).bind(name, email, company, body.id).run();
+    `).bind(name, email, company, role, body.id).run();
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

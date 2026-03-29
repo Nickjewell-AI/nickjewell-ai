@@ -574,9 +574,14 @@
       display: none !important;
     }
 
-    /* ─── Save & Share Form ─── */
+    /* ─── Brief Contact Form ─── */
 
-    .save-share-subtitle {
+    .brief-contact-form {
+      margin-top: 1.25rem;
+      animation: brief-fade-in 0.4s ease forwards;
+    }
+
+    .brief-contact-lead {
       font-family: var(--font-body);
       font-size: 0.85rem;
       color: var(--text-secondary);
@@ -584,75 +589,57 @@
       margin-bottom: 1.25rem;
     }
 
-    .save-share-form {
+    .brief-contact-fields {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
 
-    .save-share-fields {
-      display: flex;
-      gap: 0.75rem;
-    }
-
-    .save-share-fields input {
-      flex: 1;
-      padding: 0.625rem 0.875rem;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 6px;
+    .brief-contact-fields input {
+      width: 100%;
+      padding: 0.7rem 0;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
       color: var(--text-primary);
       font-family: var(--font-body);
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       transition: border-color 0.2s ease;
     }
 
-    .save-share-fields input::placeholder {
+    .brief-contact-fields input::placeholder {
       color: var(--text-muted);
     }
 
-    .save-share-fields input:focus {
+    .brief-contact-fields input:focus {
       outline: none;
-      border-color: var(--accent);
+      border-bottom-color: var(--accent);
     }
 
-    .save-btn {
-      align-self: flex-start;
-      padding: 0.625rem 1.5rem;
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
+    .brief-contact-submit {
+      display: inline-block;
       font-family: var(--font-body);
-      font-size: 0.85rem;
+      font-size: 0.92rem;
       font-weight: 500;
+      color: var(--bg-primary);
+      background: var(--accent);
+      border: none;
+      padding: 0.85rem 2rem;
       border-radius: 6px;
       cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease;
+      transition: all 0.2s;
+      letter-spacing: 0.01em;
     }
 
-    .save-btn:hover {
-      background: var(--accent);
-      color: var(--bg-primary);
+    .brief-contact-submit:hover {
+      background: var(--accent-hover);
     }
 
-    .save-btn:disabled {
-      opacity: 0.5;
+    .brief-contact-submit:disabled {
       cursor: default;
-      pointer-events: none;
-    }
-
-    .save-status {
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-      line-height: 1.4;
-    }
-
-    .save-status.success {
-      color: var(--verdict-green);
-    }
-
-    .save-status.error {
-      color: var(--verdict-red);
+      opacity: 0.85;
     }
 
     /* ─── Taste Reasoning Free-Text ─── */
@@ -763,8 +750,8 @@
         padding: 1.25rem 1.5rem;
       }
 
-      .save-share-fields {
-        flex-direction: column;
+      .brief-contact-fields {
+        gap: 0.75rem;
       }
     }
 
@@ -1092,23 +1079,19 @@
           <hr class="brief-divider">
           <div class="result-section-title">Executive Brief</div>
           <p class="brief-subtext">A personalized diagnostic narrative built from your specific answers — your Taste profile, your binding constraint, and what it means for your organization. Generated in real time.</p>
-          <button class="brief-generate-btn">Generate My Executive Brief →</button>
+          <button class="brief-generate-btn">Generate My Executive Brief &rarr;</button>
+          <form id="brief-contact-form" class="brief-contact-form hidden">
+            <p class="brief-contact-lead">Tell us a bit about yourself to generate your brief.</p>
+            <div class="brief-contact-fields">
+              <input type="text" id="brief-name" placeholder="Name" autocomplete="name" required />
+              <input type="email" id="brief-email" placeholder="Email" autocomplete="email" required />
+              <input type="text" id="brief-company" placeholder="Company" autocomplete="organization" required />
+              <input type="text" id="brief-role" placeholder="Role" autocomplete="job-title" required />
+            </div>
+            <button type="submit" class="brief-contact-submit">Generate Brief &rarr;</button>
+          </form>
           <p class="brief-status hidden"></p>
           <div class="brief-text-container hidden"></div>
-        </div>
-
-        <div class="result-section" id="save-share-section">
-          <div class="result-section-title">Share Your Details</div>
-          <p class="save-share-subtitle">Optional — help us improve the framework. Your anonymous results are already saved. Add your info below if you'd like to be included in industry benchmarking or future insights.</p>
-          <form id="save-share-form" class="save-share-form">
-            <div class="save-share-fields">
-              <input type="text" id="save-name" placeholder="Name" autocomplete="name" />
-              <input type="email" id="save-email" placeholder="Email" autocomplete="email" />
-              <input type="text" id="save-company" placeholder="Company" autocomplete="organization" />
-            </div>
-            <button type="submit" id="save-btn" class="save-btn">Submit</button>
-            <p id="save-status" class="save-status hidden"></p>
-          </form>
         </div>
 
         <div class="retake-wrapper">

@@ -595,14 +595,6 @@ function showResults() {
   // Executive Brief CTA
   initExecutiveBrief();
 
-  // Save & Share form — replace to avoid stacking listeners on retake
-  const saveForm = document.getElementById('save-share-form');
-  if (saveForm) {
-    const freshForm = saveForm.cloneNode(true);
-    saveForm.parentNode.replaceChild(freshForm, saveForm);
-    freshForm.addEventListener('submit', handleContactSubmit);
-  }
-
   // Stagger fade-in of result sections
   const sections = resultsEl.querySelectorAll('.result-section');
   sections.forEach((sec, i) => {
@@ -781,71 +773,124 @@ function initExecutiveBrief() {
   const btn = section.querySelector('.brief-generate-btn');
   const statusEl = section.querySelector('.brief-status');
   const briefContainer = section.querySelector('.brief-text-container');
+  const contactForm = document.getElementById('brief-contact-form');
 
   // Reset brief UI state for retakes
   btn.classList.remove('hidden', 'brief-loading');
   btn.disabled = false;
-  btn.innerHTML = 'Generate My Executive Brief';
+  btn.innerHTML = 'Generate My Executive Brief \u2192';
   statusEl.classList.add('hidden');
   statusEl.textContent = '';
   briefContainer.innerHTML = '';
   briefContainer.classList.add('hidden');
+  contactForm.classList.add('hidden');
 
   // Replace button to remove any previous click listeners
   const freshBtn = btn.cloneNode(true);
   btn.parentNode.replaceChild(freshBtn, btn);
 
-  freshBtn.addEventListener('click', async () => {
-    // Read current session and results at click time, not at init time
-    const currentSession = session;
-    const currentResults = lastResults;
+  // Replace form to remove any previous submit listeners
+  const freshForm = contactForm.cloneNode(true);
+  contactForm.parentNode.replaceChild(freshForm, contactForm);
 
-    freshBtn.disabled = true;
-    freshBtn.classList.add('brief-loading');
-    freshBtn.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
-    briefContainer.classList.remove('hidden');
-
-    const systemPrompt = 'You are a senior AI implementation strategist writing a personalized executive brief for the Jewell Assessment. Write in first-person plural ("we") as if you are the assessment delivering findings. Be direct, specific, and constructive \u2014 like a $500/hour consultant who respects the reader\'s time.\n\nUse this exact structure with markdown headers:\n\n## Verdict Context\n2-3 sentences on what the overall verdict means for THIS specific organization given their industry, role, and maturity stage.\n\n## The Real Story\nOne paragraph on what the pattern of their answers reveals \u2014 not just the scores, but what their specific combination of strengths and gaps means in practice. Reference specific answers where they are revealing.\n\n## Taste Read\n2-3 sentences on what their Taste signature and dimensional profile says about how they make decisions. Be specific to their FR/KD/EC scores.\n\n## The Binding Constraint\nOne paragraph on why their weakest layer is the bottleneck, what failure mode it creates, and why fixing other things first is wasted effort.\n\n## What To Do Monday\nThree bullet points with ultra-specific actions for the next 30 days. Not generic advice \u2014 actions that connect to their actual answers, industry, and gaps. Each bullet should be one concrete sentence.\n\nNever reference internal question IDs like CU2, T1, F1, AC1, etc. Reference answers by describing what the user said or the topic, not which question number they answered.\n\nFor What To Do Monday bullets, use this format: a short directive phrase (under 15 words) bolded, then a long dash (\u2014), then the supporting context and rationale. Example: **Rewrite your failure post-mortem** \u2014 take the initiative you described and...\n\nWrite ~500-700 words total. The reader should feel like someone actually read their answers, not like they got a template.';
-
-    const contextStr = buildBriefContext(currentSession, currentResults);
-
-    const result = await window.AssessmentAPI.generateExecutiveBrief({
-      system: systemPrompt,
-      messages: [{ role: 'user', content: contextStr }],
-      onChunk: (text) => {
-        const span = document.createElement('span');
-        span.className = 'brief-chunk';
-        span.textContent = text;
-        briefContainer.appendChild(span);
-      },
-    });
-
-    // Handle result
-    if (result && typeof result === 'string') {
-      // Success — hide button, render markdown-structured brief
+  freshBtn.addEventListener('click', () => {
+    // If user already provided contact info this session, skip the form
+    if (session._contactName && session._contactEmail) {
       freshBtn.classList.add('hidden');
-      briefContainer.innerHTML = '';
-      renderBrief(briefContainer, result);
-    } else if (result && result.error === 'ip_limit') {
-      freshBtn.classList.add('hidden');
-      statusEl.textContent = "You've reached the maximum briefs for today. Come back tomorrow.";
-      statusEl.classList.remove('hidden');
-      briefContainer.classList.add('hidden');
-    } else if (result && result.error === 'briefs_at_capacity') {
-      freshBtn.classList.add('hidden');
-      statusEl.textContent = 'Executive briefs are at capacity today. Try again tomorrow.';
-      statusEl.classList.remove('hidden');
-      briefContainer.classList.add('hidden');
-    } else {
-      freshBtn.classList.add('hidden');
-      statusEl.textContent = 'Brief generation is temporarily unavailable. Your deterministic results above are still fully accurate.';
-      statusEl.classList.remove('hidden');
-      briefContainer.classList.add('hidden');
+      generateBrief(statusEl, briefContainer, freshBtn);
+      return;
     }
+    // Show the contact form, hide the button
+    freshBtn.classList.add('hidden');
+    freshForm.classList.remove('hidden');
+    freshForm.querySelector('#brief-name').focus();
+  });
+
+  freshForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = freshForm.querySelector('#brief-name').value.trim();
+    const email = freshForm.querySelector('#brief-email').value.trim();
+    const company = freshForm.querySelector('#brief-company').value.trim();
+    const role = freshForm.querySelector('#brief-role').value.trim();
+
+    if (!name || !email || !company || !role) return;
+
+    // Save contact info to session
+    session._contactName = name;
+    session._contactEmail = email;
+    session._contactCompany = company;
+    session._contactRole = role;
+
+    // Update D1 record with contact info
+    if (savedRowId) {
+      try {
+        await fetch('/api/submit-assessment', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: savedRowId, name, email, company, role }),
+        });
+      } catch (err) {
+        // Silent fail — brief generation proceeds regardless
+      }
+    }
+
+    // Hide form, generate brief
+    freshForm.classList.add('hidden');
+    generateBrief(statusEl, briefContainer, freshBtn);
   });
 }
 
-// ─── Auto-Save & Contact Update ─────────────────────────
+async function generateBrief(statusEl, briefContainer, btn) {
+  const currentSession = session;
+  const currentResults = lastResults;
+
+  // Show loading state
+  const loadingEl = document.createElement('div');
+  loadingEl.className = 'brief-generate-btn brief-loading';
+  loadingEl.style.display = 'inline-block';
+  loadingEl.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
+  btn.parentNode.insertBefore(loadingEl, briefContainer);
+  briefContainer.classList.remove('hidden');
+
+  const systemPrompt = 'You are a senior AI implementation strategist writing a personalized executive brief for the Jewell Assessment. Write in first-person plural (\u201cwe\u201d) as if you are the assessment delivering findings. Be direct, specific, and constructive \u2014 like a $500/hour consultant who respects the reader\u2019s time.\n\nUse this exact structure with markdown headers:\n\n## Verdict Context\n2-3 sentences on what the overall verdict means for THIS specific organization given their industry, role, and maturity stage.\n\n## The Real Story\nOne paragraph on what the pattern of their answers reveals \u2014 not just the scores, but what their specific combination of strengths and gaps means in practice. Reference specific answers where they are revealing.\n\n## Taste Read\n2-3 sentences on what their Taste signature and dimensional profile says about how they make decisions. Be specific to their FR/KD/EC scores.\n\n## The Binding Constraint\nOne paragraph on why their weakest layer is the bottleneck, what failure mode it creates, and why fixing other things first is wasted effort.\n\n## What To Do Monday\nThree bullet points with ultra-specific actions for the next 30 days. Not generic advice \u2014 actions that connect to their actual answers, industry, and gaps. Each bullet should be one concrete sentence.\n\nNever reference internal question IDs like CU2, T1, F1, AC1, etc. Reference answers by describing what the user said or the topic, not which question number they answered.\n\nFor What To Do Monday bullets, use this format: a short directive phrase (under 15 words) bolded, then a long dash (\u2014), then the supporting context and rationale. Example: **Rewrite your failure post-mortem** \u2014 take the initiative you described and...\n\nWrite ~500-700 words total. The reader should feel like someone actually read their answers, not like they got a template.';
+
+  const contextStr = buildBriefContext(currentSession, currentResults);
+
+  const result = await window.AssessmentAPI.generateExecutiveBrief({
+    system: systemPrompt,
+    messages: [{ role: 'user', content: contextStr }],
+    onChunk: (text) => {
+      const span = document.createElement('span');
+      span.className = 'brief-chunk';
+      span.textContent = text;
+      briefContainer.appendChild(span);
+    },
+  });
+
+  // Remove loading indicator
+  loadingEl.remove();
+
+  // Handle result
+  if (result && typeof result === 'string') {
+    briefContainer.innerHTML = '';
+    renderBrief(briefContainer, result);
+  } else if (result && result.error === 'ip_limit') {
+    statusEl.textContent = "You\u2019ve reached the maximum briefs for today. Come back tomorrow.";
+    statusEl.classList.remove('hidden');
+    briefContainer.classList.add('hidden');
+  } else if (result && result.error === 'briefs_at_capacity') {
+    statusEl.textContent = 'Executive briefs are at capacity today. Try again tomorrow.';
+    statusEl.classList.remove('hidden');
+    briefContainer.classList.add('hidden');
+  } else {
+    statusEl.textContent = 'Brief generation is temporarily unavailable. Your deterministic results above are still fully accurate.';
+    statusEl.classList.remove('hidden');
+    briefContainer.classList.add('hidden');
+  }
+}
+
+// ─── Auto-Save ─────────────────────────────────────────
 
 async function autoSaveResults() {
   const timeToComplete = assessmentStartTime
@@ -891,50 +936,6 @@ async function autoSaveResults() {
   } catch (err) {
     // Silent fail — anonymous save is best-effort
   }
-}
-
-async function handleContactSubmit(e) {
-  e.preventDefault();
-  const btn = document.getElementById('save-btn');
-  const status = document.getElementById('save-status');
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-  status.classList.add('hidden');
-
-  const name = document.getElementById('save-name').value.trim() || null;
-  const email = document.getElementById('save-email').value.trim() || null;
-  const company = document.getElementById('save-company').value.trim() || null;
-
-  if (!name && !email && !company) {
-    status.textContent = 'Enter at least one field to save.';
-    status.className = 'save-status error';
-    status.classList.remove('hidden');
-    btn.textContent = 'Submit';
-    btn.disabled = false;
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/submit-assessment', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: savedRowId, name, email, company }),
-    });
-
-    if (res.ok) {
-      status.textContent = 'Thanks! Your info has been saved.';
-      status.className = 'save-status success';
-      btn.textContent = 'Submitted';
-    } else {
-      throw new Error('Update failed');
-    }
-  } catch (err) {
-    status.textContent = 'Could not save. Your assessment results are already recorded.';
-    status.className = 'save-status error';
-    btn.textContent = 'Submit';
-    btn.disabled = false;
-  }
-  status.classList.remove('hidden');
 }
 
 // ─── Boot ─────────────────────────────────────────────────
