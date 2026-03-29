@@ -465,6 +465,12 @@ a.layer-item-link {
   font-variant-numeric: tabular-nums;
 }
 
+.writing-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .writing-title {
   font-family: var(--font-display);
   font-size: 1.05rem;
