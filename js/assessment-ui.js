@@ -84,9 +84,6 @@ function showNextQuestion() {
   const options = document.createElement('div');
   options.className = 'options-list';
 
-  let selectedOption = null;
-  let selectedBtn = null;
-  let advanceTimer = null;
   let locked = false;
 
   question.options.forEach((opt) => {
@@ -95,24 +92,11 @@ function showNextQuestion() {
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
       if (locked) return;
-      // Double-click same option — advance immediately
-      if (selectedBtn === btn) {
-        if (advanceTimer) clearTimeout(advanceTimer);
-        locked = true;
-        handleAnswer(card, question, selectedOption, options);
-        return;
-      }
-      selectedOption = opt;
-      selectedBtn = btn;
-      // Update highlight — clear all, then mark this one
+      locked = true;
+      // Show selected state briefly before advancing
       options.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
-      // Start 3-second advance timer; resets if a different option is clicked
-      if (advanceTimer) clearTimeout(advanceTimer);
-      advanceTimer = setTimeout(() => {
-        locked = true;
-        handleAnswer(card, question, selectedOption, options);
-      }, 3000);
+      setTimeout(() => handleAnswer(card, question, opt, options), 250);
     });
     options.appendChild(btn);
   });
@@ -184,33 +168,7 @@ function showFollowUp(parentCard, parentQuestion) {
   const fuOptions = document.createElement('div');
   fuOptions.className = 'options-list';
 
-  let selectedFuOpt = null;
-  let selectedFuBtn = null;
-  let fuAdvanceTimer = null;
   let fuLocked = false;
-
-  function commitFollowUp() {
-    fuLocked = true;
-
-    // Disable all follow-up buttons
-    const fuButtons = fuOptions.querySelectorAll('.option-button');
-    fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
-
-    // Record follow-up
-    recordFollowUp(session, fu.id, selectedFuOpt.key, parentQuestion.id, selectedFuOpt.effect, selectedFuOpt.newScore);
-
-    // Show follow-up insight if applicable
-    const fuInsightKey = 'insightOn' + selectedFuOpt.key;
-    if (fu[fuInsightKey]) {
-      const insight = document.createElement('div');
-      insight.className = 'question-insight fade-in';
-      insight.textContent = fu[fuInsightKey];
-      fuCard.appendChild(insight);
-      requestAnimationFrame(() => insight.classList.add('visible'));
-    }
-
-    setTimeout(() => showNextQuestion(), 400);
-  }
 
   fu.options.forEach((opt) => {
     const btn = document.createElement('button');
@@ -218,21 +176,30 @@ function showFollowUp(parentCard, parentQuestion) {
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
       if (fuLocked) return;
-      // Double-click same option — advance immediately
-      if (selectedFuBtn === btn) {
-        if (fuAdvanceTimer) clearTimeout(fuAdvanceTimer);
-        commitFollowUp();
-        return;
-      }
-      selectedFuOpt = opt;
-      selectedFuBtn = btn;
+      fuLocked = true;
       fuOptions.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
-      // Start 3-second advance timer; resets if a different option is clicked
-      if (fuAdvanceTimer) clearTimeout(fuAdvanceTimer);
-      fuAdvanceTimer = setTimeout(() => {
-        commitFollowUp();
-      }, 3000);
+
+      setTimeout(() => {
+        // Disable all follow-up buttons
+        const fuButtons = fuOptions.querySelectorAll('.option-button');
+        fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
+
+        // Record follow-up
+        recordFollowUp(session, fu.id, opt.key, parentQuestion.id, opt.effect, opt.newScore);
+
+        // Show follow-up insight if applicable
+        const fuInsightKey = 'insightOn' + opt.key;
+        if (fu[fuInsightKey]) {
+          const insight = document.createElement('div');
+          insight.className = 'question-insight fade-in';
+          insight.textContent = fu[fuInsightKey];
+          fuCard.appendChild(insight);
+          requestAnimationFrame(() => insight.classList.add('visible'));
+        }
+
+        setTimeout(() => showNextQuestion(), 400);
+      }, 250);
     });
     fuOptions.appendChild(btn);
   });
@@ -317,17 +284,7 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
   const fuOptions = document.createElement('div');
   fuOptions.className = 'options-list';
 
-  let selectedRBtn = null;
-  let selectedROpt = null;
-  let rAdvanceTimer = null;
   let rLocked = false;
-
-  function commitReasoning() {
-    rLocked = true;
-    fuOptions.querySelectorAll('.option-button').forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
-    recordTasteReasoning(session, parentQuestion.id, selectedROpt.key);
-    setTimeout(() => showNextQuestion(), 400);
-  }
 
   reasoning.options.forEach((opt) => {
     const btn = document.createElement('button');
@@ -335,17 +292,14 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
       if (rLocked) return;
-      if (selectedRBtn === btn) {
-        if (rAdvanceTimer) clearTimeout(rAdvanceTimer);
-        commitReasoning();
-        return;
-      }
-      selectedROpt = opt;
-      selectedRBtn = btn;
+      rLocked = true;
       fuOptions.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
-      if (rAdvanceTimer) clearTimeout(rAdvanceTimer);
-      rAdvanceTimer = setTimeout(() => commitReasoning(), 3000);
+      setTimeout(() => {
+        fuOptions.querySelectorAll('.option-button').forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
+        recordTasteReasoning(session, parentQuestion.id, opt.key);
+        setTimeout(() => showNextQuestion(), 400);
+      }, 250);
     });
     fuOptions.appendChild(btn);
   });
