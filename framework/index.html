@@ -20,10 +20,16 @@
   <nav class="nav">
     <div class="nav-inner">
       <a href="/" class="nav-logo">Nick Jewell</a>
+      <button class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <ul class="nav-links">
-        <li><a href="/" class="nav-link">Home</a></li>
         <li><a href="/framework/" class="nav-link active">Framework</a></li>
         <li><a href="/assessment/" class="nav-link">Assessment</a></li>
+        <li><a href="/writing/" class="nav-link">Writing</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
       </ul>
     </div>
   </nav>
@@ -534,6 +540,15 @@
   <!-- Scroll Animations -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Hamburger toggle
+      const hamburger = document.querySelector('.nav-hamburger');
+      const navLinks = document.querySelector('.nav-links');
+      hamburger.addEventListener('click', () => {
+        const isOpen = hamburger.classList.toggle('open');
+        navLinks.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', isOpen);
+      });
+
       const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry, i) => {
           if (entry.isIntersecting) {

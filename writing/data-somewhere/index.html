@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080808">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <title>"We have the data somewhere" and other expensive assumptions — Nick Jewell</title>
+  <meta name="description" content="Data exists does not mean data is accessible. The distinction costs organizations six figures and months of wasted implementation.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://nickjewell.ai/writing/data-somewhere/">
+  <meta property="og:title" content="&quot;We have the data somewhere&quot; and other expensive assumptions">
+  <meta property="og:description" content="Data exists does not mean data is accessible. The distinction costs organizations six figures and months of wasted implementation.">
+  <meta property="og:image" content="https://nickjewell.ai/assets/og-image.png">
+  <meta property="og:site_name" content="Nick Jewell">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="&quot;We have the data somewhere&quot; and other expensive assumptions">
+  <meta name="twitter:description" content="Data exists does not mean data is accessible. The distinction costs organizations six figures.">
+  <meta name="twitter:image" content="https://nickjewell.ai/assets/og-image.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "\"We have the data somewhere\" and other expensive assumptions",
+    "author": {
+      "@type": "Person",
+      "name": "Nick Jewell",
+      "url": "https://nickjewell.ai"
+    },
+    "datePublished": "2026-03-29",
+    "description": "Data exists does not mean data is accessible. The distinction costs organizations six figures and months of wasted implementation.",
+    "publisher": {
+      "@type": "Person",
+      "name": "Nick Jewell"
+    }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <a href="#main-content" class="skip-to-content">Skip to content</a>
+
+  <!-- Navigation -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">Nick Jewell</a>
+      <button class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="/framework/" class="nav-link">Framework</a></li>
+        <li><a href="/assessment/" class="nav-link">Assessment</a></li>
+        <li><a href="/writing/" class="nav-link active">Writing</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Article -->
+  <article class="article" id="main-content">
+    <div class="container">
+      <header class="article-header fade-in">
+        <span class="writing-date">Mar 2026</span>
+        <h1>&ldquo;We have the data somewhere&rdquo; and other expensive assumptions</h1>
+        <div class="article-meta">
+          <span class="writing-tag">Foundation</span>
+          <span class="article-read-time">~4 min read</span>
+        </div>
+      </header>
+
+      <div class="article-body fade-in">
+        <p>In almost every AI readiness conversation, there is a moment when someone says it: &ldquo;We have the data.&rdquo; They say it with confidence, because it&rsquo;s technically true. The data does exist. What they mean, though, is that the data is organized, accessible, and usable. That is almost never true. The gap between &ldquo;data exists&rdquo; and &ldquo;data is accessible&rdquo; is where six-figure implementation budgets go to die.</p>
+
+        <p>This is the Foundation layer &mdash; the raw materials that every other layer depends on. It&rsquo;s the layer every other assessment already covers, and it&rsquo;s still where most organizations stumble first.</p>
+
+        <h3>Scattered, trapped, and ungoverned</h3>
+
+        <p>Organizations claim data readiness because data <em>exists</em> &mdash; but it&rsquo;s scattered across 14 systems, three cloud providers, and someone&rsquo;s desktop spreadsheet labeled &ldquo;master_list_FINAL_v3.&rdquo; When an AI model needs to pull 12 months of customer interactions, it finds six months in Salesforce, four months in a legacy CRM, and two months in email threads nobody migrated.</p>
+
+        <p>A mid-market insurance company launched an AI claims processing pilot. Three months in, they discovered 40% of their claims data was trapped in scanned PDFs with no OCR pipeline. The AI could read the structured database records but was blind to nearly half the actual claims history. Cost: $200K+ in wasted implementation spend.</p>
+
+        <p>Then there&rsquo;s governance by document. The organization has a 40-page AI governance policy that legal drafted, the board approved, and nobody has read since. A Fortune 500 retailer had a comprehensive data governance policy. When audited, they discovered 60% of their data pipelines had no lineage tracking &mdash; they couldn&rsquo;t trace which customer data fed which AI model. A material GDPR/CCPA violation that the governance document was supposed to prevent.</p>
+
+        <h3>Data as a product</h3>
+
+        <p>Organizations that treat data like a product &mdash; with owners, quality standards, SLAs, and consumers &mdash; consistently outperform. Spotify&rsquo;s data mesh approach assigns domain teams ownership of their data as a product. When they build AI features like Discover Weekly, the recommendation team doesn&rsquo;t beg the streaming team for clean data &mdash; the streaming team already publishes it with documented schemas, freshness guarantees, and quality scores.</p>
+
+        <p>Capital One&rsquo;s approach begins with business questions, not data infrastructure. Each AI initiative starts with a clearly defined decision it needs to improve &mdash; credit risk scoring, fraud detection, customer targeting &mdash; and builds only the data pipeline required for that specific decision. This avoids the common trap of spending 18 months on a data lake nobody uses.</p>
+
+        <h3>The real diagnostic</h3>
+
+        <p>Can you describe where your critical business data lives without saying &ldquo;I&rsquo;d have to check&rdquo;? Do you know who owns your data governance policy &mdash; not who wrote it, but who enforces it? Can you describe a recent instance where data quality blocked a project? Is there a data catalog, or does discovery require tribal knowledge? These questions reveal whether your foundation is solid or performative.</p>
+      </div>
+
+      <div class="article-cta fade-in">
+        <p>Not sure where your data foundation actually stands? <a href="/assessment/">Take the assessment &rarr;</a></p>
+      </div>
+
+      <div class="related-pieces fade-in">
+        <h4>Related</h4>
+        <ul>
+          <li><a href="/writing/automating-the-mess/">The most expensive mistake in enterprise AI: automating the mess</a></li>
+          <li><a href="/writing/committees-dont-call/">Committees don&rsquo;t pick up the phone at 2am</a></li>
+          <li><a href="/writing/training-without-transformation/">Training without transformation: the AI literacy trap</a></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href="/">Home</a>
+      <a href="/framework/">Framework</a>
+      <a href="/assessment/">Assessment</a>
+      <a href="/writing/">Writing</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+    <p>&copy; 2026 Nick Jewell &middot; nickjewell.ai</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const hamburger = document.querySelector('.nav-hamburger');
+      const navLinks = document.querySelector('.nav-links');
+      hamburger.addEventListener('click', () => {
+        const isOpen = hamburger.classList.toggle('open');
+        navLinks.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', isOpen);
+      });
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            entry.target.style.transitionDelay = `${i * 0.08}s`;
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    });
+  </script>
+
+</body>
+</html>

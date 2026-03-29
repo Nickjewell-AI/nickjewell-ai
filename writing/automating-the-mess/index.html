@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080808">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <title>The most expensive mistake in enterprise AI: automating the mess — Nick Jewell</title>
+  <meta name="description" content="If the workflow is broken before AI, AI will execute that broken workflow faster and at scale. The most expensive mistake is automating without redesigning.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://nickjewell.ai/writing/automating-the-mess/">
+  <meta property="og:title" content="The most expensive mistake in enterprise AI: automating the mess">
+  <meta property="og:description" content="If the workflow is broken before AI, AI will execute that broken workflow faster and at scale. The most expensive mistake is automating without redesigning.">
+  <meta property="og:image" content="https://nickjewell.ai/assets/og-image.png">
+  <meta property="og:site_name" content="Nick Jewell">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The most expensive mistake in enterprise AI: automating the mess">
+  <meta name="twitter:description" content="If the workflow is broken before AI, AI will execute that broken workflow faster and at scale.">
+  <meta name="twitter:image" content="https://nickjewell.ai/assets/og-image.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "The most expensive mistake in enterprise AI: automating the mess",
+    "author": {
+      "@type": "Person",
+      "name": "Nick Jewell",
+      "url": "https://nickjewell.ai"
+    },
+    "datePublished": "2026-03-29",
+    "description": "If the workflow is broken before AI, AI will execute that broken workflow faster and at scale. The most expensive mistake is automating without redesigning.",
+    "publisher": {
+      "@type": "Person",
+      "name": "Nick Jewell"
+    }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <a href="#main-content" class="skip-to-content">Skip to content</a>
+
+  <!-- Navigation -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">Nick Jewell</a>
+      <button class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="/framework/" class="nav-link">Framework</a></li>
+        <li><a href="/assessment/" class="nav-link">Assessment</a></li>
+        <li><a href="/writing/" class="nav-link active">Writing</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Article -->
+  <article class="article" id="main-content">
+    <div class="container">
+      <header class="article-header fade-in">
+        <span class="writing-date">Mar 2026</span>
+        <h1>The most expensive mistake in enterprise AI: automating the mess</h1>
+        <div class="article-meta">
+          <span class="writing-tag">Architecture</span>
+          <span class="article-read-time">~4 min read</span>
+        </div>
+      </header>
+
+      <div class="article-body fade-in">
+        <p>There is a particular kind of organizational optimism that AI tends to amplify: the belief that technology can fix a process problem. It can&rsquo;t. If the workflow is broken before AI, AI will execute that broken workflow faster and at scale. Speed without direction is just expensive chaos.</p>
+
+        <p>The most common and most costly mistake in enterprise AI isn&rsquo;t choosing the wrong model or the wrong vendor. It&rsquo;s taking a broken manual process and layering AI on top of it. The AI runs faster, which means it produces bad outputs faster. Organizations confuse speed with improvement.</p>
+
+        <h3>Automating what shouldn&rsquo;t exist</h3>
+
+        <p>A large bank automated their loan approval workflow. The existing process had 23 manual handoffs, six of which existed because of a regulatory requirement repealed in 2019 but never removed from the process. The AI automated all 23 steps, including the six unnecessary ones. 40% faster but still fundamentally wasteful &mdash; and now harder to change because the waste was embedded in code.</p>
+
+        <p>Then there&rsquo;s &ldquo;integration by prayer&rdquo; &mdash; systems connected through brittle point-to-point integrations, manual CSV exports, or someone running a script on their laptop every Tuesday morning. A hospital network&rsquo;s AI patient flow prediction relied on bed availability data updated via manual nurse entry that synced every 4 hours. The AI predicted patient flow beautifully against reported data, but reported data was always 2&ndash;4 hours behind reality. Technically accurate. Operationally useless.</p>
+
+        <h3>Redesign first, then automate</h3>
+
+        <p>Organizations that achieve the highest ROI from AI treat implementation as a trigger to redesign workflows first. &ldquo;If we were building this process from scratch today, what would it look like?&rdquo; Then they automate the redesigned version.</p>
+
+        <p>When Toyota implemented AI-assisted quality inspection, they didn&rsquo;t just point cameras at existing stations. They redesigned the entire quality workflow &mdash; moving inspection earlier, consolidating redundant checks, eliminating steps that existed because human inspectors couldn&rsquo;t see certain defects. Defects dropped 50% while removing inspection steps.</p>
+
+        <p>Stripe&rsquo;s architecture means any new capability &mdash; AI fraud detection, smart routing, risk scoring &mdash; plugs into the same API infrastructure external customers use. No special integration work needed. This is why they ship AI features in weeks, not quarters. The architecture was designed for extensibility, not for a specific AI use case.</p>
+
+        <h3>The questions that matter</h3>
+
+        <p>Can you map your critical workflow end-to-end, including every handoff between systems and teams? When was the last time a major process was redesigned &mdash; not patched, but fundamentally rethought? How many &ldquo;Kevin on a laptop&rdquo; dependencies exist in your critical data flows? These aren&rsquo;t technology questions. They&rsquo;re architecture questions. And they determine whether AI will create value or amplify waste.</p>
+      </div>
+
+      <div class="article-cta fade-in">
+        <p>Think your workflows are ready for AI? Find out where the real bottlenecks are. <a href="/assessment/">Take the assessment &rarr;</a></p>
+      </div>
+
+      <div class="related-pieces fade-in">
+        <h4>Related</h4>
+        <ul>
+          <li><a href="/writing/data-somewhere/">&ldquo;We have the data somewhere&rdquo; and other expensive assumptions</a></li>
+          <li><a href="/writing/committees-dont-call/">Committees don&rsquo;t pick up the phone at 2am</a></li>
+          <li><a href="/writing/taste-missing-dimension/">Why &ldquo;taste&rdquo; is the missing dimension in AI readiness</a></li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href="/">Home</a>
+      <a href="/framework/">Framework</a>
+      <a href="/assessment/">Assessment</a>
+      <a href="/writing/">Writing</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+    <p>&copy; 2026 Nick Jewell &middot; nickjewell.ai</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const hamburger = document.querySelector('.nav-hamburger');
+      const navLinks = document.querySelector('.nav-links');
+      hamburger.addEventListener('click', () => {
+        const isOpen = hamburger.classList.toggle('open');
+        navLinks.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', isOpen);
+      });
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            entry.target.style.transitionDelay = `${i * 0.08}s`;
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    });
+  </script>
+
+</body>
+</html>
