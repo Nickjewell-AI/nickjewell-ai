@@ -41,6 +41,17 @@
     </div>
   </nav>
 
+  <!-- Layer Navigation -->
+  <div class="layer-nav" id="layer-nav">
+    <div class="container">
+      <a href="#foundation" class="layer-nav-link active">Foundation</a>
+      <a href="#architecture" class="layer-nav-link">Architecture</a>
+      <a href="#accountability" class="layer-nav-link">Accountability</a>
+      <a href="#culture" class="layer-nav-link">Culture</a>
+      <a href="#taste" class="layer-nav-link">Taste</a>
+    </div>
+  </div>
+
   <!-- Framework Hero -->
   <section class="framework-hero">
     <div class="container">
@@ -567,6 +578,37 @@
       }, { threshold: 0.1 });
 
       document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+      // Layer nav: show/hide based on scroll past hero
+      const layerNav = document.getElementById('layer-nav');
+      const frameworkHero = document.querySelector('.framework-hero');
+      const layerLinks = document.querySelectorAll('.layer-nav-link');
+      const layerSections = document.querySelectorAll('#foundation, #architecture, #accountability, #culture, #taste');
+
+      const heroObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            layerNav.classList.remove('visible');
+          } else {
+            layerNav.classList.add('visible');
+          }
+        });
+      }, { threshold: 0 });
+
+      heroObserver.observe(frameworkHero);
+
+      // Layer nav: highlight active section
+      const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            layerLinks.forEach(link => link.classList.remove('active'));
+            const activeLink = document.querySelector(`.layer-nav-link[href="#${entry.target.id}"]`);
+            if (activeLink) activeLink.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-20% 0px -60% 0px' });
+
+      layerSections.forEach(section => sectionObserver.observe(section));
     });
   </script>
 
