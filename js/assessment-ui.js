@@ -11,6 +11,7 @@ const {
   getTotalQuestions,
   getAnsweredCount,
   TASTE_REASONING,
+  TASTE_LEADINS,
   buildBriefContext,
 } = window.AssessmentEngine;
 
@@ -277,9 +278,11 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
   const fuCard = document.createElement('div');
   fuCard.className = 'follow-up-card fade-in';
 
+  const leadIn = TASTE_LEADINS[parentQuestion.id]?.[selectedOption.key] || 'What was the biggest factor in your thinking?';
+
   const fuText = document.createElement('div');
   fuText.className = 'follow-up-text';
-  fuText.textContent = reasoning.prompt;
+  fuText.textContent = leadIn;
 
   const fuOptions = document.createElement('div');
   fuOptions.className = 'options-list';
@@ -288,8 +291,8 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
 
   reasoning.options.forEach((opt) => {
     const btn = document.createElement('button');
-    btn.className = 'option-button follow-up-option';
-    btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
+    btn.className = 'option-button follow-up-option reasoning-option';
+    btn.innerHTML = `<span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
       if (rLocked) return;
       rLocked = true;

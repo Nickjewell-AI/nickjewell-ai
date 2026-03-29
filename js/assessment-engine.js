@@ -412,41 +412,64 @@ const TASTE_QUESTIONS = [
 
 // ─── Taste Reasoning Follow-Ups ──────────────────────────
 
+const TASTE_LEADINS = {
+  T1: {
+    A: "Killing a pilot that underperforms humans — what drove that call?",
+    B: "Running AI alongside humans as a safety net — what was behind that?",
+    C: "Digging into the failure cases before deciding — what triggered that instinct?",
+    D: "Questioning whether accuracy is even the right metric — what made you go there?",
+  },
+  T2: {
+    A: "Going straight to vendor evaluation — what made that feel like the right first step?",
+    B: "Cleaning the knowledge base before touching AI — what was behind that?",
+    C: "Testing with messy data instead of waiting — what drove that instinct?",
+    D: "Going straight to the CEO's underlying intent — what drove that instinct?",
+  },
+  T3: {
+    A: "Giving it more time with clearer metrics — what was behind that?",
+    B: "Pivoting to something more measurable rather than killing it — what drove that?",
+    C: "Pulling the plug after 18 months and $400K — what made that feel right?",
+    D: "Bringing in an outside review before deciding — what triggered that?",
+  },
+  T4: {
+    A: "Focusing on the 4% error rate — what made that the primary concern?",
+    B: "Thinking about how customers perceive AI handling their money — what drove that?",
+    C: "Worrying about edge cases the agent wasn't trained on — what triggered that?",
+    D: "Questioning whether the refund process should exist at all — what made you go there?",
+  },
+};
+
 const TASTE_REASONING = {
   T1: {
-    prompt: 'Interesting choice. What was the biggest factor in your thinking?',
     options: [
-      { key: 'R1', text: 'The numbers made the decision clear', fr: 0, kd: 0, ec: 1 },
-      { key: 'R2', text: 'I was thinking about what we might be missing', fr: 1, kd: 0, ec: 1 },
-      { key: 'R3', text: 'I questioned whether we were measuring the right thing', fr: 2, kd: 0, ec: 0 },
-      { key: 'R4', text: 'I wanted to act decisively rather than wait', fr: 0, kd: 1, ec: 0 },
+      { key: 'R1', text: '78% vs 85% — the accuracy gap told me what I needed to know', fr: 0, kd: 0, ec: 1 },
+      { key: 'R2', text: 'I kept thinking about what types of cases the AI gets wrong and whether those failures are dangerous', fr: 1, kd: 0, ec: 1 },
+      { key: 'R3', text: 'Accuracy might not be the real measure — maybe the AI catches things humans miss, or fails in ways that matter less', fr: 2, kd: 0, ec: 0 },
+      { key: 'R4', text: 'Pilots stall when you overanalyze — better to make a call and learn from what happens', fr: 0, kd: 1, ec: 0 },
     ],
   },
   T2: {
-    prompt: 'Interesting choice. What was the biggest factor in your thinking?',
     options: [
-      { key: 'R1', text: 'I focused on the data quality problem first', fr: 0, kd: 1, ec: 1 },
-      { key: 'R2', text: "I wanted to understand the CEO's real intent", fr: 2, kd: 0, ec: 0 },
-      { key: 'R3', text: 'I thought testing assumptions quickly was more important than debating them', fr: 1, kd: 0, ec: 1 },
-      { key: 'R4', text: 'The technology excited me — I wanted to move on it', fr: -1, kd: 0, ec: 0 },
+      { key: 'R1', text: 'An LLM on 60% outdated content will confidently give wrong answers — that felt dangerous', fr: 0, kd: 1, ec: 1 },
+      { key: 'R2', text: "Conference excitement fades — I wanted to know what problem the CEO actually needs solved before picking a tool", fr: 2, kd: 0, ec: 0 },
+      { key: 'R3', text: "You learn more from a quick pilot on messy data than months of cleanup you might not even need", fr: 1, kd: 0, ec: 1 },
+      { key: 'R4', text: "The LLM space moves fast — getting vendor conversations started early gives us an advantage", fr: -1, kd: 0, ec: 0 },
     ],
   },
   T3: {
-    prompt: 'Interesting choice. What was the biggest factor in your thinking?',
     options: [
-      { key: 'R1', text: 'I was worried about sunk cost bias influencing the decision', fr: 1, kd: 1, ec: 0 },
-      { key: 'R2', text: "I thought about what we'd lose by stopping vs. continuing", fr: 0, kd: 1, ec: 1 },
-      { key: 'R3', text: 'I wanted an outside perspective to cut through internal politics', fr: 2, kd: 0, ec: 1 },
-      { key: 'R4', text: 'I believe most projects just need more time to show results', fr: -1, kd: -1, ec: 0 },
+      { key: 'R1', text: "$400K in and a passionate team — I worried we'd keep going just because stopping feels like failure", fr: 1, kd: 1, ec: 0 },
+      { key: 'R2', text: 'I weighed what the team and budget could accomplish if redirected vs. what 6 more months of unclear ROI gets us', fr: 0, kd: 1, ec: 1 },
+      { key: 'R3', text: 'The executive sponsor and the team are too close to it — someone outside the blast radius needs to make this call', fr: 2, kd: 0, ec: 1 },
+      { key: 'R4', text: '18 months is still early for enterprise AI — growing usage is a signal worth protecting', fr: -1, kd: -1, ec: 0 },
     ],
   },
   T4: {
-    prompt: 'Interesting choice. What was the biggest factor in your thinking?',
     options: [
-      { key: 'R1', text: 'I was thinking about what happens when the system hits something unexpected', fr: 0, kd: 0, ec: 2 },
-      { key: 'R2', text: 'I questioned whether we should be solving this problem at all', fr: 2, kd: 1, ec: 0 },
-      { key: 'R3', text: 'The error rate on financial transactions concerned me most', fr: 0, kd: 1, ec: 1 },
-      { key: 'R4', text: 'I thought about how customers would perceive it', fr: 0, kd: 0, ec: 0 },
+      { key: 'R1', text: '96% sounds great until the agent hits a refund scenario nobody anticipated — that 4% could be the weird cases', fr: 0, kd: 0, ec: 2 },
+      { key: 'R2', text: 'Before automating refunds, I wanted to ask why we process so many refunds in the first place', fr: 2, kd: 1, ec: 0 },
+      { key: 'R3', text: '4% errors on money means real customers losing real dollars — that risk felt unacceptable at scale', fr: 0, kd: 1, ec: 1 },
+      { key: 'R4', text: "Even if it's accurate, customers might not trust a machine with their money — perception matters", fr: 0, kd: 0, ec: 0 },
     ],
   },
 };
@@ -1058,6 +1081,9 @@ function computeResults(session) {
     tasteDimensions.killDiscipline += session.tasteReasoningDims.killDiscipline;
     tasteDimensions.edgeCaseInstinct += session.tasteReasoningDims.edgeCaseInstinct;
   }
+  tasteDimensions.frameRecognition = Math.max(0, Math.min(8, tasteDimensions.frameRecognition));
+  tasteDimensions.killDiscipline = Math.max(0, Math.min(6, tasteDimensions.killDiscipline));
+  tasteDimensions.edgeCaseInstinct = Math.max(0, Math.min(8, tasteDimensions.edgeCaseInstinct));
   const tasteSignature = getTasteSignature(tasteDimensions);
   const tasteTotal = tasteDimensions.frameRecognition + tasteDimensions.killDiscipline + tasteDimensions.edgeCaseInstinct;
   const { verdict, composite } = calculateVerdict(layerScores, tasteSignature);
@@ -1280,6 +1306,7 @@ window.AssessmentEngine = {
   getTotalQuestions,
   getAnsweredCount,
   TASTE_REASONING,
+  TASTE_LEADINS,
   buildBriefContext,
 };
 })();
