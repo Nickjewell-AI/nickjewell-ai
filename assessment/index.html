@@ -567,6 +567,87 @@
       display: none !important;
     }
 
+    /* ─── Save & Share Form ─── */
+
+    .save-share-subtitle {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .save-share-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .save-share-fields {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .save-share-fields input {
+      flex: 1;
+      padding: 0.625rem 0.875rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      transition: border-color 0.2s ease;
+    }
+
+    .save-share-fields input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .save-share-fields input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .save-btn {
+      align-self: flex-start;
+      padding: 0.625rem 1.5rem;
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .save-btn:hover {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .save-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .save-status {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .save-status.success {
+      color: var(--verdict-green);
+    }
+
+    .save-status.error {
+      color: var(--verdict-red);
+    }
+
     /* ─── Mobile ─── */
     @media (max-width: 768px) {
       .assessment-container {
@@ -586,6 +667,10 @@
       .taste-card,
       .constraint-block {
         padding: 1.25rem 1.5rem;
+      }
+
+      .save-share-fields {
+        flex-direction: column;
       }
     }
   </style>

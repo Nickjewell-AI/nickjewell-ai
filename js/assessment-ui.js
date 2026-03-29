@@ -96,8 +96,8 @@ function showNextQuestion() {
   // Trigger animation
   requestAnimationFrame(() => card.classList.add('visible'));
 
-  // Scroll to new question
-  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // Scroll to top so the new question is visible
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function handleAnswer(card, question, selectedOption, optionsContainer) {
@@ -218,6 +218,9 @@ function showResults() {
   document.getElementById('assessment-active').classList.add('hidden');
   const resultsEl = document.getElementById('assessment-results');
   resultsEl.classList.remove('hidden');
+
+  // Scroll to top so user sees verdict badge first
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   // Verdict badge
   const verdictClass = 'verdict-' + results.verdict.toLowerCase();
