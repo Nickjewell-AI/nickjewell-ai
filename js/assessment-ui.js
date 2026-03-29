@@ -99,7 +99,7 @@ function showNextQuestion() {
       advanceTimer = setTimeout(() => {
         locked = true;
         handleAnswer(card, question, selectedOption, options);
-      }, 1000);
+      }, 1500);
     });
     options.appendChild(btn);
   });
@@ -177,6 +177,7 @@ function showFollowUp(parentCard, parentQuestion) {
       fuAdvanceTimer = setTimeout(() => {
         fuLocked = true;
 
+
         // Disable all follow-up buttons
         const fuButtons = fuOptions.querySelectorAll('.option-button');
         fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
@@ -195,7 +196,7 @@ function showFollowUp(parentCard, parentQuestion) {
         }
 
         setTimeout(() => showNextQuestion(), 400);
-      }, 1000);
+      }, 1500);
     });
     fuOptions.appendChild(btn);
   });
