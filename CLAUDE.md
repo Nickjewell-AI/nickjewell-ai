@@ -24,7 +24,11 @@ Nick Jewell. AI and automation implementation consultant pursuing senior AI stra
 - **Hosting:** Cloudflare Pages (auto-deploy from GitHub)
 - **API Proxy:** Cloudflare Worker at /functions/api-proxy.js (secures Anthropic API key)
 - **API:** Anthropic Messages API (claude-sonnet-4-20250514) for conversational assessment
-- **No backend/database for MVP** — assessment runs client-side with API calls, results generated in-session
+- **Database:** Cloudflare D1 — `jewell-assessment-db`. Tables: `brief_counter`, `brief_ip_counter`, assessment results. Node/npx not available locally — D1 operations via Cloudflare dashboard Console.
+
+## Environment Notes
+- PowerShell only (no `&&` chaining) — run git commands one at a time
+- Site resolves on **www.nickjewell.ai** only (bare domain redirects via Cloudflare Page Rule)
 
 ## Repo Structure
 ```
@@ -44,7 +48,10 @@ nickjewell-ai/
 │   └── api-proxy.js              # Cloudflare Worker — proxies Anthropic API calls
 ├── assets/
 │   ├── og-image.png              # Social sharing preview image
-│   └── favicon.svg               # Site favicon
+│   ├── favicon.svg               # Site favicon
+│   └── logos/                    # Company logos for Taste in Practice section
+├── sitemap.xml                   # XML sitemap
+├── robots.txt                    # Crawl directives
 ├── docs/                         # Detailed specs (assessment, architecture, design, content)
 ├── CLAUDE.md                     # This file
 ├── package.json
@@ -56,7 +63,7 @@ nickjewell-ai/
 **Aesthetic:** Dark editorial — authoritative without being cold, distinctive without being flashy.
 - **Fonts:** Fraunces (display/headings), DM Sans (body)
 - **Background:** #080808 primary, #0f0f0f secondary, #141414 cards
-- **Text:** #f0ebe3 primary, #8a8279 secondary, #5a5550 muted
+- **Text:** #f0ebe3 primary, #9a9189 secondary (WCAG AA), #7a756f muted (WCAG AA)
 - **Accent:** #c8965a (warm amber)
 - **Border:** #222019
 - **Film grain overlay** for texture
@@ -72,6 +79,22 @@ Full design system: `docs/design-system.md`
 - Mobile-first responsive design
 - Comments explaining business logic, not obvious code
 - After creating or modifying any HTML or CSS files, verify there are no broken references or path issues.
+
+## Current State (March 29, 2026)
+- **Milestone 3** API integration complete and deployed
+- Content strategy executed — all homepage sections live (hero, pattern vignettes, framework preview, assessment CTA, taste in practice logos, writing with summaries, contact)
+- Accessibility overhaul complete (skip-to-content, ARIA labels, focus-visible states, hamburger menu, radiogroup roles, progressbar ARIA)
+- SEO assets deployed (sitemap.xml, robots.txt, OG tags, Twitter cards, JSON-LD structured data, favicon)
+- OG image live
+- Framework page transitions and story anchors done (company deep links with scroll-margin)
+- Chrome autofill dark theme fix deployed
+
+## Remaining Work
+- Standalone writing pages (individual articles)
+- Analytics event tracking
+- Email capture on assessment results
+- nick@nickjewell.ai email setup
+- Framework + assessment page OG images (currently only homepage has one)
 
 ## When Helping Nick Build
 - Nick is learning Claude Code and terminal workflows — explain commands and concepts when they're new
