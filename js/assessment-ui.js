@@ -53,6 +53,7 @@ function updateProgress() {
   const total = getTotalQuestions(session);
   const pct = Math.round((answered / total) * 100);
   progressBar.style.width = pct + '%';
+  progressBar.setAttribute('aria-valuenow', pct);
   progressText.textContent = `${answered} of ${total}`;
 }
 
@@ -84,19 +85,23 @@ function showNextQuestion() {
 
   const options = document.createElement('div');
   options.className = 'options-list';
+  options.setAttribute('role', 'radiogroup');
 
   let locked = false;
 
   question.options.forEach((opt) => {
     const btn = document.createElement('button');
     btn.className = 'option-button';
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', 'false');
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
       if (locked) return;
       locked = true;
       // Show selected state briefly before advancing
-      options.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
+      options.querySelectorAll('.option-button').forEach((b) => { b.classList.remove('selected'); b.setAttribute('aria-checked', 'false'); });
       btn.classList.add('selected');
+      btn.setAttribute('aria-checked', 'true');
       setTimeout(() => handleAnswer(card, question, opt, options), 250);
     });
     options.appendChild(btn);
