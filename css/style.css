@@ -943,6 +943,12 @@ a.layer-item-link {
   gap: var(--space-8);
 }
 
+a.logo-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
 .logo-card {
   text-align: center;
   padding: 1.5rem;
