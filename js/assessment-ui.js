@@ -591,10 +591,66 @@ function showResults() {
 
 // ─── Executive Brief ─────────────────────────────────────
 
+function renderMondayActions(container, bulletLines, animDelay) {
+  // Section label
+  const label = document.createElement('div');
+  label.className = 'monday-section-label';
+  label.textContent = 'YOUR NEXT MOVES';
+  label.style.animationDelay = animDelay + 'ms';
+  container.appendChild(label);
+  animDelay += 100;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'monday-actions';
+  container.appendChild(wrapper);
+
+  bulletLines.forEach((raw, idx) => {
+    const text = raw.replace(/^\s*[-*]\s+/, '');
+    // Parse **bold** — explanation, or **bold**: explanation, or just plain text
+    const boldMatch = text.match(/^\*\*(.+?)\*\*\s*[—–:\-]\s*(.+)$/);
+    const actionTitle = boldMatch ? boldMatch[1] : text.split(/\s*[—–]\s*/)[0];
+    const actionDesc = boldMatch ? boldMatch[2] : (text.includes('—') ? text.split(/\s*[—–]\s*/).slice(1).join(' — ') : '');
+
+    const card = document.createElement('div');
+    card.className = 'monday-action-card fade-in';
+    card.style.animationDelay = (animDelay + idx * 150) + 'ms';
+
+    const number = document.createElement('div');
+    number.className = 'monday-action-number';
+    number.textContent = String(idx + 1).padStart(2, '0');
+
+    const content = document.createElement('div');
+    content.className = 'monday-action-content';
+
+    const title = document.createElement('div');
+    title.className = 'monday-action-title';
+    // Strip any remaining ** markdown
+    title.textContent = actionTitle.replace(/\*\*/g, '');
+
+    content.appendChild(title);
+
+    if (actionDesc) {
+      const desc = document.createElement('div');
+      desc.className = 'monday-action-desc';
+      desc.textContent = actionDesc.replace(/\*\*/g, '');
+      content.appendChild(desc);
+    }
+
+    card.appendChild(number);
+    card.appendChild(content);
+    wrapper.appendChild(card);
+
+    requestAnimationFrame(() => card.classList.add('visible'));
+  });
+
+  return animDelay + bulletLines.length * 150;
+}
+
 function renderBrief(container, text) {
   const lines = text.split('\n');
   let i = 0;
   let animDelay = 0;
+  let inMondaySection = false;
 
   while (i < lines.length) {
     const line = lines[i];
@@ -604,9 +660,33 @@ function renderBrief(container, text) {
 
     // Markdown header: ## Title
     if (/^##\s+/.test(line)) {
+      const headerText = line.replace(/^##\s+/, '');
+
+      // Detect "What To Do Monday" section
+      if (/what\s+to\s+do\s+monday/i.test(headerText)) {
+        inMondaySection = true;
+        // Skip the header — we render our own label
+        i++;
+        // Collect all bullet lines in this section
+        const bullets = [];
+        while (i < lines.length) {
+          if (/^##\s+/.test(lines[i])) break; // next section
+          if (/^\s*[-*]\s+/.test(lines[i])) {
+            bullets.push(lines[i]);
+          }
+          i++;
+        }
+        if (bullets.length > 0) {
+          animDelay = renderMondayActions(container, bullets, animDelay);
+        }
+        inMondaySection = false;
+        continue;
+      }
+
+      inMondaySection = false;
       const h = document.createElement('h3');
       h.className = 'brief-section-header';
-      h.textContent = line.replace(/^##\s+/, '');
+      h.textContent = headerText;
       h.style.animationDelay = animDelay + 'ms';
       container.appendChild(h);
       animDelay += 100;
@@ -622,7 +702,7 @@ function renderBrief(container, text) {
       while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
         const li = document.createElement('li');
         li.className = 'brief-list-item';
-        li.textContent = lines[i].replace(/^\s*[-*]\s+/, '');
+        li.textContent = lines[i].replace(/^\s*[-*]\s+/, '').replace(/\*\*/g, '');
         ul.appendChild(li);
         i++;
       }
@@ -640,7 +720,7 @@ function renderBrief(container, text) {
     if (paraText) {
       const p = document.createElement('p');
       p.className = 'brief-paragraph';
-      p.textContent = paraText;
+      p.textContent = paraText.replace(/\*\*/g, '');
       p.style.animationDelay = animDelay + 'ms';
       container.appendChild(p);
       animDelay += 100;
