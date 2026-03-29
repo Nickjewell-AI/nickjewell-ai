@@ -32,13 +32,14 @@ const TIER1_QUESTIONS = [
     label: 'Industry',
     text: 'What industry are you in?',
     options: [
-      { key: 'A', text: 'Technology / Software' },
-      { key: 'B', text: 'Financial Services / Insurance' },
-      { key: 'C', text: 'Healthcare / Life Sciences' },
-      { key: 'D', text: 'Manufacturing / Supply Chain' },
-      { key: 'E', text: 'Professional Services / Consulting' },
-      { key: 'F', text: 'Retail / E-Commerce' },
-      { key: 'G', text: 'Other' },
+      { key: 'A', text: 'Financial Services & Insurance' },
+      { key: 'B', text: 'Healthcare & Life Sciences' },
+      { key: 'C', text: 'Technology & Software' },
+      { key: 'D', text: 'Manufacturing & Industrial' },
+      { key: 'E', text: 'Retail & Consumer' },
+      { key: 'F', text: 'Professional Services & Consulting' },
+      { key: 'G', text: 'Government & Public Sector' },
+      { key: 'H', text: 'Other' },
     ],
   },
   {
@@ -62,6 +63,29 @@ const TIER1_QUESTIONS = [
       { key: 'B', text: "Mostly — I know the high level but not all the details" },
       { key: 'C', text: "Not really — I'd need to ask other people" },
       { key: 'D', text: "No — that's not my area" },
+    ],
+  },
+  {
+    id: 'P6',
+    label: 'AI Initiative Count',
+    text: 'How many active AI or automation initiatives does your organization have right now?',
+    options: [
+      { key: 'A', text: "None — we're still evaluating" },
+      { key: 'B', text: '1-3 pilots or experiments' },
+      { key: 'C', text: '4-10 across different teams' },
+      { key: 'D', text: '10+ embedded in operations' },
+    ],
+  },
+  {
+    id: 'P7',
+    label: 'Organization Size',
+    text: 'Roughly how many people are in your organization?',
+    options: [
+      { key: 'A', text: 'Under 50' },
+      { key: 'B', text: '50-500' },
+      { key: 'C', text: '500-2,000' },
+      { key: 'D', text: '2,000-10,000' },
+      { key: 'E', text: '10,000+' },
     ],
   },
 ];
@@ -1227,16 +1251,22 @@ function buildBriefContext(session, results) {
   const p2 = session.pulseAnswers.P2;
   const p3 = session.pulseAnswers.P3;
   const p4 = session.pulseAnswers.P4;
+  const p6 = session.pulseAnswers.P6;
+  const p7 = session.pulseAnswers.P7;
   const p1Q = questionMap.P1;
   const p2Q = questionMap.P2;
   const p3Q = questionMap.P3;
   const p4Q = questionMap.P4;
+  const p6Q = questionMap.P6;
+  const p7Q = questionMap.P7;
 
   lines.push('=== CONTEXT ===');
   lines.push('Industry: ' + (p3Q.options.find(o => o.key === p3)?.text || p3));
   lines.push('Role: ' + (p1Q.options.find(o => o.key === p1)?.text || p1));
   lines.push('Maturity Stage: ' + (p2Q.options.find(o => o.key === p2)?.text || p2));
   lines.push('Primary Concern: ' + (p4Q.options.find(o => o.key === p4)?.text || p4));
+  if (p6 && p6Q) lines.push('Active AI Initiatives: ' + (p6Q.options.find(o => o.key === p6)?.text || p6));
+  if (p7 && p7Q) lines.push('Organization Size: ' + (p7Q.options.find(o => o.key === p7)?.text || p7));
   lines.push('');
 
   // All answered questions with selected options
