@@ -101,7 +101,7 @@
           <h3>"Data as a product"</h3>
           <p>Organizations that treat data like a product &mdash; with owners, quality standards, SLAs, and consumers &mdash; consistently outperform. They don't just have data; they have data that is <em>maintained</em> for specific use cases.</p>
           <div class="pattern-example">
-            <p>Spotify's data mesh approach assigns domain teams ownership of their data as a product. When they build AI features like Discover Weekly, the recommendation team doesn't beg the streaming team for clean data &mdash; the streaming team already publishes it with documented schemas, freshness guarantees, and quality scores.</p>
+            <p id="spotify">Spotify's data mesh approach assigns domain teams ownership of their data as a product. When they build AI features like Discover Weekly, the recommendation team doesn't beg the streaming team for clean data &mdash; the streaming team already publishes it with documented schemas, freshness guarantees, and quality scores.</p>
           </div>
         </div>
 
@@ -170,7 +170,7 @@
           <h3>"API-first architecture"</h3>
           <p>Organizations with clean API layers between systems can plug AI in without re-architecting everything. The AI becomes a new consumer of existing, well-documented interfaces.</p>
           <div class="pattern-example">
-            <p>Stripe's architecture means any new capability &mdash; AI fraud detection, smart routing, risk scoring &mdash; plugs into the same API infrastructure external customers use. No special integration work needed. This is why they ship AI features in weeks, not quarters.</p>
+            <p id="stripe">Stripe's architecture means any new capability &mdash; AI fraud detection, smart routing, risk scoring &mdash; plugs into the same API infrastructure external customers use. No special integration work needed. This is why they ship AI features in weeks, not quarters.</p>
           </div>
         </div>
       </div>
@@ -223,7 +223,7 @@
           <h3>"Named humans, not committees"</h3>
           <p>A single named individual &mdash; not a team, not a committee &mdash; is personally accountable for each AI deployment's outcomes. This person has the authority to pause or kill the deployment without committee approval.</p>
           <div class="pattern-example">
-            <p>Airbnb assigns a DRI (Directly Responsible Individual) to every AI feature. When pricing suggestions showed signs of discrimination, the DRI had pre-authorized authority to disable the feature within hours, investigate, and re-enable only after the issue was understood and fixed.</p>
+            <p id="airbnb">Airbnb assigns a DRI (Directly Responsible Individual) to every AI feature. When pricing suggestions showed signs of discrimination, the DRI had pre-authorized authority to disable the feature within hours, investigate, and re-enable only after the issue was understood and fixed.</p>
           </div>
         </div>
 
@@ -231,7 +231,7 @@
           <h3>"Pre-committed kill criteria"</h3>
           <p>Before launching an AI initiative, successful organizations define the specific conditions under which they will stop, pause, or pivot &mdash; documented before institutional momentum builds.</p>
           <div class="pattern-example">
-            <p>Netflix includes pre-registered failure criteria for every model deployment. If a recommendation model's metrics drop below threshold for 48 hours, it automatically rolls back. The decision to stop is made before the emotional investment begins.</p>
+            <p id="netflix">Netflix includes pre-registered failure criteria for every model deployment. If a recommendation model's metrics drop below threshold for 48 hours, it automatically rolls back. The decision to stop is made before the emotional investment begins.</p>
           </div>
         </div>
       </div>
@@ -359,7 +359,7 @@
           <h3>"The elegant constraint"</h3>
           <p>Organizations with taste deploy AI to fewer use cases but deploy it <em>excellently</em>. They choose the use case where AI creates disproportionate leverage.</p>
           <div class="pattern-example">
-            <p>John Deere didn't try to make AI do everything on a farm. They focused on one problem: identifying and spraying only the weeds, not the entire field. See &amp; Spray reduced herbicide use by 77%. The taste wasn't in the technology &mdash; it was in the restraint.</p>
+            <p id="john-deere">John Deere didn't try to make AI do everything on a farm. They focused on one problem: identifying and spraying only the weeds, not the entire field. See &amp; Spray reduced herbicide use by 77%. The taste wasn't in the technology &mdash; it was in the restraint.</p>
           </div>
         </div>
 
@@ -375,7 +375,7 @@
           <h3>"Second-order thinking"</h3>
           <p>Not just asking "will this AI work?" but "what happens after it works?" If the AI bot handles 80% of queries, what happens to the remaining 20%? Are those the hardest, highest-stakes interactions &mdash; meaning your human agents now handle only angry, complex cases all day?</p>
           <div class="pattern-example">
-            <p>When Shopify deployed AI for merchant support, they explicitly designed for the second-order effect. They knew AI would handle routine queries, leaving humans with harder cases. So they simultaneously restructured the human support role &mdash; different title, higher pay, different training. They anticipated that "AI handles the easy stuff" would change the human job, and they designed for that change proactively.</p>
+            <p id="shopify">When Shopify deployed AI for merchant support, they explicitly designed for the second-order effect. They knew AI would handle routine queries, leaving humans with harder cases. So they simultaneously restructured the human support role &mdash; different title, higher pay, different training. They anticipated that "AI handles the easy stuff" would change the human job, and they designed for that change proactively.</p>
           </div>
         </div>
       </div>
