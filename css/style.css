@@ -972,15 +972,17 @@ a.layer-item-link {
   color: var(--text-secondary);
 }
 
-.logo-img {
-  height: 36px;
-  opacity: 0.5;
-  filter: sepia(1) saturate(0.5) hue-rotate(-10deg) brightness(0.9);
-  transition: opacity 0.2s;
+.logo-card .logo-img {
+  height: 48px;
+  max-width: 160px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
 }
 
 .logo-card:hover .logo-img {
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 /* --- Writing Summary --- */
