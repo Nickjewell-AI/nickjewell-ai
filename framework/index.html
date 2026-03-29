@@ -579,25 +579,9 @@
 
       document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-      // Layer nav: show/hide based on scroll past hero
-      const layerNav = document.getElementById('layer-nav');
-      const frameworkHero = document.querySelector('.framework-hero');
+      // Layer nav: highlight active section
       const layerLinks = document.querySelectorAll('.layer-nav-link');
       const layerSections = document.querySelectorAll('#foundation, #architecture, #accountability, #culture, #taste');
-
-      const heroObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            layerNav.classList.remove('visible');
-          } else {
-            layerNav.classList.add('visible');
-          }
-        });
-      }, { threshold: 0 });
-
-      heroObserver.observe(frameworkHero);
-
-      // Layer nav: highlight active section
       const sectionObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {

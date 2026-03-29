@@ -1529,11 +1529,6 @@ a.logo-card-link {
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
   padding: 0.5rem 0;
-  display: none;
-}
-
-.layer-nav.visible {
-  display: block;
 }
 
 .layer-nav .container {
