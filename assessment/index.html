@@ -648,6 +648,69 @@
       color: var(--verdict-red);
     }
 
+    /* ─── Taste Reasoning Free-Text ─── */
+
+    .tell-us-more-link {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .tell-us-more-link:hover {
+      color: var(--accent);
+    }
+
+    .taste-freetext-wrap {
+      margin-top: 0.75rem;
+    }
+
+    .taste-freetext {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .taste-freetext::placeholder {
+      color: var(--text-muted);
+    }
+
+    .taste-freetext:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .taste-freetext-submit {
+      margin-top: 0.5rem;
+      padding: 0.4rem 1rem;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: none;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .taste-freetext-submit:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .taste-freetext-submit:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
     /* ─── Mobile ─── */
     @media (max-width: 768px) {
       .assessment-container {
@@ -683,6 +746,8 @@
       <a href="../index.html" class="nav-logo">Nick Jewell</a>
       <ul class="nav-links">
         <li><a href="../index.html" class="nav-link">Home</a></li>
+        <li><a href="../framework/index.html" class="nav-link">Framework</a></li>
+        <li><a href="../assessment/index.html" class="nav-link active">Assessment</a></li>
       </ul>
     </div>
   </nav>
@@ -795,6 +860,7 @@
     </div>
   </main>
 
+  <script src="../js/api.js"></script>
   <script src="../js/assessment-engine.js"></script>
   <script src="../js/assessment-ui.js"></script>
 </body>

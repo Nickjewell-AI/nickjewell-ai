@@ -5,9 +5,11 @@ const {
   getNextQuestion,
   recordAnswer,
   recordFollowUp,
+  recordTasteReasoning,
   computeResults,
   getTotalQuestions,
   getAnsweredCount,
+  TASTE_REASONING,
 } = window.AssessmentEngine;
 
 const LAYER_NAMES = {
@@ -146,6 +148,12 @@ function handleAnswer(card, question, selectedOption, optionsContainer) {
     requestAnimationFrame(() => insight.classList.add('visible'));
   }
 
+  // Check for taste reasoning follow-up (Tier 3 taste questions)
+  if (question.tier === 3 && TASTE_REASONING[question.id]) {
+    setTimeout(() => showTasteReasoning(card, question, selectedOption), 400);
+    return;
+  }
+
   // Check for follow-up question
   const triggerKeys = question.followUp?.triggerKeys || (question.followUp?.triggerKey ? [question.followUp.triggerKey] : []);
   if (question.followUp && triggerKeys.includes(selectedOption.key)) {
@@ -225,6 +233,122 @@ function showFollowUp(parentCard, parentQuestion) {
   fuCard.appendChild(fuOptions);
   parentCard.appendChild(fuCard);
   requestAnimationFrame(() => fuCard.classList.add('visible'));
+}
+
+function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
+  const reasoning = TASTE_REASONING[parentQuestion.id];
+
+  const fuCard = document.createElement('div');
+  fuCard.className = 'follow-up-card fade-in';
+
+  const fuText = document.createElement('div');
+  fuText.className = 'follow-up-text';
+  fuText.textContent = reasoning.prompt;
+
+  const fuOptions = document.createElement('div');
+  fuOptions.className = 'options-list';
+
+  let selectedRBtn = null;
+  let selectedROpt = null;
+  let rAdvanceTimer = null;
+  let rLocked = false;
+
+  function commitReasoning() {
+    rLocked = true;
+    fuOptions.querySelectorAll('.option-button').forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
+    recordTasteReasoning(session, parentQuestion.id, selectedROpt.key);
+    setTimeout(() => showNextQuestion(), 400);
+  }
+
+  reasoning.options.forEach((opt) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button follow-up-option';
+    btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
+    btn.addEventListener('click', () => {
+      if (rLocked) return;
+      if (selectedRBtn === btn) {
+        if (rAdvanceTimer) clearTimeout(rAdvanceTimer);
+        commitReasoning();
+        return;
+      }
+      selectedROpt = opt;
+      selectedRBtn = btn;
+      fuOptions.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      if (rAdvanceTimer) clearTimeout(rAdvanceTimer);
+      rAdvanceTimer = setTimeout(() => commitReasoning(), 3000);
+    });
+    fuOptions.appendChild(btn);
+  });
+
+  fuCard.appendChild(fuText);
+  fuCard.appendChild(fuOptions);
+
+  // "Tell us more" free-text link
+  const tellMore = document.createElement('a');
+  tellMore.href = '#';
+  tellMore.className = 'tell-us-more-link';
+  tellMore.textContent = 'Tell us more \u2192';
+  tellMore.addEventListener('click', (e) => {
+    e.preventDefault();
+    tellMore.style.display = 'none';
+    freeTextWrap.classList.remove('hidden');
+  });
+
+  const freeTextWrap = document.createElement('div');
+  freeTextWrap.className = 'taste-freetext-wrap hidden';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'taste-freetext';
+  textarea.placeholder = 'What else shaped your thinking? (optional)';
+  textarea.rows = 3;
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'taste-freetext-submit';
+  submitBtn.textContent = 'Submit';
+  submitBtn.addEventListener('click', async () => {
+    const text = textarea.value.trim();
+    if (!text) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Analyzing\u2026';
+    try {
+      if (window.AssessmentAPI && window.AssessmentAPI.callAssessmentAPI) {
+        const systemPrompt = 'You are analyzing a free-text response from a strategic AI readiness assessment. The user was asked why they made a particular choice in a scenario about AI implementation. Analyze their reasoning for:\n- Frame Recognition: Do they question assumptions or reframe the problem? (adjust: -1, 0, or +1)\n- Kill Discipline: Do they show willingness to stop or redirect? (adjust: -1, 0, or +1)\n- Edge-Case Instinct: Do they think about what could go wrong? (adjust: -1, 0, or +1)\nRespond with ONLY a JSON object: {"fr": 0, "kd": 0, "ec": 0} with values of -1, 0, or +1.';
+        const userMsg = `Scenario: ${parentQuestion.text}\nTheir answer: ${selectedOption.text}\nWhy they chose it: ${text}`;
+        const result = await window.AssessmentAPI.callAssessmentAPI({
+          system: systemPrompt,
+          messages: [{ role: 'user', content: userMsg }],
+          model: 'claude-sonnet-4-20250514',
+        });
+        if (result) {
+          try {
+            const jsonMatch = result.match(/\{[^}]+\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (!session.tasteReasoningDims) {
+                session.tasteReasoningDims = { frameRecognition: 0, killDiscipline: 0, edgeCaseInstinct: 0 };
+              }
+              const clamp = (v) => Math.max(-1, Math.min(1, Math.round(v) || 0));
+              session.tasteReasoningDims.frameRecognition += clamp(parsed.fr);
+              session.tasteReasoningDims.killDiscipline += clamp(parsed.kd);
+              session.tasteReasoningDims.edgeCaseInstinct += clamp(parsed.ec);
+            }
+          } catch { /* skip silently */ }
+        }
+      }
+    } catch { /* skip silently */ }
+    submitBtn.textContent = 'Thanks!';
+  });
+
+  freeTextWrap.appendChild(textarea);
+  freeTextWrap.appendChild(submitBtn);
+
+  fuCard.appendChild(tellMore);
+  fuCard.appendChild(freeTextWrap);
+
+  parentCard.appendChild(fuCard);
+  requestAnimationFrame(() => fuCard.classList.add('visible'));
+  fuCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── Results ──────────────────────────────────────────────

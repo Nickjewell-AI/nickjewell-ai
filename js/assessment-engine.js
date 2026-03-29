@@ -410,6 +410,62 @@ const TASTE_QUESTIONS = [
   },
 ];
 
+// ─── Taste Reasoning Follow-Ups ──────────────────────────
+
+const TASTE_REASONING = {
+  T1: {
+    prompt: 'Interesting choice. What was the biggest factor in your thinking?',
+    options: [
+      { key: 'R1', text: 'The numbers made the decision clear', fr: 0, kd: 0, ec: 1 },
+      { key: 'R2', text: 'I was thinking about what we might be missing', fr: 1, kd: 0, ec: 1 },
+      { key: 'R3', text: 'I questioned whether we were measuring the right thing', fr: 2, kd: 0, ec: 0 },
+      { key: 'R4', text: 'I wanted to act decisively rather than wait', fr: 0, kd: 1, ec: 0 },
+    ],
+  },
+  T2: {
+    prompt: 'Interesting choice. What was the biggest factor in your thinking?',
+    options: [
+      { key: 'R1', text: 'I focused on the data quality problem first', fr: 0, kd: 1, ec: 1 },
+      { key: 'R2', text: "I wanted to understand the CEO's real intent", fr: 2, kd: 0, ec: 0 },
+      { key: 'R3', text: 'I thought testing assumptions quickly was more important than debating them', fr: 1, kd: 0, ec: 1 },
+      { key: 'R4', text: 'The technology excited me — I wanted to move on it', fr: -1, kd: 0, ec: 0 },
+    ],
+  },
+  T3: {
+    prompt: 'Interesting choice. What was the biggest factor in your thinking?',
+    options: [
+      { key: 'R1', text: 'I was worried about sunk cost bias influencing the decision', fr: 1, kd: 1, ec: 0 },
+      { key: 'R2', text: "I thought about what we'd lose by stopping vs. continuing", fr: 0, kd: 1, ec: 1 },
+      { key: 'R3', text: 'I wanted an outside perspective to cut through internal politics', fr: 2, kd: 0, ec: 1 },
+      { key: 'R4', text: 'I believe most projects just need more time to show results', fr: -1, kd: -1, ec: 0 },
+    ],
+  },
+  T4: {
+    prompt: 'Interesting choice. What was the biggest factor in your thinking?',
+    options: [
+      { key: 'R1', text: 'I was thinking about what happens when the system hits something unexpected', fr: 0, kd: 0, ec: 2 },
+      { key: 'R2', text: 'I questioned whether we should be solving this problem at all', fr: 2, kd: 1, ec: 0 },
+      { key: 'R3', text: 'The error rate on financial transactions concerned me most', fr: 0, kd: 1, ec: 1 },
+      { key: 'R4', text: 'I thought about how customers would perceive it', fr: 0, kd: 0, ec: 0 },
+    ],
+  },
+};
+
+function recordTasteReasoning(session, scenarioId, reasoningKey) {
+  const scenario = TASTE_REASONING[scenarioId];
+  if (!scenario) return;
+  const option = scenario.options.find(o => o.key === reasoningKey);
+  if (!option) return;
+
+  // Initialize reasoning dimensions if needed
+  if (!session.tasteReasoningDims) {
+    session.tasteReasoningDims = { frameRecognition: 0, killDiscipline: 0, edgeCaseInstinct: 0 };
+  }
+  session.tasteReasoningDims.frameRecognition += option.fr;
+  session.tasteReasoningDims.killDiscipline += option.kd;
+  session.tasteReasoningDims.edgeCaseInstinct += option.ec;
+}
+
 // ─── Routing Logic ────────────────────────────────────────
 
 // Determines which Tier 2 layer modules to show based on Tier 1 answers
@@ -990,6 +1046,12 @@ function computeResults(session) {
 
   const tasteDimensions = scoreTaste(session.tasteResponses);
   applyConsistencyModifier(tasteDimensions, session.tasteResponses);
+  // Add reasoning follow-up adjustments (additive)
+  if (session.tasteReasoningDims) {
+    tasteDimensions.frameRecognition += session.tasteReasoningDims.frameRecognition;
+    tasteDimensions.killDiscipline += session.tasteReasoningDims.killDiscipline;
+    tasteDimensions.edgeCaseInstinct += session.tasteReasoningDims.edgeCaseInstinct;
+  }
   const tasteSignature = getTasteSignature(tasteDimensions);
   const tasteTotal = tasteDimensions.frameRecognition + tasteDimensions.killDiscipline + tasteDimensions.edgeCaseInstinct;
   const { verdict, composite } = calculateVerdict(layerScores, tasteSignature);
@@ -1043,8 +1105,10 @@ window.AssessmentEngine = {
   getNextQuestion,
   recordAnswer,
   recordFollowUp,
+  recordTasteReasoning,
   computeResults,
   getTotalQuestions,
   getAnsweredCount,
+  TASTE_REASONING,
 };
 })();
