@@ -359,10 +359,18 @@ section {
   border-bottom: 1px solid var(--border);
 }
 
+a.layer-item-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
 .layer-item:hover {
   background: var(--bg-card-hover);
   border-color: var(--border-light);
-  padding-left: 2rem;
+  border-left: 2px solid var(--accent);
+  padding-left: calc(2rem - 1px);
+  transition: all 0.2s ease;
 }
 
 .layer-number {
