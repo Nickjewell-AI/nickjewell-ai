@@ -934,3 +934,60 @@ section {
     font-size: 0.65rem;
   }
 }
+
+/* ─── Taste Dimension Bars ────────────────────────────── */
+
+.taste-dimensions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.taste-dim {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.taste-dim-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.taste-dim-track {
+  height: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.taste-dim-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.6s ease;
+}
+
+.taste-dim-value {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .taste-dim {
+    grid-template-columns: 1fr 1fr 2rem;
+  }
+  .taste-dim-label {
+    font-size: 0.65rem;
+  }
+}
