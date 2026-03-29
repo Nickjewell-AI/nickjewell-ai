@@ -553,6 +553,53 @@
       font-style: italic;
     }
 
+    /* Save Results */
+    .save-results-card {
+      background: var(--bg-secondary);
+      border-left: 3px solid var(--accent);
+      padding: 1.5rem 2rem;
+    }
+    .save-results-text {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    .save-results-form {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .save-email-input {
+      flex: 1;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      padding: 0.75rem 1rem;
+    }
+    .save-email-input:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+    .save-email-btn {
+      white-space: nowrap;
+      padding: 0.75rem 1.5rem;
+    }
+    .save-results-privacy {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .save-results-status {
+      font-size: 0.82rem;
+      margin-top: 0.5rem;
+      color: var(--verdict-green);
+    }
+    .save-results-status.error {
+      color: var(--verdict-red);
+    }
+
     .retake-wrapper {
       text-align: center;
       margin-top: 3rem;
@@ -762,6 +809,10 @@
 
       .brief-contact-fields {
         gap: 0.75rem;
+      }
+
+      .save-results-form {
+        flex-direction: column;
       }
     }
 
@@ -1090,6 +1141,19 @@
         </div>
 
         <p id="assessed-note" class="assessed-note hidden"></p>
+
+        <div class="result-section" id="save-results">
+          <div class="result-section-title">Save Your Results</div>
+          <div class="save-results-card">
+            <p class="save-results-text">Get a copy of these results in your inbox — reference them later or share with your team.</p>
+            <div class="save-results-form">
+              <input type="email" id="save-email" class="save-email-input" placeholder="your@company.com" aria-label="Email address">
+              <button id="save-email-btn" class="btn-primary save-email-btn">Send Results</button>
+            </div>
+            <p class="save-results-privacy">No spam. No list. Just your results.</p>
+            <p id="save-results-status" class="save-results-status hidden"></p>
+          </div>
+        </div>
 
         <div class="result-section" id="executive-brief-section">
           <hr class="brief-divider">
