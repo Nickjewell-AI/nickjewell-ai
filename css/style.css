@@ -896,6 +896,31 @@ a.layer-item-link {
   margin-right: auto;
 }
 
+/* --- Layer Transitions --- */
+.layer-transition {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 3rem 2rem;
+  max-width: 640px;
+  margin: 0 auto;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.layer-cta {
+  margin-top: 2rem;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.layer-cta a {
+  color: var(--accent);
+}
+
 /* --- Company Anchor Scroll Offset --- */
 [id="john-deere"],
 [id="spotify"],
