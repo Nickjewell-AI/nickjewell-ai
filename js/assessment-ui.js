@@ -561,24 +561,31 @@ function showResults() {
     noteEl.classList.remove('hidden');
   }
 
-  // Retake button
-  document.getElementById('retake-btn').addEventListener('click', () => {
+  // Retake button — replace to avoid stacking listeners on repeated retakes
+  const retakeBtn = document.getElementById('retake-btn');
+  const freshRetakeBtn = retakeBtn.cloneNode(true);
+  retakeBtn.parentNode.replaceChild(freshRetakeBtn, retakeBtn);
+  freshRetakeBtn.addEventListener('click', () => {
     resultsEl.classList.add('hidden');
     container.innerHTML = '';
     document.getElementById('assessment-intro').classList.remove('hidden');
     session = createSession();
+    lastResults = null;
+    savedRowId = null;
   });
 
   // Auto-save anonymous results
   autoSaveResults();
 
   // Executive Brief CTA
-  initExecutiveBrief(session, results);
+  initExecutiveBrief();
 
-  // Save & Share form — updates row with optional contact info
+  // Save & Share form — replace to avoid stacking listeners on retake
   const saveForm = document.getElementById('save-share-form');
   if (saveForm) {
-    saveForm.addEventListener('submit', handleContactSubmit);
+    const freshForm = saveForm.cloneNode(true);
+    saveForm.parentNode.replaceChild(freshForm, saveForm);
+    freshForm.addEventListener('submit', handleContactSubmit);
   }
 
   // Stagger fade-in of result sections
@@ -728,7 +735,7 @@ function renderBrief(container, text) {
   }
 }
 
-function initExecutiveBrief(session, results) {
+function initExecutiveBrief() {
   const section = document.getElementById('executive-brief-section');
   if (!section) return;
 
@@ -736,15 +743,32 @@ function initExecutiveBrief(session, results) {
   const statusEl = section.querySelector('.brief-status');
   const briefContainer = section.querySelector('.brief-text-container');
 
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    btn.classList.add('brief-loading');
-    btn.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
+  // Reset brief UI state for retakes
+  btn.classList.remove('hidden', 'brief-loading');
+  btn.disabled = false;
+  btn.innerHTML = 'Generate My Executive Brief';
+  statusEl.classList.add('hidden');
+  statusEl.textContent = '';
+  briefContainer.innerHTML = '';
+  briefContainer.classList.add('hidden');
+
+  // Replace button to remove any previous click listeners
+  const freshBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(freshBtn, btn);
+
+  freshBtn.addEventListener('click', async () => {
+    // Read current session and results at click time, not at init time
+    const currentSession = session;
+    const currentResults = lastResults;
+
+    freshBtn.disabled = true;
+    freshBtn.classList.add('brief-loading');
+    freshBtn.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
     briefContainer.classList.remove('hidden');
 
     const systemPrompt = 'You are a senior AI implementation strategist writing a personalized executive brief for the Jewell Assessment. Write in first-person plural ("we") as if you are the assessment delivering findings. Be direct, specific, and constructive \u2014 like a $500/hour consultant who respects the reader\'s time.\n\nUse this exact structure with markdown headers:\n\n## Verdict Context\n2-3 sentences on what the overall verdict means for THIS specific organization given their industry, role, and maturity stage.\n\n## The Real Story\nOne paragraph on what the pattern of their answers reveals \u2014 not just the scores, but what their specific combination of strengths and gaps means in practice. Reference specific answers where they are revealing.\n\n## Taste Read\n2-3 sentences on what their Taste signature and dimensional profile says about how they make decisions. Be specific to their FR/KD/EC scores.\n\n## The Binding Constraint\nOne paragraph on why their weakest layer is the bottleneck, what failure mode it creates, and why fixing other things first is wasted effort.\n\n## What To Do Monday\nThree bullet points with ultra-specific actions for the next 30 days. Not generic advice \u2014 actions that connect to their actual answers, industry, and gaps. Each bullet should be one concrete sentence.\n\nWrite ~500-700 words total. The reader should feel like someone actually read their answers, not like they got a template.';
 
-    const contextStr = buildBriefContext(session, results);
+    const contextStr = buildBriefContext(currentSession, currentResults);
 
     const result = await window.AssessmentAPI.generateExecutiveBrief({
       system: systemPrompt,
@@ -760,21 +784,21 @@ function initExecutiveBrief(session, results) {
     // Handle result
     if (result && typeof result === 'string') {
       // Success — hide button, render markdown-structured brief
-      btn.classList.add('hidden');
+      freshBtn.classList.add('hidden');
       briefContainer.innerHTML = '';
       renderBrief(briefContainer, result);
     } else if (result && result.error === 'ip_limit') {
-      btn.classList.add('hidden');
+      freshBtn.classList.add('hidden');
       statusEl.textContent = "You've reached the maximum briefs for today. Come back tomorrow.";
       statusEl.classList.remove('hidden');
       briefContainer.classList.add('hidden');
     } else if (result && result.error === 'briefs_at_capacity') {
-      btn.classList.add('hidden');
+      freshBtn.classList.add('hidden');
       statusEl.textContent = 'Executive briefs are at capacity today. Try again tomorrow.';
       statusEl.classList.remove('hidden');
       briefContainer.classList.add('hidden');
     } else {
-      btn.classList.add('hidden');
+      freshBtn.classList.add('hidden');
       statusEl.textContent = 'Brief generation is temporarily unavailable. Your deterministic results above are still fully accurate.';
       statusEl.classList.remove('hidden');
       briefContainer.classList.add('hidden');
