@@ -896,6 +896,16 @@ a.layer-item-link {
   margin-right: auto;
 }
 
+/* --- Company Anchor Scroll Offset --- */
+[id="john-deere"],
+[id="spotify"],
+[id="stripe"],
+[id="netflix"],
+[id="airbnb"],
+[id="shopify"] {
+  scroll-margin-top: 5rem;
+}
+
 /* --- Persona Line --- */
 .persona-line {
   font-size: 0.92rem;
