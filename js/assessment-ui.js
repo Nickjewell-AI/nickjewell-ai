@@ -22,6 +22,8 @@ let container;
 let progressBar;
 let progressText;
 let tierLabel;
+let assessmentStartTime;
+let lastResults;
 
 function init() {
   session = createSession();
@@ -34,6 +36,7 @@ function init() {
 }
 
 function startAssessment() {
+  assessmentStartTime = Date.now();
   document.getElementById('assessment-intro').classList.add('hidden');
   document.getElementById('assessment-active').classList.remove('hidden');
   showNextQuestion();
@@ -209,6 +212,7 @@ function createHorizonGroup(label, subtitle, actions) {
 
 function showResults() {
   const results = computeResults(session);
+  lastResults = results;
 
   document.getElementById('assessment-active').classList.add('hidden');
   const resultsEl = document.getElementById('assessment-results');
@@ -367,12 +371,86 @@ function showResults() {
     session = createSession();
   });
 
+  // Save & Share form
+  const saveForm = document.getElementById('save-share-form');
+  if (saveForm) {
+    saveForm.addEventListener('submit', handleSaveResults);
+  }
+
   // Stagger fade-in of result sections
   const sections = resultsEl.querySelectorAll('.result-section');
   sections.forEach((sec, i) => {
     sec.classList.add('fade-in');
     setTimeout(() => sec.classList.add('visible'), 200 + i * 250);
   });
+}
+
+// ─── Save & Share ────────────────────────────────────────
+
+async function handleSaveResults(e) {
+  e.preventDefault();
+  const btn = document.getElementById('save-btn');
+  const status = document.getElementById('save-status');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  status.classList.add('hidden');
+
+  const timeToComplete = assessmentStartTime
+    ? Math.round((Date.now() - assessmentStartTime) / 1000)
+    : null;
+
+  // Build all_responses: pulse + layer + taste + follow-ups
+  const allResponses = {
+    pulse: session.pulseAnswers,
+    layers: session.layerResponses,
+    taste: session.tasteResponses,
+    followUps: session.followUpResponses,
+  };
+
+  const payload = {
+    name: document.getElementById('save-name').value.trim() || null,
+    email: document.getElementById('save-email').value.trim() || null,
+    company: document.getElementById('save-company').value.trim() || null,
+    role_context: session.pulseAnswers.P1 || null,
+    industry: session.pulseAnswers.P3 || null,
+    maturity_stage: session.pulseAnswers.P2 || null,
+    foundation_score: lastResults.layerScores.foundation,
+    architecture_score: lastResults.layerScores.architecture,
+    accountability_score: lastResults.layerScores.accountability,
+    culture_score: lastResults.layerScores.culture,
+    taste_signature: lastResults.tasteSignature.name,
+    taste_frame_recognition: lastResults.tasteDimensions.frameRecognition,
+    taste_kill_discipline: lastResults.tasteDimensions.killDiscipline,
+    taste_edge_case_instinct: lastResults.tasteDimensions.edgeCaseInstinct,
+    verdict: lastResults.verdict,
+    composite_score: lastResults.composite,
+    binding_constraint: lastResults.bindingConstraint,
+    all_responses: allResponses,
+    time_to_complete_seconds: timeToComplete,
+  };
+
+  try {
+    const res = await fetch('/api/submit-assessment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      status.textContent = 'Results saved. We\u2019ll use aggregate data to improve the framework.';
+      status.className = 'save-status success';
+      btn.textContent = 'Saved';
+    } else {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Save failed');
+    }
+  } catch (err) {
+    status.textContent = 'Could not save results. You can still use your assessment above.';
+    status.className = 'save-status error';
+    btn.textContent = 'Save Results';
+    btn.disabled = false;
+  }
+  status.classList.remove('hidden');
 }
 
 // ─── Boot ─────────────────────────────────────────────────
