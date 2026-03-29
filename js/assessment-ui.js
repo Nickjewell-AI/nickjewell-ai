@@ -24,6 +24,7 @@ let progressText;
 let tierLabel;
 let assessmentStartTime;
 let lastResults;
+let savedRowId = null;
 
 function init() {
   session = createSession();
@@ -371,10 +372,13 @@ function showResults() {
     session = createSession();
   });
 
-  // Save & Share form
+  // Auto-save anonymous results
+  autoSaveResults();
+
+  // Save & Share form — updates row with optional contact info
   const saveForm = document.getElementById('save-share-form');
   if (saveForm) {
-    saveForm.addEventListener('submit', handleSaveResults);
+    saveForm.addEventListener('submit', handleContactSubmit);
   }
 
   // Stagger fade-in of result sections
@@ -385,21 +389,13 @@ function showResults() {
   });
 }
 
-// ─── Save & Share ────────────────────────────────────────
+// ─── Auto-Save & Contact Update ─────────────────────────
 
-async function handleSaveResults(e) {
-  e.preventDefault();
-  const btn = document.getElementById('save-btn');
-  const status = document.getElementById('save-status');
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-  status.classList.add('hidden');
-
+async function autoSaveResults() {
   const timeToComplete = assessmentStartTime
     ? Math.round((Date.now() - assessmentStartTime) / 1000)
     : null;
 
-  // Build all_responses: pulse + layer + taste + follow-ups
   const allResponses = {
     pulse: session.pulseAnswers,
     layers: session.layerResponses,
@@ -408,9 +404,6 @@ async function handleSaveResults(e) {
   };
 
   const payload = {
-    name: document.getElementById('save-name').value.trim() || null,
-    email: document.getElementById('save-email').value.trim() || null,
-    company: document.getElementById('save-company').value.trim() || null,
     role_context: session.pulseAnswers.P1 || null,
     industry: session.pulseAnswers.P3 || null,
     maturity_stage: session.pulseAnswers.P2 || null,
@@ -435,19 +428,54 @@ async function handleSaveResults(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-
     if (res.ok) {
-      status.textContent = 'Results saved. We\u2019ll use aggregate data to improve the framework.';
-      status.className = 'save-status success';
-      btn.textContent = 'Saved';
-    } else {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || 'Save failed');
+      const data = await res.json();
+      savedRowId = data.id || null;
     }
   } catch (err) {
-    status.textContent = 'Could not save results. You can still use your assessment above.';
+    // Silent fail — anonymous save is best-effort
+  }
+}
+
+async function handleContactSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('save-btn');
+  const status = document.getElementById('save-status');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  status.classList.add('hidden');
+
+  const name = document.getElementById('save-name').value.trim() || null;
+  const email = document.getElementById('save-email').value.trim() || null;
+  const company = document.getElementById('save-company').value.trim() || null;
+
+  if (!name && !email && !company) {
+    status.textContent = 'Enter at least one field to save.';
     status.className = 'save-status error';
-    btn.textContent = 'Save Results';
+    status.classList.remove('hidden');
+    btn.textContent = 'Submit';
+    btn.disabled = false;
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/submit-assessment', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: savedRowId, name, email, company }),
+    });
+
+    if (res.ok) {
+      status.textContent = 'Thanks! Your info has been saved.';
+      status.className = 'save-status success';
+      btn.textContent = 'Submitted';
+    } else {
+      throw new Error('Update failed');
+    }
+  } catch (err) {
+    status.textContent = 'Could not save. Your assessment results are already recorded.';
+    status.className = 'save-status error';
+    btn.textContent = 'Submit';
     btn.disabled = false;
   }
   status.classList.remove('hidden');
