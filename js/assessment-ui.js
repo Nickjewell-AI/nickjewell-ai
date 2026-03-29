@@ -81,47 +81,43 @@ function showNextQuestion() {
   options.className = 'options-list';
 
   let selectedOption = null;
-
-  // Continue button (hidden until an option is selected)
-  const continueBtn = document.createElement('button');
-  continueBtn.className = 'continue-btn hidden';
-  continueBtn.textContent = 'Continue';
+  let advanceTimer = null;
+  let locked = false;
 
   question.options.forEach((opt) => {
     const btn = document.createElement('button');
     btn.className = 'option-button';
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
+      if (locked) return;
       selectedOption = opt;
       // Update highlight — clear all, then mark this one
       options.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
-      continueBtn.classList.remove('hidden');
+      // Reset the 1-second advance timer on every selection change
+      if (advanceTimer) clearTimeout(advanceTimer);
+      advanceTimer = setTimeout(() => {
+        locked = true;
+        handleAnswer(card, question, selectedOption, options);
+      }, 1000);
     });
     options.appendChild(btn);
-  });
-
-  continueBtn.addEventListener('click', () => {
-    if (!selectedOption) return;
-    handleAnswer(card, question, selectedOption, options, continueBtn);
   });
 
   card.appendChild(qLabel);
   card.appendChild(qText);
   card.appendChild(options);
-  card.appendChild(continueBtn);
   container.appendChild(card);
 
   // Trigger animation
   requestAnimationFrame(() => card.classList.add('visible'));
 
-  // Scroll to top so the new question is visible
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroll to the new question card so it's visible at the top of the viewport
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function handleAnswer(card, question, selectedOption, optionsContainer, continueBtn) {
-  // Hide continue button and disable all option buttons
-  if (continueBtn) continueBtn.classList.add('hidden');
+function handleAnswer(card, question, selectedOption, optionsContainer) {
+  // Disable all option buttons
   const buttons = optionsContainer.querySelectorAll('.option-button');
   buttons.forEach((btn) => {
     btn.disabled = true;
@@ -164,51 +160,48 @@ function showFollowUp(parentCard, parentQuestion) {
   fuOptions.className = 'options-list';
 
   let selectedFuOpt = null;
-
-  const fuContinueBtn = document.createElement('button');
-  fuContinueBtn.className = 'continue-btn hidden';
-  fuContinueBtn.textContent = 'Continue';
+  let fuAdvanceTimer = null;
+  let fuLocked = false;
 
   fu.options.forEach((opt) => {
     const btn = document.createElement('button');
     btn.className = 'option-button follow-up-option';
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
+      if (fuLocked) return;
       selectedFuOpt = opt;
       fuOptions.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
-      fuContinueBtn.classList.remove('hidden');
+      // Reset the 1-second advance timer on every selection change
+      if (fuAdvanceTimer) clearTimeout(fuAdvanceTimer);
+      fuAdvanceTimer = setTimeout(() => {
+        fuLocked = true;
+
+        // Disable all follow-up buttons
+        const fuButtons = fuOptions.querySelectorAll('.option-button');
+        fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
+
+        // Record follow-up
+        recordFollowUp(session, fu.id, selectedFuOpt.key, parentQuestion.id, selectedFuOpt.effect, selectedFuOpt.newScore);
+
+        // Show follow-up insight if applicable
+        const fuInsightKey = 'insightOn' + selectedFuOpt.key;
+        if (fu[fuInsightKey]) {
+          const insight = document.createElement('div');
+          insight.className = 'question-insight fade-in';
+          insight.textContent = fu[fuInsightKey];
+          fuCard.appendChild(insight);
+          requestAnimationFrame(() => insight.classList.add('visible'));
+        }
+
+        setTimeout(() => showNextQuestion(), 400);
+      }, 1000);
     });
     fuOptions.appendChild(btn);
   });
 
-  fuContinueBtn.addEventListener('click', () => {
-    if (!selectedFuOpt) return;
-    fuContinueBtn.classList.add('hidden');
-
-    // Disable all follow-up buttons
-    const fuButtons = fuOptions.querySelectorAll('.option-button');
-    fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
-
-    // Record follow-up
-    recordFollowUp(session, fu.id, selectedFuOpt.key, parentQuestion.id, selectedFuOpt.effect, selectedFuOpt.newScore);
-
-    // Show follow-up insight if applicable
-    const fuInsightKey = 'insightOn' + selectedFuOpt.key;
-    if (fu[fuInsightKey]) {
-      const insight = document.createElement('div');
-      insight.className = 'question-insight fade-in';
-      insight.textContent = fu[fuInsightKey];
-      fuCard.appendChild(insight);
-      requestAnimationFrame(() => insight.classList.add('visible'));
-    }
-
-    setTimeout(() => showNextQuestion(), 400);
-  });
-
   fuCard.appendChild(fuText);
   fuCard.appendChild(fuOptions);
-  fuCard.appendChild(fuContinueBtn);
   parentCard.appendChild(fuCard);
   requestAnimationFrame(() => fuCard.classList.add('visible'));
 }
