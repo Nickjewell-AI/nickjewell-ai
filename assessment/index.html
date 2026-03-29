@@ -3,8 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080808">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <title>The Jewell Assessment — AI Implementation Readiness</title>
   <meta name="description" content="Evaluate your organization's AI implementation readiness across five layers, culminating in a proprietary Taste dimension that measures strategic judgment.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Take the Assessment — Find Your AI Binding Constraint in 10 Minutes">
+  <meta property="og:description" content="An adaptive diagnostic evaluating your organization's AI readiness across five layers, culminating in a proprietary Taste dimension that measures strategic judgment.">
+  <meta property="og:image" content="https://nickjewell.ai/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Take the Assessment — Find Your AI Binding Constraint in 10 Minutes">
+  <meta name="twitter:description" content="An adaptive diagnostic evaluating your organization's AI readiness across five layers, culminating in a proprietary Taste dimension that measures strategic judgment.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -978,13 +987,19 @@
 <body>
 
   <!-- Navigation -->
-  <nav class="nav">
+  <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
-      <a href="../index.html" class="nav-logo">Nick Jewell</a>
+      <a href="/" class="nav-logo">Nick Jewell</a>
+      <button class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <ul class="nav-links">
-        <li><a href="../index.html" class="nav-link">Home</a></li>
-        <li><a href="../framework/index.html" class="nav-link">Framework</a></li>
-        <li><a href="../assessment/index.html" class="nav-link active">Assessment</a></li>
+        <li><a href="/framework/" class="nav-link">Framework</a></li>
+        <li><a href="/assessment/" class="nav-link active">Assessment</a></li>
+        <li><a href="/#writing" class="nav-link">Writing</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
       </ul>
     </div>
   </nav>
@@ -1007,7 +1022,7 @@
         <div class="progress-wrapper">
           <span id="tier-label" class="progress-tier">The Pulse</span>
           <div class="progress-track">
-            <div id="progress-fill" class="progress-fill"></div>
+            <div id="progress-fill" class="progress-fill" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Assessment progress"></div>
           </div>
           <span id="progress-text" class="progress-count">0 of 0</span>
         </div>
@@ -1102,8 +1117,30 @@
     </div>
   </main>
 
+  <footer class="footer">
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href="/">Home</a>
+      <a href="/framework/">Framework</a>
+      <a href="/assessment/">Assessment</a>
+      <a href="/#writing">Writing</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+    <p>&copy; 2026 Nick Jewell &middot; nickjewell.ai</p>
+  </footer>
+
   <script src="../js/api.js"></script>
   <script src="../js/assessment-engine.js"></script>
   <script src="../js/assessment-ui.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const hamburger = document.querySelector('.nav-hamburger');
+      const navLinks = document.querySelector('.nav-links');
+      hamburger.addEventListener('click', () => {
+        const isOpen = hamburger.classList.toggle('open');
+        navLinks.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', isOpen);
+      });
+    });
+  </script>
 </body>
 </html>
