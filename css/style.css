@@ -973,8 +973,9 @@ a.layer-item-link {
 }
 
 .logo-card .logo-img {
-  height: 56px;
-  max-width: 160px;
+  height: 80px;
+  width: 100%;
+  max-width: 200px;
   object-fit: contain;
   margin-bottom: 1rem;
   opacity: 0.65;
