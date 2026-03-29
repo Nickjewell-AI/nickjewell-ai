@@ -760,6 +760,156 @@
         flex-direction: column;
       }
     }
+
+    /* ─── Executive Brief ─── */
+
+    .brief-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0 1.5rem;
+    }
+
+    .brief-subtext {
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+
+    .brief-generate-btn {
+      display: inline-block;
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--bg-primary);
+      background: var(--accent);
+      border: none;
+      padding: 0.85rem 2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    .brief-generate-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .brief-generate-btn:disabled {
+      cursor: default;
+      opacity: 0.85;
+    }
+
+    .brief-generate-btn.brief-loading {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .brief-spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--text-muted);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: brief-spin 0.8s linear infinite;
+      margin-right: 0.6rem;
+      vertical-align: middle;
+    }
+
+    @keyframes brief-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .brief-status {
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-top: 1rem;
+    }
+
+    .brief-text-container {
+      margin-top: 1.5rem;
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--text-primary);
+      letter-spacing: 0.01em;
+    }
+
+    .brief-chunk {
+      animation: brief-fade-in 0.4s ease forwards;
+      opacity: 0;
+    }
+
+    @keyframes brief-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .brief-paragraph {
+      margin-bottom: 1.25rem;
+      opacity: 0;
+      animation: brief-fade-in 0.6s ease forwards;
+    }
+
+    .brief-paragraph:last-child {
+      margin-bottom: 0;
+    }
+
+    .brief-section-header {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 2rem 0 0.75rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      opacity: 0;
+      animation: brief-fade-in 0.6s ease forwards;
+    }
+
+    .brief-section-header:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .brief-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.25rem;
+      opacity: 0;
+      animation: brief-fade-in 0.6s ease forwards;
+    }
+
+    .brief-list-item {
+      position: relative;
+      padding-left: 1.25rem;
+      margin-bottom: 0.75rem;
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--text-primary);
+    }
+
+    .brief-list-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.7em;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .brief-list-item:last-child {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
@@ -861,6 +1011,15 @@
         </div>
 
         <p id="assessed-note" class="assessed-note hidden"></p>
+
+        <div class="result-section" id="executive-brief-section">
+          <hr class="brief-divider">
+          <div class="result-section-title">Executive Brief</div>
+          <p class="brief-subtext">A personalized diagnostic narrative built from your specific answers — your Taste profile, your binding constraint, and what it means for your organization. Generated in real time.</p>
+          <button class="brief-generate-btn">Generate My Executive Brief →</button>
+          <p class="brief-status hidden"></p>
+          <div class="brief-text-container hidden"></div>
+        </div>
 
         <div class="result-section" id="save-share-section">
           <div class="result-section-title">Share Your Details</div>

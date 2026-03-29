@@ -11,6 +11,7 @@ const {
   getTotalQuestions,
   getAnsweredCount,
   TASTE_REASONING,
+  buildBriefContext,
 } = window.AssessmentEngine;
 
 const LAYER_NAMES = {
@@ -614,6 +615,9 @@ function showResults() {
   // Auto-save anonymous results
   autoSaveResults();
 
+  // Executive Brief CTA
+  initExecutiveBrief(session, results);
+
   // Save & Share form — updates row with optional contact info
   const saveForm = document.getElementById('save-share-form');
   if (saveForm) {
@@ -625,6 +629,119 @@ function showResults() {
   sections.forEach((sec, i) => {
     sec.classList.add('fade-in');
     setTimeout(() => sec.classList.add('visible'), 200 + i * 250);
+  });
+}
+
+// ─── Executive Brief ─────────────────────────────────────
+
+function renderBrief(container, text) {
+  const lines = text.split('\n');
+  let i = 0;
+  let animDelay = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Skip blank lines
+    if (!line.trim()) { i++; continue; }
+
+    // Markdown header: ## Title
+    if (/^##\s+/.test(line)) {
+      const h = document.createElement('h3');
+      h.className = 'brief-section-header';
+      h.textContent = line.replace(/^##\s+/, '');
+      h.style.animationDelay = animDelay + 'ms';
+      container.appendChild(h);
+      animDelay += 100;
+      i++;
+      continue;
+    }
+
+    // Bullet list: collect consecutive lines starting with - or *
+    if (/^\s*[-*]\s+/.test(line)) {
+      const ul = document.createElement('ul');
+      ul.className = 'brief-list';
+      ul.style.animationDelay = animDelay + 'ms';
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+        const li = document.createElement('li');
+        li.className = 'brief-list-item';
+        li.textContent = lines[i].replace(/^\s*[-*]\s+/, '');
+        ul.appendChild(li);
+        i++;
+      }
+      container.appendChild(ul);
+      animDelay += 100;
+      continue;
+    }
+
+    // Regular paragraph: collect consecutive non-blank, non-header, non-bullet lines
+    let paraText = '';
+    while (i < lines.length && lines[i].trim() && !/^##\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i])) {
+      paraText += (paraText ? ' ' : '') + lines[i].trim();
+      i++;
+    }
+    if (paraText) {
+      const p = document.createElement('p');
+      p.className = 'brief-paragraph';
+      p.textContent = paraText;
+      p.style.animationDelay = animDelay + 'ms';
+      container.appendChild(p);
+      animDelay += 100;
+    }
+  }
+}
+
+function initExecutiveBrief(session, results) {
+  const section = document.getElementById('executive-brief-section');
+  if (!section) return;
+
+  const btn = section.querySelector('.brief-generate-btn');
+  const statusEl = section.querySelector('.brief-status');
+  const briefContainer = section.querySelector('.brief-text-container');
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.classList.add('brief-loading');
+    btn.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
+    briefContainer.classList.remove('hidden');
+
+    const systemPrompt = 'You are a senior AI implementation strategist writing a personalized executive brief for the Jewell Assessment. Write in first-person plural ("we") as if you are the assessment delivering findings. Be direct, specific, and constructive \u2014 like a $500/hour consultant who respects the reader\'s time.\n\nUse this exact structure with markdown headers:\n\n## Verdict Context\n2-3 sentences on what the overall verdict means for THIS specific organization given their industry, role, and maturity stage.\n\n## The Real Story\nOne paragraph on what the pattern of their answers reveals \u2014 not just the scores, but what their specific combination of strengths and gaps means in practice. Reference specific answers where they are revealing.\n\n## Taste Read\n2-3 sentences on what their Taste signature and dimensional profile says about how they make decisions. Be specific to their FR/KD/EC scores.\n\n## The Binding Constraint\nOne paragraph on why their weakest layer is the bottleneck, what failure mode it creates, and why fixing other things first is wasted effort.\n\n## What To Do Monday\nThree bullet points with ultra-specific actions for the next 30 days. Not generic advice \u2014 actions that connect to their actual answers, industry, and gaps. Each bullet should be one concrete sentence.\n\nWrite ~500-700 words total. The reader should feel like someone actually read their answers, not like they got a template.';
+
+    const contextStr = buildBriefContext(session, results);
+
+    const result = await window.AssessmentAPI.generateExecutiveBrief({
+      system: systemPrompt,
+      messages: [{ role: 'user', content: contextStr }],
+      onChunk: (text) => {
+        const span = document.createElement('span');
+        span.className = 'brief-chunk';
+        span.textContent = text;
+        briefContainer.appendChild(span);
+      },
+    });
+
+    // Handle result
+    if (result && typeof result === 'string') {
+      // Success — hide button, render markdown-structured brief
+      btn.classList.add('hidden');
+      briefContainer.innerHTML = '';
+      renderBrief(briefContainer, result);
+    } else if (result && result.error === 'ip_limit') {
+      btn.classList.add('hidden');
+      statusEl.textContent = "You've reached the maximum briefs for today. Come back tomorrow.";
+      statusEl.classList.remove('hidden');
+      briefContainer.classList.add('hidden');
+    } else if (result && result.error === 'briefs_at_capacity') {
+      btn.classList.add('hidden');
+      statusEl.textContent = 'Executive briefs are at capacity today. Try again tomorrow.';
+      statusEl.classList.remove('hidden');
+      briefContainer.classList.add('hidden');
+    } else {
+      btn.classList.add('hidden');
+      statusEl.textContent = 'Brief generation is temporarily unavailable. Your deterministic results above are still fully accurate.';
+      statusEl.classList.remove('hidden');
+      briefContainer.classList.add('hidden');
+    }
   });
 }
 

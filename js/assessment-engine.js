@@ -1147,6 +1147,127 @@ async function analyzeCU2Response(session, freeText) {
   }
 }
 
+// ─── Brief Context Builder ───────────────────────────────
+
+function buildBriefContext(session, results) {
+  const allQuestions = [
+    ...TIER1_QUESTIONS,
+    ...FOUNDATION_QUESTIONS,
+    ...ARCHITECTURE_QUESTIONS,
+    ...ACCOUNTABILITY_QUESTIONS,
+    ...CULTURE_QUESTIONS,
+    ...TASTE_QUESTIONS,
+  ];
+  const questionMap = {};
+  for (const q of allQuestions) {
+    questionMap[q.id] = q;
+  }
+
+  const lines = [];
+
+  // Tier 1 context
+  const p1 = session.pulseAnswers.P1;
+  const p2 = session.pulseAnswers.P2;
+  const p3 = session.pulseAnswers.P3;
+  const p4 = session.pulseAnswers.P4;
+  const p1Q = questionMap.P1;
+  const p2Q = questionMap.P2;
+  const p3Q = questionMap.P3;
+  const p4Q = questionMap.P4;
+
+  lines.push('=== CONTEXT ===');
+  lines.push('Industry: ' + (p3Q.options.find(o => o.key === p3)?.text || p3));
+  lines.push('Role: ' + (p1Q.options.find(o => o.key === p1)?.text || p1));
+  lines.push('Maturity Stage: ' + (p2Q.options.find(o => o.key === p2)?.text || p2));
+  lines.push('Primary Concern: ' + (p4Q.options.find(o => o.key === p4)?.text || p4));
+  lines.push('');
+
+  // All answered questions with selected options
+  lines.push('=== ANSWERS ===');
+
+  // Tier 1 pulse answers
+  for (const [qId, answer] of Object.entries(session.pulseAnswers)) {
+    const q = questionMap[qId];
+    if (!q) continue;
+    const useLowDepth = session.knowledgeDepth === 'low' && q.lowDepthVariant;
+    const qText = useLowDepth ? q.lowDepthVariant.text : q.text;
+    const opts = useLowDepth ? q.lowDepthVariant.options : q.options;
+    const selected = opts.find(o => o.key === answer);
+    lines.push(qId + ': ' + qText);
+    lines.push('  → ' + (selected?.text || answer));
+  }
+
+  // Tier 2 layer responses
+  for (const [layer, responses] of Object.entries(session.layerResponses)) {
+    for (const r of responses) {
+      const q = questionMap[r.questionId];
+      if (!q) continue;
+      const useLowDepth = session.knowledgeDepth === 'low' && q.lowDepthVariant;
+      const qText = useLowDepth ? q.lowDepthVariant.text : q.text;
+      const opts = useLowDepth ? q.lowDepthVariant.options : q.options;
+      const selected = opts.find(o => o.key === r.answer);
+      lines.push(r.questionId + ' (' + layer + '): ' + qText);
+      lines.push('  → ' + (selected?.text || r.answer));
+    }
+  }
+
+  // Tier 3 taste responses
+  for (const r of session.tasteResponses) {
+    const q = questionMap[r.questionId];
+    if (!q) continue;
+    const selected = q.options.find(o => o.key === r.answer);
+    lines.push(r.questionId + ' (taste): ' + q.text);
+    lines.push('  → ' + (selected?.text || r.answer));
+  }
+
+  // Follow-up responses
+  for (const [fuId, fu] of Object.entries(session.followUpResponses)) {
+    lines.push(fuId + ' (follow-up to ' + fu.parentQuestionId + '): → ' + fu.answer);
+  }
+
+  lines.push('');
+  lines.push('=== SCORES ===');
+  lines.push('Foundation: ' + (results.layerScores.foundation !== null ? results.layerScores.foundation + '/100' : 'Not assessed'));
+  lines.push('Architecture: ' + (results.layerScores.architecture !== null ? results.layerScores.architecture + '/100' : 'Not assessed'));
+  lines.push('Accountability: ' + (results.layerScores.accountability !== null ? results.layerScores.accountability + '/100' : 'Not assessed'));
+  lines.push('Culture: ' + (results.layerScores.culture !== null ? results.layerScores.culture + '/100' : 'Not assessed'));
+  lines.push('Composite: ' + results.composite + '/100');
+  lines.push('Verdict: ' + results.verdict);
+  lines.push('Binding Constraint: ' + (results.bindingConstraint || 'None'));
+
+  lines.push('');
+  lines.push('=== TASTE PROFILE ===');
+  lines.push('Taste Signature: ' + results.tasteSignature.name);
+  lines.push('Frame Recognition: ' + results.tasteDimensions.frameRecognition + '/8');
+  lines.push('Kill Discipline: ' + results.tasteDimensions.killDiscipline + '/6');
+  lines.push('Edge-Case Instinct: ' + results.tasteDimensions.edgeCaseInstinct + '/8');
+  if (results.tasteSignature.consistencyModifier) {
+    lines.push('Consistency Modifier: ' + results.tasteSignature.consistencyModifier);
+  }
+
+  // CU2 free-text analysis
+  if (session.cu2FreeText) {
+    lines.push('');
+    lines.push('=== CU2 FREE-TEXT RESPONSE ===');
+    lines.push('Response: ' + session.cu2FreeText);
+    if (session.cu2Analysis) {
+      lines.push('Analysis — Specificity: ' + session.cu2Analysis.specificity + '/2, Accountability: ' + session.cu2Analysis.accountability + '/2, Learning: ' + session.cu2Analysis.learning + '/2');
+      if (session.cu2Analysis.summary) lines.push('Summary: ' + session.cu2Analysis.summary);
+    }
+  }
+
+  // Taste reasoning selections
+  if (session.tasteReasoningSelections || session.tasteReasoningDims) {
+    lines.push('');
+    lines.push('=== TASTE REASONING ===');
+    if (session.tasteReasoningDims) {
+      lines.push('Reasoning adjustments — FR: ' + session.tasteReasoningDims.frameRecognition + ', KD: ' + session.tasteReasoningDims.killDiscipline + ', EC: ' + session.tasteReasoningDims.edgeCaseInstinct);
+    }
+  }
+
+  return lines.join('\n');
+}
+
 // Expose engine API on window for non-module usage
 window.AssessmentEngine = {
   createSession,
@@ -1159,5 +1280,6 @@ window.AssessmentEngine = {
   getTotalQuestions,
   getAnsweredCount,
   TASTE_REASONING,
+  buildBriefContext,
 };
 })();

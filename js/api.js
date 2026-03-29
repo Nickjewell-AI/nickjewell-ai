@@ -64,10 +64,15 @@
         }),
       });
 
-      // Handle 429 capacity limit
+      // Handle 429 — parse error type (ip_limit vs briefs_at_capacity)
       if (response.status === 429) {
         clearTimeout(timeout);
-        return { error: 'capacity' };
+        try {
+          const errData = await response.json();
+          return { error: errData.error || 'capacity' };
+        } catch {
+          return { error: 'capacity' };
+        }
       }
 
       if (!response.ok) {

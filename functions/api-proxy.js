@@ -33,6 +33,31 @@ function jsonResponse(body, status, origin) {
   });
 }
 
+// Check per-IP daily limit for briefs. Returns null if under limit, or a 429 Response if at limit.
+async function checkIpLimit(db, ip, origin) {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = ip + ':' + today;
+
+  const row = await db.prepare(
+    'SELECT count FROM brief_ip_counter WHERE ip_date = ?'
+  ).bind(key).first();
+
+  const currentCount = row ? row.count : 0;
+
+  if (currentCount >= 3) {
+    return jsonResponse({
+      error: 'ip_limit',
+      message: "You've reached the maximum number of executive briefs for today. Try again tomorrow.",
+    }, 429, origin);
+  }
+
+  await db.prepare(
+    'INSERT OR REPLACE INTO brief_ip_counter (ip_date, count) VALUES (?, ?)'
+  ).bind(key, currentCount + 1).run();
+
+  return null;
+}
+
 // Check and increment the daily brief counter. Returns null if under cap, or a 429 Response if at capacity.
 async function checkBriefCap(db, origin) {
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -85,8 +110,12 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: 'Missing or invalid type field (must be "assessment" or "brief")' }, 400, origin);
   }
 
-  // For briefs, enforce the daily cap
+  // For briefs, enforce per-IP limit first, then the global daily cap
   if (type === 'brief') {
+    const clientIp = context.request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+    const ipResponse = await checkIpLimit(context.env.DB, clientIp, origin);
+    if (ipResponse) return ipResponse;
+
     const capResponse = await checkBriefCap(context.env.DB, origin);
     if (capResponse) return capResponse;
   }
