@@ -80,17 +80,36 @@ function showNextQuestion() {
   const options = document.createElement('div');
   options.className = 'options-list';
 
+  let selectedOption = null;
+
+  // Continue button (hidden until an option is selected)
+  const continueBtn = document.createElement('button');
+  continueBtn.className = 'continue-btn hidden';
+  continueBtn.textContent = 'Continue';
+
   question.options.forEach((opt) => {
     const btn = document.createElement('button');
     btn.className = 'option-button';
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
-    btn.addEventListener('click', () => handleAnswer(card, question, opt, options));
+    btn.addEventListener('click', () => {
+      selectedOption = opt;
+      // Update highlight — clear all, then mark this one
+      options.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      continueBtn.classList.remove('hidden');
+    });
     options.appendChild(btn);
+  });
+
+  continueBtn.addEventListener('click', () => {
+    if (!selectedOption) return;
+    handleAnswer(card, question, selectedOption, options, continueBtn);
   });
 
   card.appendChild(qLabel);
   card.appendChild(qText);
   card.appendChild(options);
+  card.appendChild(continueBtn);
   container.appendChild(card);
 
   // Trigger animation
@@ -100,19 +119,14 @@ function showNextQuestion() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function handleAnswer(card, question, selectedOption, optionsContainer) {
-  // Disable all buttons
+function handleAnswer(card, question, selectedOption, optionsContainer, continueBtn) {
+  // Hide continue button and disable all option buttons
+  if (continueBtn) continueBtn.classList.add('hidden');
   const buttons = optionsContainer.querySelectorAll('.option-button');
   buttons.forEach((btn) => {
     btn.disabled = true;
     btn.classList.add('disabled');
   });
-
-  // Highlight selected
-  const selectedBtn = [...buttons].find(
-    (btn) => btn.querySelector('.option-key').textContent === selectedOption.key
-  );
-  if (selectedBtn) selectedBtn.classList.add('selected');
 
   // Record the answer
   recordAnswer(session, question.id, selectedOption.key, selectedOption.score);
@@ -149,36 +163,52 @@ function showFollowUp(parentCard, parentQuestion) {
   const fuOptions = document.createElement('div');
   fuOptions.className = 'options-list';
 
+  let selectedFuOpt = null;
+
+  const fuContinueBtn = document.createElement('button');
+  fuContinueBtn.className = 'continue-btn hidden';
+  fuContinueBtn.textContent = 'Continue';
+
   fu.options.forEach((opt) => {
     const btn = document.createElement('button');
     btn.className = 'option-button follow-up-option';
     btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
     btn.addEventListener('click', () => {
-      // Disable all follow-up buttons
-      const fuButtons = fuOptions.querySelectorAll('.option-button');
-      fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
+      selectedFuOpt = opt;
+      fuOptions.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
-
-      // Record follow-up
-      recordFollowUp(session, fu.id, opt.key, parentQuestion.id, opt.effect, opt.newScore);
-
-      // Show follow-up insight if applicable
-      const fuInsightKey = 'insightOn' + opt.key;
-      if (fu[fuInsightKey]) {
-        const insight = document.createElement('div');
-        insight.className = 'question-insight fade-in';
-        insight.textContent = fu[fuInsightKey];
-        fuCard.appendChild(insight);
-        requestAnimationFrame(() => insight.classList.add('visible'));
-      }
-
-      setTimeout(() => showNextQuestion(), 400);
+      fuContinueBtn.classList.remove('hidden');
     });
     fuOptions.appendChild(btn);
   });
 
+  fuContinueBtn.addEventListener('click', () => {
+    if (!selectedFuOpt) return;
+    fuContinueBtn.classList.add('hidden');
+
+    // Disable all follow-up buttons
+    const fuButtons = fuOptions.querySelectorAll('.option-button');
+    fuButtons.forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
+
+    // Record follow-up
+    recordFollowUp(session, fu.id, selectedFuOpt.key, parentQuestion.id, selectedFuOpt.effect, selectedFuOpt.newScore);
+
+    // Show follow-up insight if applicable
+    const fuInsightKey = 'insightOn' + selectedFuOpt.key;
+    if (fu[fuInsightKey]) {
+      const insight = document.createElement('div');
+      insight.className = 'question-insight fade-in';
+      insight.textContent = fu[fuInsightKey];
+      fuCard.appendChild(insight);
+      requestAnimationFrame(() => insight.classList.add('visible'));
+    }
+
+    setTimeout(() => showNextQuestion(), 400);
+  });
+
   fuCard.appendChild(fuText);
   fuCard.appendChild(fuOptions);
+  fuCard.appendChild(fuContinueBtn);
   parentCard.appendChild(fuCard);
   requestAnimationFrame(() => fuCard.classList.add('visible'));
 }
