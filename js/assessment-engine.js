@@ -1044,6 +1044,12 @@ function computeResults(session) {
     culture: scoreLayer(session.layerResponses.culture),
   };
 
+  // Apply CU2 free-text bonus (additive to culture score, max 100)
+  if (session.cu2Bonus && layerScores.culture !== null) {
+    // Bonus is 0-2 points; scale to match 0-100 layer score (each point ≈ 8.33 on 0-100)
+    layerScores.culture = Math.min(100, layerScores.culture + session.cu2Bonus * 8);
+  }
+
   const tasteDimensions = scoreTaste(session.tasteResponses);
   applyConsistencyModifier(tasteDimensions, session.tasteResponses);
   // Add reasoning follow-up adjustments (additive)
@@ -1099,6 +1105,48 @@ function getAnsweredCount(session) {
   return count;
 }
 
+// ─── CU2 Open-Ended Response Analysis ───────────────────
+
+async function analyzeCU2Response(session, freeText) {
+  session.cu2FreeText = freeText;
+  session.cu2Bonus = 0;
+
+  try {
+    if (!window.AssessmentAPI || !window.AssessmentAPI.callAssessmentAPI) return 0;
+
+    const systemPrompt = 'You are analyzing a free-text response from an AI readiness assessment. The user was asked to describe an AI initiative that didn\'t work and what they learned. Analyze their response for three signals:\n- Specificity: Do they name a real project with concrete details, or give a vague answer? (0-2 points)\n- Accountability: Do they own the failure or blame external factors? (0-2 points)\n- Learning signal: Do they describe what actually changed as a result? (0-2 points)\nRespond with ONLY a JSON object: {"specificity": 0, "accountability": 0, "learning": 0, "summary": "one sentence assessment"}';
+
+    const result = await window.AssessmentAPI.callAssessmentAPI({
+      system: systemPrompt,
+      messages: [{ role: 'user', content: freeText }],
+      model: 'claude-sonnet-4-20250514',
+    });
+
+    if (!result) return 0;
+
+    const jsonMatch = result.match(/\{[^}]+\}/);
+    if (!jsonMatch) return 0;
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    const clamp = (v) => Math.max(0, Math.min(2, Math.round(v) || 0));
+    const specificity = clamp(parsed.specificity);
+    const accountability = clamp(parsed.accountability);
+    const learning = clamp(parsed.learning);
+    const total = specificity + accountability + learning;
+
+    // Map total (0-6) to culture score bonus
+    let bonus = 0;
+    if (total >= 5) bonus = 2;
+    else if (total >= 3) bonus = 1;
+
+    session.cu2Bonus = bonus;
+    session.cu2Analysis = { specificity, accountability, learning, summary: parsed.summary || '' };
+    return bonus;
+  } catch {
+    return 0;
+  }
+}
+
 // Expose engine API on window for non-module usage
 window.AssessmentEngine = {
   createSession,
@@ -1106,6 +1154,7 @@ window.AssessmentEngine = {
   recordAnswer,
   recordFollowUp,
   recordTasteReasoning,
+  analyzeCU2Response,
   computeResults,
   getTotalQuestions,
   getAnsweredCount,

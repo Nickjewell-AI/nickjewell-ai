@@ -6,6 +6,7 @@ const {
   recordAnswer,
   recordFollowUp,
   recordTasteReasoning,
+  analyzeCU2Response,
   computeResults,
   getTotalQuestions,
   getAnsweredCount,
@@ -148,6 +149,12 @@ function handleAnswer(card, question, selectedOption, optionsContainer) {
     requestAnimationFrame(() => insight.classList.add('visible'));
   }
 
+  // Check for CU2 free-text follow-up (option A = "Yes, we had a failure")
+  if (question.id === 'CU2' && selectedOption.key === 'A') {
+    setTimeout(() => showCU2FreeText(card, question), 400);
+    return;
+  }
+
   // Check for taste reasoning follow-up (Tier 3 taste questions)
   if (question.tier === 3 && TASTE_REASONING[question.id]) {
     setTimeout(() => showTasteReasoning(card, question, selectedOption), 400);
@@ -233,6 +240,67 @@ function showFollowUp(parentCard, parentQuestion) {
   fuCard.appendChild(fuOptions);
   parentCard.appendChild(fuCard);
   requestAnimationFrame(() => fuCard.classList.add('visible'));
+}
+
+function showCU2FreeText(parentCard, parentQuestion) {
+  const fuCard = document.createElement('div');
+  fuCard.className = 'follow-up-card fade-in';
+
+  const fuText = document.createElement('div');
+  fuText.className = 'follow-up-text';
+  fuText.textContent = 'Tell us what happened — it makes your results more precise.';
+
+  const freeTextWrap = document.createElement('div');
+  freeTextWrap.className = 'cu2-freetext-wrap';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'taste-freetext';
+  textarea.placeholder = 'Describe what happened and what you learned (optional — but it makes your results more precise)';
+  textarea.rows = 4;
+
+  const controls = document.createElement('div');
+  controls.className = 'cu2-controls';
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'taste-freetext-submit';
+  submitBtn.textContent = 'Submit';
+
+  const skipLink = document.createElement('a');
+  skipLink.href = '#';
+  skipLink.className = 'cu2-skip-link';
+  skipLink.textContent = 'Skip →';
+
+  skipLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    setTimeout(() => showNextQuestion(), 400);
+  });
+
+  submitBtn.addEventListener('click', async () => {
+    const text = textarea.value.trim();
+    if (!text) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Analyzing…';
+    textarea.disabled = true;
+    skipLink.style.display = 'none';
+    try {
+      await analyzeCU2Response(session, text);
+    } catch { /* silent */ }
+    submitBtn.textContent = 'Thanks!';
+    setTimeout(() => showNextQuestion(), 600);
+  });
+
+  controls.appendChild(submitBtn);
+  controls.appendChild(skipLink);
+
+  freeTextWrap.appendChild(textarea);
+  freeTextWrap.appendChild(controls);
+
+  fuCard.appendChild(fuText);
+  fuCard.appendChild(freeTextWrap);
+
+  parentCard.appendChild(fuCard);
+  requestAnimationFrame(() => fuCard.classList.add('visible'));
+  fuCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
