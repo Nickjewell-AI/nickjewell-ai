@@ -626,6 +626,7 @@ function initSaveResults(results) {
   btn.parentNode.replaceChild(freshBtn, btn);
 
   freshBtn.addEventListener('click', async () => {
+    console.log('Save button clicked');
     const email = input.value.trim();
     if (!email || !email.includes('@')) {
       status.textContent = 'Please enter a valid email address.';

@@ -584,8 +584,26 @@
       outline: none;
     }
     .save-email-btn {
+      display: inline-block;
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--bg-primary);
+      background: var(--accent);
+      border: none;
+      padding: 0.85rem 2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.01em;
       white-space: nowrap;
-      padding: 0.75rem 1.5rem;
+    }
+    .save-email-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+    .save-email-btn:disabled {
+      cursor: default;
+      opacity: 0.85;
     }
     .save-results-privacy {
       font-size: 0.72rem;
@@ -1148,7 +1166,7 @@
             <p class="save-results-text">Get a copy of these results in your inbox — reference them later or share with your team.</p>
             <div class="save-results-form">
               <input type="email" id="save-email" class="save-email-input" placeholder="your@company.com" aria-label="Email address">
-              <button id="save-email-btn" class="btn-primary save-email-btn">Send Results</button>
+              <button id="save-email-btn" class="save-email-btn">Send Results</button>
             </div>
             <p class="save-results-privacy">No spam. No list. Just your results.</p>
             <p id="save-results-status" class="save-results-status hidden"></p>
