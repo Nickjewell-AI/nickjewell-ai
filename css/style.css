@@ -931,6 +931,15 @@ a.layer-item-link {
   scroll-margin-top: 12rem;
 }
 
+/* --- Stat Line --- */
+.stat-line {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 620px;
+  margin-bottom: 2.5rem;
+  line-height: 1.7;
+}
+
 /* --- Persona Line --- */
 .persona-line {
   font-size: 0.92rem;
