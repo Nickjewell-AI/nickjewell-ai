@@ -679,6 +679,61 @@ function showResults() {
     sec.classList.add('fade-in');
     setTimeout(() => sec.classList.add('visible'), 200 + i * 250);
   });
+
+  // Sticky brief CTA — show when verdict scrolled past, hide when brief section visible
+  initStickyBriefCTA();
+}
+
+// ─── Sticky Brief CTA ─────────────────────────────────
+
+let stickyObservers = [];
+
+function initStickyBriefCTA() {
+  const stickyCta = document.getElementById('brief-sticky-cta');
+  if (!stickyCta) return;
+
+  // Clean up any previous observers (retake)
+  stickyObservers.forEach(obs => obs.disconnect());
+  stickyObservers = [];
+  stickyCta.classList.remove('visible');
+
+  const verdictSection = document.querySelector('.results-header');
+  const briefSection = document.getElementById('executive-brief-section');
+  if (!verdictSection || !briefSection) return;
+
+  let pastVerdict = false;
+  let briefVisible = false;
+
+  function updateVisibility() {
+    if (pastVerdict && !briefVisible) {
+      stickyCta.classList.add('visible');
+    } else {
+      stickyCta.classList.remove('visible');
+    }
+  }
+
+  // Show when verdict is scrolled past
+  const verdictObs = new IntersectionObserver((entries) => {
+    pastVerdict = !entries[0].isIntersecting;
+    updateVisibility();
+  }, { threshold: 0 });
+  verdictObs.observe(verdictSection);
+  stickyObservers.push(verdictObs);
+
+  // Hide when brief section enters viewport
+  const briefObs = new IntersectionObserver((entries) => {
+    briefVisible = entries[0].isIntersecting;
+    updateVisibility();
+  }, { threshold: 0.1 });
+  briefObs.observe(briefSection);
+  stickyObservers.push(briefObs);
+}
+
+function hideStickyBriefCTA() {
+  const stickyCta = document.getElementById('brief-sticky-cta');
+  if (stickyCta) stickyCta.classList.remove('visible');
+  stickyObservers.forEach(obs => obs.disconnect());
+  stickyObservers = [];
 }
 
 // ─── Save Results Email ─────────────────────────────────
@@ -917,43 +972,30 @@ function initExecutiveBrief() {
   const section = document.getElementById('executive-brief-section');
   if (!section) return;
 
-  const btn = section.querySelector('.brief-generate-btn');
   const statusEl = section.querySelector('.brief-status');
   const briefContainer = section.querySelector('.brief-text-container');
   const contactForm = document.getElementById('brief-contact-form');
   const briefPreview = document.getElementById('brief-preview');
 
   // Reset brief UI state for retakes
-  btn.classList.remove('hidden', 'brief-loading');
-  btn.disabled = false;
-  btn.innerHTML = 'Generate My Executive Brief \u2192';
   statusEl.classList.add('hidden');
   statusEl.textContent = '';
   briefContainer.innerHTML = '';
   briefContainer.classList.add('hidden');
-  contactForm.classList.add('hidden');
+  contactForm.classList.remove('hidden');
   if (briefPreview) briefPreview.classList.remove('hidden');
-
-  // Replace button to remove any previous click listeners
-  const freshBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(freshBtn, btn);
 
   // Replace form to remove any previous submit listeners
   const freshForm = contactForm.cloneNode(true);
   contactForm.parentNode.replaceChild(freshForm, contactForm);
 
-  freshBtn.addEventListener('click', () => {
-    // If user already provided contact info this session, skip the form
-    if (session._contactName && session._contactEmail) {
-      freshBtn.classList.add('hidden');
-      generateBrief(statusEl, briefContainer, freshBtn);
-      return;
-    }
-    // Show the contact form, hide the button
-    freshBtn.classList.add('hidden');
-    freshForm.classList.remove('hidden');
-    freshForm.querySelector('#brief-name').focus();
-  });
+  // Pre-fill if user already provided contact info this session
+  if (session._contactName) {
+    freshForm.querySelector('#brief-name').value = session._contactName;
+    freshForm.querySelector('#brief-email').value = session._contactEmail;
+    freshForm.querySelector('#brief-company').value = session._contactCompany;
+    freshForm.querySelector('#brief-role').value = session._contactRole;
+  }
 
   freshForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -987,11 +1029,12 @@ function initExecutiveBrief() {
     // Hide form and preview, generate brief
     freshForm.classList.add('hidden');
     if (briefPreview) briefPreview.classList.add('hidden');
-    generateBrief(statusEl, briefContainer, freshBtn);
+    generateBrief(statusEl, briefContainer);
   });
 }
 
-async function generateBrief(statusEl, briefContainer, btn) {
+async function generateBrief(statusEl, briefContainer) {
+  hideStickyBriefCTA();
   const currentSession = session;
   const currentResults = lastResults;
 
@@ -1000,7 +1043,7 @@ async function generateBrief(statusEl, briefContainer, btn) {
   loadingEl.className = 'brief-generate-btn brief-loading';
   loadingEl.style.display = 'inline-block';
   loadingEl.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
-  btn.parentNode.insertBefore(loadingEl, briefContainer);
+  briefContainer.parentNode.insertBefore(loadingEl, briefContainer);
   briefContainer.classList.remove('hidden');
 
   const systemPrompt = 'You are a senior AI implementation strategist writing a personalized executive brief for the Jewell Assessment. Write in first-person plural (\u201cwe\u201d) as if you are the assessment delivering findings. Be direct, specific, and constructive \u2014 like a $500/hour consultant who respects the reader\u2019s time.\n\nUse this exact structure with markdown headers:\n\n## Verdict Context\n2-3 sentences on what the overall verdict means for THIS specific organization given their industry, role, and maturity stage.\n\n## The Real Story\nOne paragraph on what the pattern of their answers reveals \u2014 not just the scores, but what their specific combination of strengths and gaps means in practice. Reference specific answers where they are revealing.\n\n## Taste Read\n2-3 sentences on what their Taste signature and dimensional profile says about how they make decisions. Be specific to their FR/KD/EC scores.\n\n## The Binding Constraint\nOne paragraph on why their weakest layer is the bottleneck, what failure mode it creates, and why fixing other things first is wasted effort.\n\n## What To Do Monday\nThree bullet points with ultra-specific actions for the next 30 days. Not generic advice \u2014 actions that connect to their actual answers, industry, and gaps. Each bullet should be one concrete sentence.\n\nNever reference internal question IDs like CU2, T1, F1, AC1, etc. Reference answers by describing what the user said or the topic, not which question number they answered.\n\nFor What To Do Monday bullets, use this format: a short directive phrase (under 15 words) bolded, then a long dash (\u2014), then the supporting context and rationale. Example: **Rewrite your failure post-mortem** \u2014 take the initiative you described and...\n\nWrite ~500-700 words total. The reader should feel like someone actually read their answers, not like they got a template.';

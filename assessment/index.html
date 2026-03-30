@@ -737,6 +737,53 @@
       color: var(--text-primary);
     }
 
+    /* Sticky Brief CTA */
+    .brief-sticky-cta {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 15, 15, 0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid var(--accent);
+      padding: 0.75rem 2rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      z-index: 100;
+    }
+    .brief-sticky-cta.visible {
+      display: flex;
+    }
+    .brief-sticky-cta span {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    .brief-sticky-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--bg-primary);
+      background: var(--accent);
+      padding: 0.5rem 1.5rem;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .brief-sticky-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    @media print {
+      .brief-sticky-cta {
+        display: none !important;
+      }
+    }
+
     .hidden {
       display: none !important;
     }
@@ -1320,7 +1367,6 @@
           <hr class="brief-divider">
           <div class="result-section-title">Executive Brief</div>
           <p class="brief-subtext">A personalized diagnostic narrative built from your specific answers — your Taste profile, your binding constraint, and what it means for your organization. Generated in real time.</p>
-          <button class="brief-generate-btn">Generate My Executive Brief &rarr;</button>
           <div id="brief-preview" class="brief-preview">
             <p class="brief-preview-teaser">Your executive brief covers five sections tailored to your specific results:</p>
             <ul class="brief-preview-list">
@@ -1331,7 +1377,7 @@
               <li class="brief-preview-item"><span class="brief-preview-lock">&#x1F512;</span><span class="brief-preview-label">What To Do Monday</span></li>
             </ul>
           </div>
-          <form id="brief-contact-form" class="brief-contact-form hidden">
+          <form id="brief-contact-form" class="brief-contact-form">
             <p class="brief-contact-lead">Tell us a bit about yourself to generate your brief.</p>
             <div class="brief-contact-fields">
               <input type="text" id="brief-name" placeholder="Name" autocomplete="name" required />
@@ -1339,7 +1385,7 @@
               <input type="text" id="brief-company" placeholder="Company" autocomplete="organization" required />
               <input type="text" id="brief-role" placeholder="Role" autocomplete="job-title" required />
             </div>
-            <button type="submit" class="brief-contact-submit">Generate Brief &rarr;</button>
+            <button type="submit" class="brief-contact-submit">Generate My Executive Brief &rarr;</button>
           </form>
           <p class="brief-status hidden"></p>
           <div class="brief-text-container hidden"></div>
@@ -1352,6 +1398,12 @@
 
     </div>
   </main>
+
+  <!-- Sticky Brief CTA -->
+  <div class="brief-sticky-cta" id="brief-sticky-cta">
+    <span>Your Executive Brief is ready</span>
+    <a href="#executive-brief-section" class="brief-sticky-btn">Unlock It</a>
+  </div>
 
   <footer class="footer">
     <nav class="footer-nav" aria-label="Footer navigation">
@@ -1366,7 +1418,7 @@
 
   <script src="../js/api.js"></script>
   <script src="../js/assessment-engine.js"></script>
-  <script src="../js/assessment-ui.js?v=4"></script>
+  <script src="../js/assessment-ui.js?v=6"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const hamburger = document.querySelector('.nav-hamburger');
