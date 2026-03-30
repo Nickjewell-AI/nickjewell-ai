@@ -184,13 +184,6 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: 'Forbidden' }, 403, origin);
   }
 
-  const apiKey = context.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return jsonResponse({
-      error: 'Server configuration error: ANTHROPIC_API_KEY is not set',
-    }, 500, origin);
-  }
-
   let body;
   try {
     body = await context.request.json();
@@ -200,8 +193,53 @@ export async function onRequestPost(context) {
 
   const { type, ...requestPayload } = body;
 
-  if (!type || (type !== 'assessment' && type !== 'brief' && type !== 'send-results')) {
+  if (!type || (type !== 'assessment' && type !== 'brief' && type !== 'send-results' && type !== 'submit_feedback')) {
     return jsonResponse({ error: 'Missing or invalid type field' }, 400, origin);
+  }
+
+  // Handle feedback submissions
+  if (type === 'submit_feedback') {
+    const { assessment_id, sentiment, feedback_text, page_context } = body;
+    const db = context.env.DB;
+    if (!db) {
+      return jsonResponse({ error: 'Database not configured' }, 500, origin);
+    }
+
+    const timestamp = new Date().toISOString();
+    const userAgent = context.request.headers.get('User-Agent') || '';
+
+    try {
+      // If feedback_text provided and assessment_id exists, try to update existing row
+      if (feedback_text && assessment_id) {
+        const existing = await db.prepare(
+          'SELECT id FROM assessment_feedback WHERE assessment_id = ? AND sentiment IS NOT NULL'
+        ).bind(assessment_id).first();
+
+        if (existing) {
+          await db.prepare(
+            'UPDATE assessment_feedback SET feedback_text = ?, page_context = ? WHERE id = ?'
+          ).bind(feedback_text, page_context || null, existing.id).run();
+          return jsonResponse({ success: true }, 200, origin);
+        }
+      }
+
+      // Insert new row
+      await db.prepare(
+        'INSERT INTO assessment_feedback (assessment_id, timestamp, sentiment, feedback_text, user_agent, page_context) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(
+        assessment_id || null,
+        timestamp,
+        sentiment || null,
+        feedback_text || null,
+        userAgent,
+        page_context || null
+      ).run();
+
+      return jsonResponse({ success: true }, 200, origin);
+    } catch (err) {
+      console.error('Feedback write error:', err.message);
+      return jsonResponse({ error: 'Failed to save feedback' }, 500, origin);
+    }
   }
 
   // Handle send-results: email results via Resend
@@ -244,6 +282,14 @@ export async function onRequestPost(context) {
       console.error('Resend fetch error:', err.message);
       return jsonResponse({ error: 'Failed to send email' }, 502, origin);
     }
+  }
+
+  // API key required for assessment and brief requests
+  const apiKey = context.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return jsonResponse({
+      error: 'Server configuration error: ANTHROPIC_API_KEY is not set',
+    }, 500, origin);
   }
 
   // Admin bypass for rate limiting

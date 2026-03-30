@@ -30,6 +30,7 @@ let tierLabel;
 let assessmentStartTime;
 let lastResults;
 let savedRowId = null;
+let feedbackState = { sentimentSent: false, briefDone: false };
 
 function init() {
   session = createSession();
@@ -385,7 +386,6 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
 // ─── Email Capture ───────────────────────────────────────
 
 function showEmailCapture() {
-  console.log('Email capture triggered');
   document.getElementById('assessment-active').classList.add('hidden');
   const captureEl = document.getElementById('email-capture');
   captureEl.classList.remove('hidden');
@@ -428,7 +428,6 @@ function showEmailCapture() {
   });
 
   skipBtn.addEventListener('click', () => {
-    console.log('Skip clicked');
     captureEl.classList.add('hidden');
     showResults();
   });
@@ -463,7 +462,6 @@ function createHorizonGroup(label, subtitle, actions) {
 }
 
 function showResults() {
-  console.log('showResults called');
   try {
   const results = computeResults(session);
   lastResults = results;
@@ -660,6 +658,12 @@ function showResults() {
     session = createSession();
     lastResults = null;
     savedRowId = null;
+    feedbackState = { sentimentSent: false, briefDone: false };
+    // Remove feedback elements from previous run
+    const oldSentiment = document.getElementById('feedback-sentiment');
+    if (oldSentiment) oldSentiment.remove();
+    const oldOpen = document.getElementById('feedback-open');
+    if (oldOpen) oldOpen.remove();
   });
 
   // Auto-save anonymous results
@@ -671,6 +675,42 @@ function showResults() {
     if (saveSection) saveSection.classList.add('hidden');
   } else {
     initSaveResults(results);
+  }
+
+  // Feedback: reset state and render sentiment before the brief section
+  feedbackState = { sentimentSent: false, briefDone: false };
+  const briefSectionEl = document.getElementById('executive-brief-section');
+  if (briefSectionEl && briefSectionEl.parentNode) {
+    // Create sentiment element and insert before brief
+    const sentimentDiv = document.createElement('div');
+    sentimentDiv.className = 'feedback-sentiment';
+    sentimentDiv.id = 'feedback-sentiment';
+    sentimentDiv.innerHTML = '<p class="feedback-prompt">Was this useful?</p><div class="feedback-options"></div>';
+    const optionsDiv = sentimentDiv.querySelector('.feedback-options');
+    [
+      { value: 'spot_on', label: 'Spot on' },
+      { value: 'felt_off', label: 'Something felt off' },
+      { value: 'not_for_me', label: 'Not for me' },
+    ].forEach(({ value, label }) => {
+      const btn = document.createElement('button');
+      btn.className = 'feedback-btn';
+      btn.setAttribute('data-sentiment', value);
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        btn.classList.add('selected');
+        submitFeedbackSentiment(value, sentimentDiv);
+      });
+      optionsDiv.appendChild(btn);
+    });
+    briefSectionEl.parentNode.insertBefore(sentimentDiv, briefSectionEl);
+
+    // Create open-text element and insert after brief section
+    renderFeedbackOpen(briefSectionEl.parentNode);
+    // Move it after the brief section
+    const openEl = document.getElementById('feedback-open');
+    if (openEl) {
+      briefSectionEl.parentNode.insertBefore(openEl, briefSectionEl.nextSibling);
+    }
   }
 
   // Executive Brief CTA
@@ -1090,6 +1130,9 @@ async function generateBrief(statusEl, briefContainer) {
     statusEl.classList.remove('hidden');
     briefContainer.classList.add('hidden');
   }
+  // Show open feedback even if brief errored
+  feedbackState.briefDone = true;
+  maybeShowOpenFeedback();
 }
 
 // ─── Auto-Save ─────────────────────────────────────────
@@ -1179,6 +1222,99 @@ async function autoSaveResults() {
       });
     } catch { /* silent */ }
   }
+}
+
+// ─── Feedback ─────────────────────────────────────────────
+
+async function submitFeedbackSentiment(sentiment, wrapper) {
+  feedbackState.sentimentSent = true;
+
+  // Replace buttons with thank-you
+  wrapper.innerHTML = '';
+  const thanks = document.createElement('p');
+  thanks.className = 'feedback-thankyou';
+  thanks.setAttribute('role', 'status');
+  thanks.setAttribute('aria-live', 'polite');
+  thanks.textContent = 'Thank you.';
+  wrapper.appendChild(thanks);
+
+  try {
+    await fetch('/api-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'submit_feedback',
+        assessment_id: savedRowId,
+        sentiment,
+        page_context: 'results',
+      }),
+    });
+  } catch { /* silent */ }
+
+  maybeShowOpenFeedback();
+}
+
+function maybeShowOpenFeedback() {
+  if (feedbackState.sentimentSent && feedbackState.briefDone) {
+    const el = document.getElementById('feedback-open');
+    if (el) el.style.display = 'block';
+  }
+}
+
+function renderFeedbackOpen(parentEl) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'feedback-open';
+  wrapper.id = 'feedback-open';
+  wrapper.style.display = 'none';
+
+  const prompt = document.createElement('p');
+  prompt.textContent = 'What should we know?';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'feedback-textarea';
+  textarea.id = 'feedback-text';
+  textarea.placeholder = 'Anything that felt off, surprised you, or could be better.';
+  textarea.maxLength = 2000;
+  textarea.setAttribute('aria-label', 'Share your feedback on the assessment');
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'feedback-submit';
+  submitBtn.id = 'feedback-submit-btn';
+  submitBtn.textContent = 'Submit';
+
+  submitBtn.addEventListener('click', async () => {
+    const text = textarea.value.trim();
+    if (!text) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    textarea.disabled = true;
+
+    try {
+      await fetch('/api-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'submit_feedback',
+          assessment_id: savedRowId,
+          feedback_text: text,
+          page_context: 'brief',
+        }),
+      });
+    } catch { /* silent */ }
+
+    wrapper.innerHTML = '';
+    const thanks = document.createElement('p');
+    thanks.className = 'feedback-thankyou';
+    thanks.setAttribute('role', 'status');
+    thanks.setAttribute('aria-live', 'polite');
+    thanks.textContent = 'Heard. Thank you.';
+    wrapper.appendChild(thanks);
+  });
+
+  wrapper.appendChild(prompt);
+  wrapper.appendChild(textarea);
+  wrapper.appendChild(submitBtn);
+  parentEl.appendChild(wrapper);
 }
 
 // ─── Boot ─────────────────────────────────────────────────
