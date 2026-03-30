@@ -53,13 +53,13 @@
     }
 
     .about-headshot {
-      text-align: center;
-      margin: 2.5rem 0 2rem;
+      float: right;
+      margin: 0 0 1.5rem 2rem;
     }
 
     .about-headshot img {
-      width: 400px;
-      height: 400px;
+      width: 200px;
+      height: 200px;
       border-radius: 50%;
       object-fit: cover;
     }
@@ -228,9 +228,14 @@
     }
 
     @media (max-width: 768px) {
+      .about-headshot {
+        float: none;
+        text-align: center;
+        margin: 0 0 1.5rem 0;
+      }
       .about-headshot img {
-        width: 280px;
-        height: 280px;
+        width: 160px;
+        height: 160px;
       }
     }
 
@@ -251,6 +256,9 @@
       }
       .beat-header h2, .key-phrase p, .first-person-close p, .about-hero h1 {
         color: #111;
+      }
+      .about-headshot {
+        float: none;
       }
       .about-headshot img {
         width: 150px;
@@ -298,9 +306,6 @@
       <div class="container">
         <span class="eyebrow fade-in">About</span>
         <h1 id="about-heading" class="fade-in">The framework didn&rsquo;t come from research.<br>It came from the room.</h1>
-        <div class="about-headshot fade-in">
-          <img src="../assets/headshot.jpg" alt="Nick Jewell" width="400" height="400" loading="eager">
-        </div>
         <p class="thesis fade-in">Nick Jewell builds at the intersection of AI strategy and implementation. Not the strategy that lives in slide decks. The kind that survives contact with real data, real workflows, and real organizational resistance. The Jewell Assessment exists because most readiness frameworks measure whether an organization <em>can</em> implement AI. They never ask whether the people making those decisions have the judgment to get it right. That gap is where most AI initiatives die.</p>
       </div>
     </section>
@@ -311,6 +316,9 @@
         <div class="beat-header fade-in">
           <span class="beat-number">01</span>
           <h2 id="beat-enterprise">Enterprise</h2>
+        </div>
+        <div class="about-headshot fade-in">
+          <img src="../assets/headshot.jpg" alt="Nick Jewell" width="200" height="200" loading="eager">
         </div>
         <div class="fade-in">
           <p>Nick is a Senior Managing Consultant at IBM Consulting, leading AI and automation delivery within Insurance Solutions. He built an AI-powered operations platform that consolidated multiple legacy mainframe and desktop systems into a single front end, replacing manual workflows with intelligent routing, OCR, document extraction, complexity tagging, and custom AI agents. Not a proof of concept. A production system serving over a thousand users processing hundreds of thousands of complex requests annually.</p>
