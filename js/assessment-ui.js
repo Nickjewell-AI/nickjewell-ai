@@ -385,6 +385,7 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
 // ─── Email Capture ───────────────────────────────────────
 
 function showEmailCapture() {
+  console.log('Email capture triggered');
   document.getElementById('assessment-active').classList.add('hidden');
   const captureEl = document.getElementById('email-capture');
   captureEl.classList.remove('hidden');
