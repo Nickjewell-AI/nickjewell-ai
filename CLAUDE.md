@@ -1,105 +1,90 @@
 # CLAUDE.md — Project Context for Claude Code
 
 ## Who Is Building This
-Nick Jewell. AI and automation implementation consultant pursuing senior AI strategy and solutions roles. Core career goal: demonstrate both business strategy depth AND hands-on AI implementation capability. This project IS the job search — not a parallel effort.
+Nick Jewell. AI implementation consultant pursuing senior AI strategy roles. This project IS the job search — not a parallel effort.
 
 ## What This Project Is
-**The Jewell Assessment** — an interactive, AI-powered diagnostic tool that evaluates organizational AI implementation readiness across five layers, culminating in a proprietary "Taste" dimension that measures strategic judgment through revealed choices rather than self-reporting.
+**The Jewell Assessment** — an interactive, AI-powered diagnostic that evaluates organizational AI readiness across five layers, culminating in a proprietary "Taste" dimension measuring strategic judgment through revealed choices.
 
-**Hosted at:** nickjewell.ai (Cloudflare domain + Cloudflare Pages hosting)
+**Live at:** https://www.nickjewell.ai (www only — bare domain 301 redirects)
 
-**Core thesis:** AI implementation doesn't fail because organizations lack capability. It fails because the people making decisions about AI lack the discernment to deploy it well. Readiness is the table stakes. Taste is the multiplier.
-
-**Tagline:** Other assessments tell you whether your organization *can* implement AI. This one tells you whether it *should* — and whether the people making that decision have the judgment to get it right.
+**Core thesis:** AI implementation fails because the people making decisions lack the judgment to deploy it well. Readiness is table stakes. Taste is the multiplier.
 
 ## The Five-Layer Framework
-1. **FOUNDATION** — Data quality, accessibility, format consistency, governance docs
+1. **FOUNDATION** — Data quality, accessibility, governance
 2. **ARCHITECTURE** — Process design, integration layers, workflow readiness
 3. **ACCOUNTABILITY** — Human ownership, escalation paths, kill switches
 4. **CULTURE** — Talent readiness, change capacity, organizational honesty
-5. **TASTE** — Strategic judgment revealed through scenario-based choices (proprietary)
+5. **TASTE** — Strategic judgment via scenario-based choices (proprietary)
 
 ## Technical Architecture
-- **Frontend:** Static HTML/CSS/JS site with interactive assessment component
-- **Hosting:** Cloudflare Pages (auto-deploy from GitHub)
-- **API Proxy:** Cloudflare Worker at /functions/api-proxy.js (secures Anthropic API key)
-- **API:** Anthropic Messages API (claude-sonnet-4-20250514) for conversational assessment
-- **Database:** Cloudflare D1 — `jewell-assessment-db`. Tables: `brief_counter`, `brief_ip_counter`, assessment results. Node/npx not available locally — D1 operations via Cloudflare dashboard Console.
+- **Frontend:** Vanilla HTML/CSS/JS — no frameworks, no build tools
+- **Hosting:** Cloudflare Pages (free tier, auto-deploy from GitHub main)
+- **API Proxy:** Cloudflare Pages Function at /functions/api-proxy.js
+- **Models:** Sonnet 4 (Taste follow-ups, CU2 analysis) + Opus 4.6 (executive brief)
+- **Database:** Cloudflare D1 (jewell-assessment-db) — auto-captures all assessments
+- **Email:** Resend (transactional send from nick@nickjewell.ai), Cloudflare Email Routing (receive to Gmail)
+- **Rate limiting:** 3 briefs/IP/day via D1, admin bypass via ?admin_key= URL param
+- **Deterministic fallback:** All API features degrade gracefully
 
-## Environment Notes
-- PowerShell only (no `&&` chaining) — run git commands one at a time
-- Site resolves on **www.nickjewell.ai** only (bare domain redirects via Cloudflare Page Rule)
+## Cloudflare Environment Variables
+
+ANTHROPIC_API_KEY — Anthropic API for assessment features
+ADMIN_KEY — Admin bypass for rate limiting
+RESEND_API_KEY — Resend email delivery
+DB — D1 database binding
 
 ## Repo Structure
-```
+
 nickjewell-ai/
-├── index.html                    # Homepage — thesis + framework overview + CTA
-├── framework/
-│   └── index.html                # Deep framework page (5 layers, failure/success patterns)
-├── assessment/
-│   └── index.html                # Interactive assessment tool
-├── css/
-│   └── style.css                 # Shared design system styles
-├── js/
-│   ├── assessment-engine.js      # Scoring logic, branching, state management
-│   ├── assessment-ui.js          # Conversational UI rendering
-│   └── api.js                    # Anthropic API communication via Worker proxy
-├── functions/
-│   └── api-proxy.js              # Cloudflare Worker — proxies Anthropic API calls
-├── assets/
-│   ├── og-image.png              # Social sharing preview image
-│   ├── favicon.svg               # Site favicon
-│   └── logos/                    # Company logos for Taste in Practice section
-├── sitemap.xml                   # XML sitemap
-├── robots.txt                    # Crawl directives
-├── docs/                         # Detailed specs (assessment, architecture, design, content)
-├── CLAUDE.md                     # This file
-├── package.json
-├── wrangler.toml                 # Cloudflare Pages/Workers config
-└── README.md
-```
+  index.html                        (Homepage)
+  framework/index.html              (Framework deep-dive + sticky layer nav)
+  assessment/index.html             (Interactive assessment)
+  writing/index.html                (Writing index)
+  writing/taste-missing-dimension/index.html
+  writing/committees-dont-call/index.html
+  writing/automating-the-mess/index.html
+  writing/data-somewhere/index.html
+  writing/training-without-transformation/index.html
+  css/style.css                     (Shared design system)
+  js/assessment-engine.js           (Scoring, branching, state)
+  js/assessment-ui.js               (UI rendering + ARIA + Save Results)
+  js/api.js                         (Anthropic API via Worker proxy)
+  functions/api-proxy.js            (Cloudflare Pages Function — API proxy + Resend email)
+  assets/og-image.png               (Homepage OG 1200x630)
+  assets/og-framework.png           (Framework OG)
+  assets/og-assessment.png          (Assessment OG)
+  assets/favicon.svg
+  assets/logos/                     (Company logos for Taste in Practice)
+  sitemap.xml
+  robots.txt
+  CLAUDE.md
+  package.json
+  wrangler.toml
+  .gitignore
 
-## Design System Summary
-**Aesthetic:** Dark editorial — authoritative without being cold, distinctive without being flashy.
-- **Fonts:** Fraunces (display/headings), DM Sans (body)
-- **Background:** #080808 primary, #0f0f0f secondary, #141414 cards
-- **Text:** #f0ebe3 primary, #9a9189 secondary (WCAG AA), #7a756f muted (WCAG AA)
-- **Accent:** #c8965a (warm amber)
-- **Border:** #222019
-- **Film grain overlay** for texture
-- **Fade-in animations** on scroll via IntersectionObserver
-
-Full design system: `docs/design-system.md`
-
-## Coding Conventions
-- Vanilla HTML/CSS/JS for static pages (no build tools for MVP)
-- ES6 modules for assessment engine JavaScript
-- CSS custom properties for design tokens
-- Semantic HTML with accessibility considerations
-- Mobile-first responsive design
-- Comments explaining business logic, not obvious code
-- After creating or modifying any HTML or CSS files, verify there are no broken references or path issues.
+## Design System
+- Aesthetic: Dark editorial — #080808 backgrounds, #c8965a amber accent, #f0ebe3 warm white
+- Fonts: Fraunces (headings), DM Sans (body)
+- Text tokens (WCAG AA): primary #f0ebe3, secondary #9a9189, muted #7a756f
+- Film grain overlay: SVG noise at 2.5% opacity
+- Full spec: docs/design-system.md
 
 ## Current State (March 29, 2026)
-- **Milestone 3** API integration complete and deployed
-- Content strategy executed — all homepage sections live (hero, pattern vignettes, framework preview, assessment CTA, taste in practice logos, writing with summaries, contact)
-- Accessibility overhaul complete (skip-to-content, ARIA labels, focus-visible states, hamburger menu, radiogroup roles, progressbar ARIA)
-- SEO assets deployed (sitemap.xml, robots.txt, OG tags, Twitter cards, JSON-LD structured data, favicon)
-- OG image live
-- Framework page transitions and story anchors done (company deep links with scroll-margin)
-- Chrome autofill dark theme fix deployed
+Live: Homepage, Framework (with sticky layer nav), Assessment (full API integration), 5 Writing pages, Save Results email pipeline, nick@nickjewell.ai, all OG images, full accessibility + SEO
 
-## Remaining Work
-- Standalone writing pages (individual articles)
-- Analytics event tracking
-- Email capture on assessment results
-- nick@nickjewell.ai email setup
-- Framework + assessment page OG images (currently only homepage has one)
+Next build: /about/ page — full copy and build reference in project docs (NickJewellAI_About_Page_Reference.docx). Nav on ALL pages needs About link added after build.
 
-## When Helping Nick Build
-- Nick is learning Claude Code and terminal workflows — explain commands and concepts when they're new
-- Prefer simple, readable code over clever abstractions
+## Development Environment
+- OS: Windows 11, PowerShell (no && chaining — one command at a time)
+- Node.js: NOT in system PATH — no npx/wrangler locally
+- D1 ops: Cloudflare dashboard Console tab only
+- Deploy: git add -A then git commit -m "msg" then git push origin main (separate commands)
+
+## Coding Conventions
+- Vanilla HTML/CSS/JS — no build tools
+- CSS custom properties for design tokens
+- Semantic HTML with ARIA roles on assessment
+- Mobile-first responsive
 - Build incrementally — working state after every change
-- Test in browser frequently
-- Commit after each meaningful change with descriptive messages
-- When in doubt, ask Nick rather than assuming
+- Commit after each meaningful change
