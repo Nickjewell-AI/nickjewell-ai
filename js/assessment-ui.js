@@ -61,7 +61,7 @@ function showNextQuestion() {
   const question = getNextQuestion(session);
 
   if (!question) {
-    showResults();
+    showEmailCapture();
     return;
   }
 
@@ -382,6 +382,56 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
   fuCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// ─── Email Capture ───────────────────────────────────────
+
+function showEmailCapture() {
+  document.getElementById('assessment-active').classList.add('hidden');
+  const captureEl = document.getElementById('email-capture');
+  captureEl.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const input = document.getElementById('capture-email');
+  const error = document.getElementById('capture-error');
+  const submitBtn = document.getElementById('capture-submit');
+  const skipBtn = document.getElementById('capture-skip');
+
+  input.focus();
+
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  // Clear validation on input
+  input.addEventListener('input', () => {
+    input.classList.remove('invalid');
+    error.classList.remove('visible');
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const email = input.value.trim();
+    if (!email || !validateEmail(email)) {
+      input.classList.add('invalid');
+      error.classList.add('visible');
+      return;
+    }
+
+    // Store captured email for use after results render
+    session._capturedEmail = email;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Loading your results\u2026';
+    skipBtn.style.display = 'none';
+
+    captureEl.classList.add('hidden');
+    showResults();
+  });
+
+  skipBtn.addEventListener('click', () => {
+    captureEl.classList.add('hidden');
+    showResults();
+  });
+}
+
 // ─── Results ──────────────────────────────────────────────
 
 function createHorizonGroup(label, subtitle, actions) {
@@ -589,6 +639,20 @@ function showResults() {
     resultsEl.classList.add('hidden');
     container.innerHTML = '';
     document.getElementById('assessment-intro').classList.remove('hidden');
+    // Reset email capture screen
+    const captureEl = document.getElementById('email-capture');
+    captureEl.classList.add('hidden');
+    const captureInput = document.getElementById('capture-email');
+    captureInput.value = '';
+    captureInput.classList.remove('invalid');
+    document.getElementById('capture-error').classList.remove('visible');
+    const captureSubmit = document.getElementById('capture-submit');
+    captureSubmit.disabled = false;
+    captureSubmit.textContent = 'Send & Show My Results';
+    document.getElementById('capture-skip').style.display = '';
+    // Reset save-results visibility
+    const saveSection = document.getElementById('save-results');
+    if (saveSection) saveSection.classList.remove('hidden');
     session = createSession();
     lastResults = null;
     savedRowId = null;
@@ -597,8 +661,13 @@ function showResults() {
   // Auto-save anonymous results
   autoSaveResults();
 
-  // Save Results email
-  initSaveResults(results);
+  // Save Results email — hide if email already captured
+  if (session._capturedEmail) {
+    const saveSection = document.getElementById('save-results');
+    if (saveSection) saveSection.classList.add('hidden');
+  } else {
+    initSaveResults(results);
+  }
 
   // Executive Brief CTA
   initExecutiveBrief();
@@ -1012,6 +1081,47 @@ async function autoSaveResults() {
     }
   } catch (err) {
     // Silent fail — anonymous save is best-effort
+  }
+
+  // If email was captured pre-results, update D1 row and send email
+  if (session._capturedEmail) {
+    const email = session._capturedEmail;
+
+    // Update D1 row with email
+    if (savedRowId) {
+      try {
+        await fetch('/api/submit-assessment', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: savedRowId, email }),
+        });
+      } catch { /* silent */ }
+    }
+
+    // Send results email via Resend
+    const plan = lastResults.actionPlan;
+    const actions = [
+      plan.rightNow,
+      ...(plan.thisWeek || []),
+      plan.thisMonth,
+    ].filter(Boolean);
+
+    const resultsData = {
+      verdict: lastResults.verdict,
+      composite: lastResults.composite,
+      bindingConstraint: lastResults.bindingConstraint,
+      layerScores: lastResults.layerScores,
+      tasteSignature: lastResults.tasteSignature ? lastResults.tasteSignature.name : null,
+      actions,
+    };
+
+    try {
+      await fetch('/api-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'send-results', email, results: resultsData }),
+      });
+    } catch { /* silent */ }
   }
 }
 
