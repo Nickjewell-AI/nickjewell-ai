@@ -428,6 +428,7 @@ function showEmailCapture() {
   });
 
   skipBtn.addEventListener('click', () => {
+    console.log('Skip clicked');
     captureEl.classList.add('hidden');
     showResults();
   });
@@ -462,6 +463,8 @@ function createHorizonGroup(label, subtitle, actions) {
 }
 
 function showResults() {
+  console.log('showResults called');
+  try {
   const results = computeResults(session);
   lastResults = results;
 
@@ -682,6 +685,12 @@ function showResults() {
 
   // Sticky brief CTA — show when verdict scrolled past, hide when brief section visible
   initStickyBriefCTA();
+
+  } catch (err) {
+    console.error('showResults error:', err);
+    // Ensure results are visible even if something fails
+    document.getElementById('assessment-results').classList.remove('hidden');
+  }
 }
 
 // ─── Sticky Brief CTA ─────────────────────────────────
