@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080808">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <title>About — Nick Jewell</title>
+  <meta name="description" content="Builder and strategic advisor at the intersection of AI implementation and organizational judgment. The person behind the Jewell Assessment framework.">
+  <meta property="og:type" content="profile">
+  <meta property="og:url" content="https://www.nickjewell.ai/about/">
+  <meta property="og:title" content="About — Nick Jewell">
+  <meta property="og:description" content="Builder and strategic advisor at the intersection of AI implementation and organizational judgment. The person behind the Jewell Assessment framework.">
+  <meta property="og:image" content="https://www.nickjewell.ai/assets/og-image.png">
+  <meta property="og:site_name" content="Nick Jewell">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="About — Nick Jewell">
+  <meta name="twitter:description" content="Builder and strategic advisor at the intersection of AI implementation and organizational judgment.">
+  <meta name="twitter:image" content="https://www.nickjewell.ai/assets/og-image.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "mainEntity": {
+      "@type": "Person",
+      "name": "Nick Jewell",
+      "url": "https://www.nickjewell.ai",
+      "jobTitle": "Senior Managing Consultant, AI & Automation",
+      "worksFor": {
+        "@type": "Organization",
+        "name": "IBM Consulting"
+      },
+      "sameAs": [
+        "https://www.linkedin.com/in/nickjewell-ai"
+      ],
+      "alumniOf": {
+        "@type": "CollegeOrUniversity",
+        "name": "Lehigh University"
+      }
+    }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* About page styles */
+    .about-hero {
+      padding: 8rem 0 4rem;
+      text-align: center;
+    }
+
+    .about-headshot {
+      text-align: center;
+      margin: 2.5rem 0 2rem;
+    }
+
+    .about-headshot img {
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .about-hero .thesis {
+      max-width: 720px;
+      margin: 1.5rem auto 0;
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+      line-height: 1.7;
+    }
+
+    .about-beat {
+      padding: 5rem 0;
+      border-top: 1px solid #222019;
+    }
+
+    .about-beat:nth-child(odd) {
+      background: #0f0f0f;
+    }
+
+    .about-beat:nth-child(even) {
+      background: #080808;
+    }
+
+    .beat-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .beat-number {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+
+    .beat-header h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 400;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .about-beat p {
+      color: var(--text-secondary);
+      font-size: 1.0625rem;
+      line-height: 1.75;
+      margin-bottom: 1.5rem;
+      max-width: 720px;
+    }
+
+    .about-beat p:last-child {
+      margin-bottom: 0;
+    }
+
+    .key-phrase {
+      border-top: 1px solid var(--accent);
+      padding-top: 2rem;
+      margin-top: 3rem;
+      max-width: 720px;
+    }
+
+    .key-phrase p {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .charney-callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(200, 150, 90, 0.06);
+      padding: 1.5rem 1.75rem;
+      margin: 2rem 0;
+      max-width: 720px;
+    }
+
+    .charney-callout p {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+
+    .first-person-close {
+      padding: 4rem 0;
+      border-top: 1px solid #222019;
+      background: #0f0f0f;
+    }
+
+    .first-person-close p {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.0625rem, 2.5vw, 1.25rem);
+      font-weight: 300;
+      color: var(--text-primary);
+      line-height: 1.7;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .about-cta {
+      padding: 5rem 0;
+      text-align: center;
+      border-top: 1px solid #222019;
+    }
+
+    .about-cta h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+      font-weight: 400;
+      color: var(--text-primary);
+      margin: 0 0 0.75rem;
+    }
+
+    .about-cta .subtext {
+      color: var(--text-secondary);
+      font-size: 1.0625rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .about-cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .about-cta-buttons .btn-primary {
+      display: inline-block;
+    }
+
+    .about-cta-buttons .btn-secondary {
+      display: inline-block;
+      padding: 0.875rem 2rem;
+      border: 1px solid #222019;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .about-cta-buttons .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(200, 150, 90, 0.06);
+    }
+
+    .linkedin-link {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    .linkedin-link:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      .about-headshot img {
+        width: 280px;
+        height: 280px;
+      }
+    }
+
+    /* Print styles */
+    @media print {
+      .nav, .film-grain, .about-cta, .skip-to-content {
+        display: none !important;
+      }
+      body {
+        background: #fff;
+        color: #111;
+      }
+      .about-beat, .first-person-close {
+        background: #fff !important;
+      }
+      .about-beat p, .thesis, .charney-callout p {
+        color: #333;
+      }
+      .beat-header h2, .key-phrase p, .first-person-close p, .about-hero h1 {
+        color: #111;
+      }
+      .about-headshot img {
+        width: 150px;
+        height: 150px;
+      }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="#main" class="skip-to-content">Skip to content</a>
+
+  <!-- Navigation -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">Nick Jewell</a>
+      <button class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="/framework/" class="nav-link">Framework</a></li>
+        <li><a href="/assessment/" class="nav-link">Assessment</a></li>
+        <li><a href="/writing/" class="nav-link">Writing</a></li>
+        <li><a href="/about/" class="nav-link active">About</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main">
+
+    <!-- Hero -->
+    <section class="about-hero" aria-labelledby="about-heading">
+      <div class="container">
+        <span class="eyebrow fade-in">About</span>
+        <h1 id="about-heading" class="fade-in">The framework didn&rsquo;t come from research.<br>It came from the room.</h1>
+        <div class="about-headshot fade-in">
+          <img src="../assets/headshot.jpg" alt="Nick Jewell" width="400" height="400" loading="eager">
+        </div>
+        <p class="thesis fade-in">Nick Jewell builds at the intersection of AI strategy and implementation. Not the strategy that lives in slide decks. The kind that survives contact with real data, real workflows, and real organizational resistance. The Jewell Assessment exists because most readiness frameworks measure whether an organization <em>can</em> implement AI. They never ask whether the people making those decisions have the judgment to get it right. That gap is where most AI initiatives die.</p>
+      </div>
+    </section>
+
+    <!-- Beat 1: Enterprise -->
+    <section class="about-beat" aria-labelledby="beat-enterprise">
+      <div class="container">
+        <div class="beat-header fade-in">
+          <span class="beat-number">01</span>
+          <h2 id="beat-enterprise">Enterprise</h2>
+        </div>
+        <div class="fade-in">
+          <p>Nick is a Senior Managing Consultant at IBM Consulting, leading AI and automation delivery within Insurance Solutions. He built an AI-powered operations platform that consolidated multiple legacy mainframe and desktop systems into a single front end, replacing manual workflows with intelligent routing, OCR, document extraction, complexity tagging, and custom AI agents. Not a proof of concept. A production system serving over a thousand users processing hundreds of thousands of complex requests annually.</p>
+
+          <p>He designed and deployed an AI-powered IVR system as a call deflection engine, analyzing tens of thousands of transcripts to model automation potential and building the financial case from vendor selection through go-live. Separately, he built an operational measurement framework that redefined how an entire organization understood its own performance. The insight was deceptively simple: measure from the customer&rsquo;s perspective, not the system&rsquo;s. That reframe drove a fundamental restructuring of how the organization operated.</p>
+
+          <p>He built and enforced a portfolio-wide AI governance system across 125+ enterprise pilots, instrumenting performance tracking, identifying failure patterns, and driving corrective action that brought underperforming engagements to production standard. He authored IBM&rsquo;s standard technical guide for enterprise WatsonX.data deployments.</p>
+        </div>
+        <div class="key-phrase fade-in">
+          <p>The five layers of the Jewell Assessment are not theoretical. Each one is a scar from a specific deployment where that layer was the thing that broke.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beat 2: Taste -->
+    <section class="about-beat" aria-labelledby="beat-taste">
+      <div class="container">
+        <div class="beat-header fade-in">
+          <span class="beat-number">02</span>
+          <h2 id="beat-taste">Taste</h2>
+        </div>
+        <div class="fade-in">
+          <p>Nick is a Founding Advisory Board Member of MKHSTRY AI, a patent-pending creative ideation engine that trains AI to distinguish between great and mediocre concepts. Not a general LLM. A domain-specific vertical model built on decades of Fortune 100 CMO judgment. Jeff recruited Nick before the product had a name. Not for a resume line. For the instinct, the grit, and the willingness to say what isn&rsquo;t working in a room where nobody else will.</p>
+
+          <div class="charney-callout">
+            <p>MKHSTRY was founded by Jeff Charney, former Chief Marketing Officer of Progressive Insurance, named Ad Age CMO of the Year in 2021. Over 100 national and international marketing awards across a three-decade career.</p>
+          </div>
+
+          <p>The relationship is bidirectional. Nick built the governance and scalability infrastructure from zero. The quality evaluation criteria. The feedback loops. The ship-or-kill framework. The structural decisions that determine whether an AI product compounds or collapses. Both produced deliverables presented to leading frontier AI labs, marketing powerhouses, and private equity. The standard was not &ldquo;does it work.&rdquo; The standard was &ldquo;is it worthy of the room it&rsquo;s walking into.&rdquo;</p>
+
+          <p>The collaboration sharpened something Nick already carried. Not &ldquo;is this model accurate?&rdquo; but &ldquo;is this output worthy of being put in front of a Fortune 100 CMO?&rdquo; Not &ldquo;does the feature work?&rdquo; but &ldquo;does the feature belong?&rdquo; Working alongside Jeff from pre-launch through commercial rollout, Nick absorbed the judgment that separates a feature from a moat. The discipline of saying &ldquo;not yet&rdquo; to capabilities that would dilute the core value proposition. The instinct for where AI creates disproportionate leverage versus where it creates noise.</p>
+        </div>
+        <div class="key-phrase fade-in">
+          <p>The Jewell Assessment&rsquo;s Taste layer did not come from a textbook. It came from building alongside someone who has practiced it at the highest level in American business for three decades.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beat 3: Builder -->
+    <section class="about-beat" aria-labelledby="beat-builder">
+      <div class="container">
+        <div class="beat-header fade-in">
+          <span class="beat-number">03</span>
+          <h2 id="beat-builder">Builder</h2>
+        </div>
+        <div class="fade-in">
+          <p>Nick founded Throom, a consumer marketplace built from nothing. Hired the engineer, designed the product, grew it to over a thousand users. It did not scale. What it taught him: building from zero is the only work that actually matters to him. Everything since has been chasing that instinct inside larger systems.</p>
+
+          <p>He serves as Board Member and Development Committee Chair for KEEN Chicago, a nonprofit serving children with special needs. Walked into a board with no governance, no structure. Built four operating committees. Recruited senior leaders across corporate strategy, finance, and technology. Tripled fundraising in one cycle. Nobody reported to him. The Culture layer of the framework is informed by this work.</p>
+
+          <p>Lehigh University. Economics. Entrepreneurship. Division I soccer. He has published on the conditions under which AI deployments should be paused or killed, grounded in the direct experience of governing enterprise pilots where that call had real financial consequences. <a href="https://www.linkedin.com/in/nickjewell-ai" class="linkedin-link" target="_blank" rel="noopener noreferrer">Connect on LinkedIn &rarr;</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beat 4: Outside the Work -->
+    <section class="about-beat" aria-labelledby="beat-outside">
+      <div class="container">
+        <div class="beat-header fade-in">
+          <span class="beat-number">04</span>
+          <h2 id="beat-outside">Outside the Work</h2>
+        </div>
+        <div class="fade-in">
+          <p>Currently training for a marathon. Certified rescue diver and divemaster, working toward an instructor&rsquo;s license. Still tries to play soccer when time allows. The through-line is the same whether it&rsquo;s 125 AI pilots or 30 meters underwater: stay calm, assess the situation, make the call.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- First-Person Closing -->
+    <section class="first-person-close" aria-labelledby="closing-heading">
+      <div class="container">
+        <p id="closing-heading">The Jewell Assessment is not a product I am selling. It is how I think. I built this site, wrote the framework, designed the assessment, and wrote every word on this page because the gap between AI capability and AI judgment keeps costing organizations outcomes they cannot recover. Nobody else was measuring it.</p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="about-cta" aria-labelledby="cta-heading">
+      <div class="container">
+        <h2 id="cta-heading" class="fade-in">Built by a practitioner, not a vendor.</h2>
+        <p class="subtext fade-in">See the framework. Take the assessment. Or start a conversation.</p>
+        <div class="about-cta-buttons fade-in">
+          <a href="/framework/" class="btn-primary">Read the Framework</a>
+          <a href="/assessment/" class="btn-secondary">Take the Assessment</a>
+          <a href="/#contact" class="btn-secondary">Get in Touch</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href="/">Home</a>
+      <a href="/framework/">Framework</a>
+      <a href="/assessment/">Assessment</a>
+      <a href="/writing/">Writing</a>
+      <a href="/about/">About</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+    <p>&copy; 2026 Nick Jewell &middot; nickjewell.ai</p>
+  </footer>
+
+  <!-- Scroll Animations -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Hamburger toggle
+      const hamburger = document.querySelector('.nav-hamburger');
+      const navLinks = document.querySelector('.nav-links');
+      hamburger.addEventListener('click', () => {
+        const isOpen = hamburger.classList.toggle('open');
+        navLinks.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', isOpen);
+      });
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            entry.target.style.transitionDelay = `${i * 0.08}s`;
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    });
+  </script>
+
+</body>
+</html>
