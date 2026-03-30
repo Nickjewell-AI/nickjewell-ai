@@ -677,11 +677,18 @@ function showResults() {
     initSaveResults(results);
   }
 
-  // Feedback: reset state and render sentiment before the brief section
+  // Feedback: reset state and render sentiment after action plan, before save results
   feedbackState = { sentimentSent: false, briefDone: false };
+  // Remove any existing feedback elements to prevent duplicates
+  const existingSentiment = document.getElementById('feedback-sentiment');
+  if (existingSentiment) existingSentiment.remove();
+  const existingOpen = document.getElementById('feedback-open');
+  if (existingOpen) existingOpen.remove();
+
+  const saveSection = document.getElementById('save-results');
   const briefSectionEl = document.getElementById('executive-brief-section');
-  if (briefSectionEl && briefSectionEl.parentNode) {
-    // Create sentiment element and insert before brief
+  if (saveSection && saveSection.parentNode) {
+    // Create sentiment element and insert before save results (after action plan)
     const sentimentDiv = document.createElement('div');
     sentimentDiv.className = 'feedback-sentiment';
     sentimentDiv.id = 'feedback-sentiment';
@@ -702,14 +709,21 @@ function showResults() {
       });
       optionsDiv.appendChild(btn);
     });
-    briefSectionEl.parentNode.insertBefore(sentimentDiv, briefSectionEl);
+    saveSection.parentNode.insertBefore(sentimentDiv, saveSection);
+
+    // Defensive guard: remove any duplicate feedback-sentiment elements
+    const allSentiments = document.querySelectorAll('.feedback-sentiment');
+    if (allSentiments.length > 1) {
+      for (let i = 1; i < allSentiments.length; i++) allSentiments[i].remove();
+    }
 
     // Create open-text element and insert after brief section
-    renderFeedbackOpen(briefSectionEl.parentNode);
-    // Move it after the brief section
-    const openEl = document.getElementById('feedback-open');
-    if (openEl) {
-      briefSectionEl.parentNode.insertBefore(openEl, briefSectionEl.nextSibling);
+    if (briefSectionEl) {
+      renderFeedbackOpen(briefSectionEl.parentNode);
+      const openEl = document.getElementById('feedback-open');
+      if (openEl) {
+        briefSectionEl.parentNode.insertBefore(openEl, briefSectionEl.nextSibling);
+      }
     }
   }
 
