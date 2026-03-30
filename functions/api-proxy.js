@@ -91,6 +91,7 @@ function buildResultsEmail(results) {
   <!-- Footer -->
   <tr><td style="border-top:1px solid #222019;padding-top:24px;">
     <p style="color:#7a756f;font-size:12px;margin:0;">The Jewell Assessment &mdash; nickjewell.ai</p>
+    <p style="font-size: 13px; color: #9a9189; margin-top: 24px; padding-top: 16px; border-top: 1px solid #2a2a2a;">For ongoing analysis of AI implementation patterns, subscribe to <a href="https://nickjewellai.substack.com/subscribe" style="color: #c8965a; text-decoration: none;">The Binding Constraint</a>.</p>
   </td></tr>
 
 </table>
