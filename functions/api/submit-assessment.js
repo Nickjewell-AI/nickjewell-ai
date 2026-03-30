@@ -2,6 +2,8 @@
 // POST: auto-saves anonymous assessment results, returns row id
 // PATCH: updates an existing row with optional contact info
 
+import { dispatchWebhooks } from '../lib/webhooks.js';
+
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': 'https://nickjewell.ai',
@@ -83,6 +85,17 @@ export async function onRequestPost(context) {
 
     const rowId = result.meta?.last_row_id ?? null;
 
+    // Dispatch webhook for assessment completion
+    context.waitUntil(dispatchWebhooks(context.env, 'assessment_complete', {
+      event: 'assessment_complete',
+      assessment_id: rowId,
+      timestamp: new Date().toISOString(),
+      verdict,
+      binding_constraint: bindingConstraint,
+      industry,
+      composite_score: compositeScore,
+    }));
+
     return new Response(JSON.stringify({ success: true, id: rowId }), {
       status: 200,
       headers: CORS_HEADERS,
@@ -133,6 +146,19 @@ export async function onRequestPatch(context) {
           role = COALESCE(?, role)
       WHERE id = ?
     `).bind(name, email, company, role, body.id).run();
+
+    // Dispatch webhook for email capture
+    if (email) {
+      context.waitUntil(dispatchWebhooks(context.env, 'email_capture', {
+        event: 'email_capture',
+        assessment_id: body.id,
+        timestamp: new Date().toISOString(),
+        name,
+        email,
+        company,
+        role,
+      }));
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
