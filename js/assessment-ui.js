@@ -921,6 +921,7 @@ function initExecutiveBrief() {
   const statusEl = section.querySelector('.brief-status');
   const briefContainer = section.querySelector('.brief-text-container');
   const contactForm = document.getElementById('brief-contact-form');
+  const briefPreview = document.getElementById('brief-preview');
 
   // Reset brief UI state for retakes
   btn.classList.remove('hidden', 'brief-loading');
@@ -931,6 +932,7 @@ function initExecutiveBrief() {
   briefContainer.innerHTML = '';
   briefContainer.classList.add('hidden');
   contactForm.classList.add('hidden');
+  if (briefPreview) briefPreview.classList.remove('hidden');
 
   // Replace button to remove any previous click listeners
   const freshBtn = btn.cloneNode(true);
@@ -982,8 +984,9 @@ function initExecutiveBrief() {
       }
     }
 
-    // Hide form, generate brief
+    // Hide form and preview, generate brief
     freshForm.classList.add('hidden');
+    if (briefPreview) briefPreview.classList.add('hidden');
     generateBrief(statusEl, briefContainer, freshBtn);
   });
 }

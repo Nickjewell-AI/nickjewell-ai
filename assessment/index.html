@@ -743,6 +743,44 @@
 
     /* ─── Brief Contact Form ─── */
 
+    .brief-preview {
+      margin-top: 1.5rem;
+      animation: brief-fade-in 0.4s ease forwards;
+    }
+    .brief-preview-teaser {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    .brief-preview-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.5rem;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .brief-preview-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-family: var(--font-body);
+    }
+    .brief-preview-item:last-child {
+      border-bottom: none;
+    }
+    .brief-preview-lock {
+      font-size: 0.75rem;
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+    .brief-preview-label {
+      opacity: 0.6;
+    }
+
     .brief-contact-form {
       margin-top: 1.25rem;
       animation: brief-fade-in 0.4s ease forwards;
@@ -1283,6 +1321,16 @@
           <div class="result-section-title">Executive Brief</div>
           <p class="brief-subtext">A personalized diagnostic narrative built from your specific answers — your Taste profile, your binding constraint, and what it means for your organization. Generated in real time.</p>
           <button class="brief-generate-btn">Generate My Executive Brief &rarr;</button>
+          <div id="brief-preview" class="brief-preview">
+            <p class="brief-preview-teaser">Your executive brief covers five sections tailored to your specific results:</p>
+            <ul class="brief-preview-list">
+              <li class="brief-preview-item"><span class="brief-preview-lock">&#x1F512;</span><span class="brief-preview-label">Verdict Context</span></li>
+              <li class="brief-preview-item"><span class="brief-preview-lock">&#x1F512;</span><span class="brief-preview-label">The Real Story</span></li>
+              <li class="brief-preview-item"><span class="brief-preview-lock">&#x1F512;</span><span class="brief-preview-label">Taste Read</span></li>
+              <li class="brief-preview-item"><span class="brief-preview-lock">&#x1F512;</span><span class="brief-preview-label">The Binding Constraint</span></li>
+              <li class="brief-preview-item"><span class="brief-preview-lock">&#x1F512;</span><span class="brief-preview-label">What To Do Monday</span></li>
+            </ul>
+          </div>
           <form id="brief-contact-form" class="brief-contact-form hidden">
             <p class="brief-contact-lead">Tell us a bit about yourself to generate your brief.</p>
             <div class="brief-contact-fields">
@@ -1318,7 +1366,7 @@
 
   <script src="../js/api.js"></script>
   <script src="../js/assessment-engine.js"></script>
-  <script src="../js/assessment-ui.js?v=2"></script>
+  <script src="../js/assessment-ui.js?v=4"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const hamburger = document.querySelector('.nav-hamburger');
