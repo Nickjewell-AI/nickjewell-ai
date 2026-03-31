@@ -673,11 +673,9 @@ function showResults() {
     row.appendChild(barOuter);
     barsContainer.appendChild(row);
 
-    // Animate fill after render
+    // Store target width — animate when detailed results are revealed
     if (score !== null) {
-      setTimeout(() => {
-        barFill.style.width = score + '%';
-      }, 300);
+      barFill.dataset.targetWidth = score + '%';
     }
   });
 
@@ -774,62 +772,6 @@ function showResults() {
     noteEl.classList.add('hidden');
   }
 
-  // Post-results reflection prompt
-  const briefSectionForReflection = document.getElementById('executive-brief-section');
-  if (briefSectionForReflection && briefSectionForReflection.parentNode) {
-    const reflectionDiv = document.createElement('div');
-    reflectionDiv.className = 'result-section reflection-prompt fade-in';
-    reflectionDiv.id = 'reflection-prompt';
-    reflectionDiv.style.cssText = 'padding: 1.5rem 0; text-align: center;';
-
-    const reflectionQ = document.createElement('p');
-    reflectionQ.textContent = 'Did anything surprise you?';
-    reflectionQ.style.cssText = 'color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;';
-
-    const reflectionWrap = document.createElement('div');
-    reflectionWrap.style.cssText = 'display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap; max-width: 500px; margin: 0 auto;';
-
-    const reflectionInput = document.createElement('input');
-    reflectionInput.type = 'text';
-    reflectionInput.className = 'reflection-input';
-    reflectionInput.placeholder = 'One sentence \u2014 this shapes your executive brief.';
-    reflectionInput.maxLength = 300;
-    reflectionInput.style.cssText = 'flex: 1; min-width: 200px; padding: 0.6rem 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem; border-radius: 4px;';
-
-    const reflectionBtn = document.createElement('button');
-    reflectionBtn.className = 'taste-freetext-submit';
-    reflectionBtn.textContent = 'Submit';
-
-    const reflectionSkip = document.createElement('a');
-    reflectionSkip.href = '#';
-    reflectionSkip.className = 'cu2-skip-link';
-    reflectionSkip.textContent = 'Skip';
-    reflectionSkip.style.cssText = 'font-size: 0.85rem; margin-left: 0.5rem;';
-
-    reflectionBtn.addEventListener('click', () => {
-      const text = reflectionInput.value.trim();
-      if (!text) return;
-      session.reflectionResponse = text;
-      reflectionBtn.textContent = 'Thanks!';
-      reflectionBtn.disabled = true;
-      reflectionInput.disabled = true;
-      reflectionSkip.style.display = 'none';
-    });
-
-    reflectionSkip.addEventListener('click', (e) => {
-      e.preventDefault();
-      reflectionDiv.style.display = 'none';
-    });
-
-    reflectionWrap.appendChild(reflectionInput);
-    reflectionWrap.appendChild(reflectionBtn);
-    reflectionWrap.appendChild(reflectionSkip);
-    reflectionDiv.appendChild(reflectionQ);
-    reflectionDiv.appendChild(reflectionWrap);
-
-    briefSectionForReflection.parentNode.insertBefore(reflectionDiv, briefSectionForReflection);
-  }
-
   // Retake button — replace to avoid stacking listeners on repeated retakes
   const retakeBtn = document.getElementById('retake-btn');
   const freshRetakeBtn = retakeBtn.cloneNode(true);
@@ -849,6 +791,9 @@ function showResults() {
     captureSubmit.disabled = false;
     captureSubmit.textContent = 'Send & Show My Results';
     document.getElementById('capture-skip').style.display = '';
+    // Hide detailed results for next run
+    const detailedResults = document.getElementById('detailed-results');
+    if (detailedResults) detailedResults.classList.add('hidden');
     session = createSession();
     lastResults = null;
     savedRowId = null;
@@ -856,21 +801,34 @@ function showResults() {
     // Remove reflection element from previous run
     const oldReflection = document.getElementById('reflection-prompt');
     if (oldReflection) oldReflection.remove();
+    // Remove brief-sent confirmation from previous run
+    const oldBriefConfirm = document.querySelector('.brief-sent-confirm');
+    if (oldBriefConfirm) oldBriefConfirm.remove();
   });
 
   // Auto-save anonymous results
   autoSaveResults();
 
-
   // Executive Brief CTA
   initExecutiveBrief();
 
-  // Stagger fade-in of result sections
-  const sections = resultsEl.querySelectorAll('.result-section');
-  sections.forEach((sec, i) => {
-    sec.classList.add('fade-in');
-    setTimeout(() => sec.classList.add('visible'), 200 + i * 250);
-  });
+  // Fade in verdict header + brief section only (detailed results are gated)
+  const verdictHeader = resultsEl.querySelector('.results-header');
+  const briefSection = document.getElementById('executive-brief-section');
+  if (verdictHeader) {
+    verdictHeader.classList.add('fade-in');
+    setTimeout(() => verdictHeader.classList.add('visible'), 200);
+  }
+  if (briefSection) {
+    briefSection.classList.add('fade-in');
+    setTimeout(() => briefSection.classList.add('visible'), 450);
+  }
+
+  // Admin bypass — auto-show detailed results without requiring form
+  const isAdmin = new URLSearchParams(window.location.search).has('admin_key');
+  if (isAdmin) {
+    revealDetailedResults();
+  }
 
   // Sticky brief CTA — show when verdict scrolled past, hide when brief section visible
   initStickyBriefCTA();
@@ -932,6 +890,81 @@ function hideStickyBriefCTA() {
   if (stickyCta) stickyCta.classList.remove('visible');
   stickyObservers.forEach(obs => obs.disconnect());
   stickyObservers = [];
+}
+
+// ─── Detailed Results Reveal ─────────────────────────────
+
+function revealDetailedResults() {
+  const detailedResults = document.getElementById('detailed-results');
+  if (!detailedResults || !detailedResults.classList.contains('hidden')) return;
+
+  detailedResults.classList.remove('hidden');
+
+  // Add reflection prompt at the end of detailed results
+  const reflectionDiv = document.createElement('div');
+  reflectionDiv.className = 'result-section reflection-prompt fade-in';
+  reflectionDiv.id = 'reflection-prompt';
+  reflectionDiv.style.cssText = 'padding: 1.5rem 0; text-align: center;';
+
+  const reflectionQ = document.createElement('p');
+  reflectionQ.textContent = 'Did anything surprise you?';
+  reflectionQ.style.cssText = 'color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;';
+
+  const reflectionWrap = document.createElement('div');
+  reflectionWrap.style.cssText = 'display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap; max-width: 500px; margin: 0 auto;';
+
+  const reflectionInput = document.createElement('input');
+  reflectionInput.type = 'text';
+  reflectionInput.className = 'reflection-input';
+  reflectionInput.placeholder = 'One sentence \u2014 what stood out?';
+  reflectionInput.maxLength = 300;
+  reflectionInput.style.cssText = 'flex: 1; min-width: 200px; padding: 0.6rem 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem; border-radius: 4px;';
+
+  const reflectionBtn = document.createElement('button');
+  reflectionBtn.className = 'taste-freetext-submit';
+  reflectionBtn.textContent = 'Submit';
+
+  const reflectionSkip = document.createElement('a');
+  reflectionSkip.href = '#';
+  reflectionSkip.className = 'cu2-skip-link';
+  reflectionSkip.textContent = 'Skip';
+  reflectionSkip.style.cssText = 'font-size: 0.85rem; margin-left: 0.5rem;';
+
+  reflectionBtn.addEventListener('click', () => {
+    const text = reflectionInput.value.trim();
+    if (!text) return;
+    session.reflectionResponse = text;
+    reflectionBtn.textContent = 'Thanks!';
+    reflectionBtn.disabled = true;
+    reflectionInput.disabled = true;
+    reflectionSkip.style.display = 'none';
+  });
+
+  reflectionSkip.addEventListener('click', (e) => {
+    e.preventDefault();
+    reflectionDiv.style.display = 'none';
+  });
+
+  reflectionWrap.appendChild(reflectionInput);
+  reflectionWrap.appendChild(reflectionBtn);
+  reflectionWrap.appendChild(reflectionSkip);
+  reflectionDiv.appendChild(reflectionQ);
+  reflectionDiv.appendChild(reflectionWrap);
+  detailedResults.appendChild(reflectionDiv);
+
+  // Stagger fade-in of each section inside detailed-results
+  const sections = detailedResults.querySelectorAll('.result-section');
+  sections.forEach((sec, i) => {
+    sec.classList.add('fade-in');
+    setTimeout(() => sec.classList.add('visible'), 200 + i * 250);
+  });
+
+  // Animate layer bar fills now that they're visible
+  setTimeout(() => {
+    detailedResults.querySelectorAll('.layer-bar-fill[data-target-width]').forEach((bar) => {
+      bar.style.width = bar.dataset.targetWidth;
+    });
+  }, 400);
 }
 
 // ─── Executive Brief ─────────────────────────────────────
@@ -1078,7 +1111,6 @@ function initExecutiveBrief() {
   const statusEl = section.querySelector('.brief-status');
   const briefContainer = section.querySelector('.brief-text-container');
   const contactForm = document.getElementById('brief-contact-form');
-  const briefPreview = document.getElementById('brief-preview');
 
   // Reset brief UI state for retakes
   statusEl.classList.add('hidden');
@@ -1086,7 +1118,6 @@ function initExecutiveBrief() {
   briefContainer.innerHTML = '';
   briefContainer.classList.add('hidden');
   contactForm.classList.remove('hidden');
-  if (briefPreview) briefPreview.classList.remove('hidden');
 
   // Replace form to remove any previous submit listeners
   const freshForm = contactForm.cloneNode(true);
@@ -1138,9 +1169,8 @@ function initExecutiveBrief() {
       }
     }
 
-    // Hide form and preview, generate brief
+    // Hide form, generate brief
     freshForm.classList.add('hidden');
-    if (briefPreview) briefPreview.classList.add('hidden');
     generateBrief(statusEl, briefContainer).catch(() => {
       // On failure, restore the form so user can retry
       freshForm.classList.remove('hidden');
@@ -1226,6 +1256,9 @@ async function generateBrief(statusEl, briefContainer) {
     briefContainer.innerHTML = '';
     renderBrief(briefContainer, result);
 
+    // Reveal detailed results below the brief
+    revealDetailedResults();
+
     // Fire-and-forget: email the brief to the user
     if (session._contactEmail && lastResults) {
       fetch('/api-proxy', {
@@ -1246,6 +1279,7 @@ async function generateBrief(statusEl, briefContainer) {
       }).then(() => {
         const confirmEl = document.createElement('p');
         confirmEl.textContent = `Brief sent to ${session._contactEmail}`;
+        confirmEl.className = 'brief-sent-confirm';
         confirmEl.style.cssText = 'color:#c8965a;font-size:14px;margin-top:16px;opacity:0;transition:opacity 0.6s ease;';
         briefContainer.parentNode.insertBefore(confirmEl, briefContainer.nextSibling);
         setTimeout(() => { confirmEl.style.opacity = '1'; }, 1000);
