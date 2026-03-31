@@ -1251,21 +1251,56 @@ async function generateBrief(statusEl, briefContainer) {
 
   const contextStr = buildBriefContext(currentSession, currentResults);
 
+  let streamBuffer = '';
+  let currentStreamEl = null; // current text node or span for appending inline text
+
+  function flushLine(line) {
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const tag = level === 1 ? 'h2' : level === 2 ? 'h3' : 'h4';
+      const h = document.createElement(tag);
+      h.className = 'brief-section-header';
+      h.textContent = headingMatch[2];
+      briefContainer.appendChild(h);
+      currentStreamEl = null;
+    } else if (line.trim()) {
+      if (!currentStreamEl || currentStreamEl.tagName !== 'SPAN') {
+        currentStreamEl = document.createElement('span');
+        currentStreamEl.className = 'brief-chunk';
+        briefContainer.appendChild(currentStreamEl);
+      }
+      currentStreamEl.textContent += line;
+    } else {
+      // Blank line — start a new text block
+      currentStreamEl = null;
+    }
+  }
+
   const result = await window.AssessmentAPI.generateExecutiveBrief({
     system: systemPrompt,
     messages: [{ role: 'user', content: contextStr }],
     onChunk: (text) => {
-      const span = document.createElement('span');
-      span.className = 'brief-chunk';
-      span.textContent = text;
-      briefContainer.appendChild(span);
+      streamBuffer += text;
+      // Process all complete lines (ending with newline)
+      const parts = streamBuffer.split('\n');
+      // Last element is the incomplete line — keep it in the buffer
+      streamBuffer = parts.pop();
+      for (const line of parts) {
+        flushLine(line);
+      }
     },
   });
+
+  // Flush any remaining buffered text
+  if (streamBuffer.trim()) {
+    flushLine(streamBuffer);
+  }
 
   // Remove loading indicator
   loadingEl.remove();
 
-  // Handle result
+  // Handle result — re-render with full formatting (lists, bold, etc.)
   if (result && typeof result === 'string') {
     briefContainer.innerHTML = '';
     renderBrief(briefContainer, result);
