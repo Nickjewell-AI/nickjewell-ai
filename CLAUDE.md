@@ -88,3 +88,4 @@ Next build: /about/ page — full copy and build reference in project docs (Nick
 - Mobile-first responsive
 - Build incrementally — working state after every change
 - Commit after each meaningful change
+- Never add Co-authored-by trailers to git commits
