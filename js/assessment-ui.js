@@ -1225,6 +1225,34 @@ async function generateBrief(statusEl, briefContainer) {
   if (result && typeof result === 'string') {
     briefContainer.innerHTML = '';
     renderBrief(briefContainer, result);
+
+    // Fire-and-forget: email the brief to the user
+    if (session._contactEmail && lastResults) {
+      fetch('/api-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'send-brief-email',
+          name: session._contactName || '',
+          email: session._contactEmail,
+          briefHtml: briefContainer.innerHTML,
+          verdict: lastResults.verdict,
+          bindingConstraint: lastResults.bindingConstraint,
+          compositeScore: lastResults.composite,
+          layerScores: lastResults.layerScores,
+          tasteSignature: lastResults.tasteSignature ? lastResults.tasteSignature.name : null,
+          assessmentId: savedRowId || null,
+        }),
+      }).then(() => {
+        const confirmEl = document.createElement('p');
+        confirmEl.textContent = `Brief sent to ${session._contactEmail}`;
+        confirmEl.style.cssText = 'color:#c8965a;font-size:14px;margin-top:16px;opacity:0;transition:opacity 0.6s ease;';
+        briefContainer.parentNode.insertBefore(confirmEl, briefContainer.nextSibling);
+        setTimeout(() => { confirmEl.style.opacity = '1'; }, 1000);
+      }).catch((err) => {
+        console.error('Brief email send failed:', err);
+      });
+    }
   } else if (result && result.error === 'ip_limit') {
     statusEl.textContent = "You\u2019ve reached the maximum briefs for today. Come back tomorrow.";
     statusEl.classList.remove('hidden');

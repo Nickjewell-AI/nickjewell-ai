@@ -25,3 +25,16 @@ CREATE TABLE IF NOT EXISTS assessment_results (
   all_responses TEXT NOT NULL,
   time_to_complete_seconds INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS email_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+  assessment_id INTEGER,
+  recipient_email TEXT NOT NULL,
+  recipient_name TEXT,
+  email_type TEXT NOT NULL,
+  subject TEXT,
+  resend_id TEXT,
+  status TEXT DEFAULT 'sent',
+  metadata TEXT
+);

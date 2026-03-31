@@ -1,6 +1,8 @@
 // Cloudflare Pages Function — /api-proxy
 // Proxies requests to the Anthropic Messages API
-// Handles two call types: "assessment" (Taste follow-ups, CU2 analysis) and "brief" (executive briefs)
+// Handles call types: assessment, brief, send-results, send-brief-email, submit_feedback
+
+import { buildBriefEmail } from './lib/email-templates.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const DAILY_BRIEF_CAP = 100;
@@ -195,7 +197,7 @@ export async function onRequestPost(context) {
 
   const { type, ...requestPayload } = body;
 
-  if (!type || (type !== 'assessment' && type !== 'brief' && type !== 'send-results' && type !== 'submit_feedback')) {
+  if (!type || (type !== 'assessment' && type !== 'brief' && type !== 'send-results' && type !== 'send-brief-email' && type !== 'submit_feedback')) {
     return jsonResponse({ error: 'Missing or invalid type field' }, 400, origin);
   }
 
@@ -283,6 +285,114 @@ export async function onRequestPost(context) {
     } catch (err) {
       console.error('Resend fetch error:', err.message);
       return jsonResponse({ error: 'Failed to send email' }, 502, origin);
+    }
+  }
+
+  // Handle send-brief-email: email the executive brief via Resend
+  if (type === 'send-brief-email') {
+    const { name, email, briefHtml, verdict, bindingConstraint, compositeScore, layerScores, tasteSignature, assessmentId } = body;
+    if (!email || !briefHtml) {
+      return jsonResponse({ error: 'Missing email or briefHtml' }, 400, origin);
+    }
+
+    const resendKey = context.env.RESEND_API_KEY;
+    if (!resendKey) {
+      return jsonResponse({ error: 'Email service not configured' }, 500, origin);
+    }
+
+    // Compute benchmark percentile from D1 (best-effort)
+    let benchmarkPercentile = null;
+    if (context.env.DB && layerScores) {
+      try {
+        // Find strongest layer
+        let strongestKey = null;
+        let maxScore = -1;
+        for (const [key, score] of Object.entries(layerScores)) {
+          if (score != null && score > maxScore) {
+            maxScore = score;
+            strongestKey = key;
+          }
+        }
+        if (strongestKey && maxScore >= 0) {
+          const col = strongestKey + '_score';
+          const belowRow = await context.env.DB.prepare(
+            `SELECT COUNT(*) as below FROM assessment_results WHERE ${col} < ?`
+          ).bind(maxScore).first();
+          const totalRow = await context.env.DB.prepare(
+            'SELECT COUNT(*) as total FROM assessment_results'
+          ).first();
+          if (belowRow && totalRow && totalRow.total > 0) {
+            benchmarkPercentile = Math.round((belowRow.below / totalRow.total) * 100);
+          }
+        }
+      } catch (err) {
+        console.error('Benchmark percentile query failed:', err.message);
+      }
+    }
+
+    const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
+    const subject = `Your AI Readiness: ${verdict || 'Assessment'} — ${constraintName} is your binding constraint`;
+
+    const htmlBody = buildBriefEmail({
+      firstName: name ? name.split(' ')[0] : '',
+      email,
+      briefHtml,
+      verdict,
+      bindingConstraint,
+      compositeScore,
+      layerScores: layerScores || {},
+      tasteSignature,
+      benchmarkPercentile,
+    });
+
+    try {
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Jewell Assessment <nick@nickjewell.ai>',
+          reply_to: 'nick@nickjewell.ai',
+          to: [email],
+          subject,
+          html: htmlBody,
+          tags: [{ name: 'type', value: 'executive-brief' }],
+        }),
+      });
+
+      if (!resendRes.ok) {
+        const errText = await resendRes.text();
+        console.error('Resend API error (brief):', errText);
+        return jsonResponse({ success: false }, 502, origin);
+      }
+
+      // Log to email_log (best-effort)
+      if (context.env.DB) {
+        try {
+          const resendData = await resendRes.json();
+          const resendId = resendData.id || null;
+          await context.env.DB.prepare(
+            'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(
+            assessmentId || null,
+            email,
+            name || null,
+            'brief',
+            subject,
+            resendId,
+            JSON.stringify({ verdict, bindingConstraint, compositeScore, tasteSignature })
+          ).run();
+        } catch (err) {
+          console.error('Email log write failed:', err.message);
+        }
+      }
+
+      return jsonResponse({ success: true }, 200, origin);
+    } catch (err) {
+      console.error('Resend fetch error (brief):', err.message);
+      return jsonResponse({ success: false }, 502, origin);
     }
   }
 
