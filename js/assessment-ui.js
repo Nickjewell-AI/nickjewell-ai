@@ -849,9 +849,6 @@ function showResults() {
     captureSubmit.disabled = false;
     captureSubmit.textContent = 'Send & Show My Results';
     document.getElementById('capture-skip').style.display = '';
-    // Reset save-results visibility
-    const saveSection = document.getElementById('save-results');
-    if (saveSection) saveSection.classList.remove('hidden');
     session = createSession();
     lastResults = null;
     savedRowId = null;
@@ -864,13 +861,6 @@ function showResults() {
   // Auto-save anonymous results
   autoSaveResults();
 
-  // Save Results email — hide if email already captured
-  if (session._capturedEmail) {
-    const saveSection = document.getElementById('save-results');
-    if (saveSection) saveSection.classList.add('hidden');
-  } else {
-    initSaveResults(results);
-  }
 
   // Executive Brief CTA
   initExecutiveBrief();
@@ -942,75 +932,6 @@ function hideStickyBriefCTA() {
   if (stickyCta) stickyCta.classList.remove('visible');
   stickyObservers.forEach(obs => obs.disconnect());
   stickyObservers = [];
-}
-
-// ─── Save Results Email ─────────────────────────────────
-
-function initSaveResults(results) {
-  const btn = document.getElementById('save-email-btn');
-  const input = document.getElementById('save-email');
-  const status = document.getElementById('save-results-status');
-  const form = document.querySelector('.save-results-form');
-
-  if (!btn) return;
-
-  // Replace to avoid stacking listeners on retake
-  const freshBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(freshBtn, btn);
-
-  freshBtn.addEventListener('click', async () => {
-    console.log('Save button clicked');
-    const email = input.value.trim();
-    if (!email || !email.includes('@')) {
-      status.textContent = 'Please enter a valid email address.';
-      status.className = 'save-results-status error';
-      status.classList.remove('hidden');
-      return;
-    }
-
-    freshBtn.disabled = true;
-    freshBtn.textContent = 'Sending...';
-    status.classList.add('hidden');
-
-    const plan = results.actionPlan;
-    const actions = [
-      plan.rightNow,
-      ...(plan.thisWeek || []),
-      plan.thisMonth,
-    ].filter(Boolean);
-
-    const resultsData = {
-      verdict: results.verdict,
-      composite: results.composite,
-      bindingConstraint: results.bindingConstraint,
-      layerScores: results.layerScores,
-      tasteSignature: results.tasteSignature ? results.tasteSignature.name : null,
-      actions,
-    };
-
-    try {
-      const res = await fetch('/api-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'send-results', email, results: resultsData }),
-      });
-
-      if (res.ok) {
-        status.textContent = 'Results sent! Check your inbox.';
-        status.className = 'save-results-status';
-        status.classList.remove('hidden');
-        form.classList.add('hidden');
-      } else {
-        throw new Error('Send failed');
-      }
-    } catch {
-      status.textContent = 'Something went wrong. Try again.';
-      status.className = 'save-results-status error';
-      status.classList.remove('hidden');
-      freshBtn.disabled = false;
-      freshBtn.textContent = 'Send Results';
-    }
-  });
 }
 
 // ─── Executive Brief ─────────────────────────────────────
