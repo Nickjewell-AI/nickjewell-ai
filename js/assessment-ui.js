@@ -886,26 +886,15 @@ function renderMondayActions(container, bulletLines, animDelay) {
 
   bulletLines.forEach((raw, idx) => {
     const text = raw.replace(/^\s*[-*]\s+/, '');
-    // Parse **bold** — explanation, or **bold**: explanation, or just plain text
+    // Only split on explicit **bold** — description pattern from the model prompt
     const boldMatch = text.match(/^\*\*(.+?)\*\*\s*[—–:\-]\s*(.+)$/);
-    let actionTitle, actionDesc;
+    let actionTitle = null;
+    let actionDesc = null;
     if (boldMatch) {
       actionTitle = boldMatch[1];
       actionDesc = boldMatch[2];
-    } else if (text.includes('—') || text.includes('–')) {
-      actionTitle = text.split(/\s*[—–]\s*/)[0];
-      actionDesc = text.split(/\s*[—–]\s*/).slice(1).join(' — ');
-    } else {
-      // No dash found — use first sentence as title, rest as description
-      const periodIdx = text.indexOf('.');
-      if (periodIdx > 0 && periodIdx < text.length - 1) {
-        actionTitle = text.slice(0, periodIdx + 1);
-        actionDesc = text.slice(periodIdx + 1).trim();
-      } else {
-        actionTitle = text;
-        actionDesc = '';
-      }
     }
+
     const card = document.createElement('div');
     card.className = 'monday-action-card fade-in';
     card.style.animationDelay = (animDelay + idx * 150) + 'ms';
@@ -917,17 +906,21 @@ function renderMondayActions(container, bulletLines, animDelay) {
     const content = document.createElement('div');
     content.className = 'monday-action-content';
 
-    const title = document.createElement('div');
-    title.className = 'monday-action-title';
-    // Strip any remaining ** markdown
-    title.textContent = actionTitle.replace(/\*\*/g, '');
+    if (actionTitle) {
+      const title = document.createElement('div');
+      title.className = 'monday-action-title';
+      title.textContent = actionTitle;
+      content.appendChild(title);
 
-    content.appendChild(title);
-
-    if (actionDesc) {
       const desc = document.createElement('div');
       desc.className = 'monday-action-desc';
-      desc.textContent = actionDesc.replace(/\*\*/g, '');
+      desc.textContent = actionDesc;
+      content.appendChild(desc);
+    } else {
+      // No explicit delimiter — render as single block, no split
+      const desc = document.createElement('div');
+      desc.className = 'monday-action-desc';
+      desc.innerHTML = parseBriefMarkdown(text);
       content.appendChild(desc);
     }
 
