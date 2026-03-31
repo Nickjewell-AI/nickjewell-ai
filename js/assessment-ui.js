@@ -13,6 +13,8 @@ const {
   TASTE_REASONING,
   TASTE_LEADINS,
   buildBriefContext,
+  ADAPTIVE_MICRO_PROMPTS,
+  getModuleQuestions,
 } = window.AssessmentEngine;
 
 const LAYER_NAMES = {
@@ -20,6 +22,13 @@ const LAYER_NAMES = {
   architecture: 'Architecture',
   accountability: 'Accountability',
   culture: 'Culture',
+};
+
+const TASTE_MICRO_PROMPTS = {
+  T1: "What\u2019s the first thing you\u2019d actually check?",
+  T2: "What\u2019s the real problem the CEO is trying to solve?",
+  T3: "What would tip your decision?",
+  T4: "What\u2019s the edge case that worries you most?",
 };
 
 let session;
@@ -32,6 +41,7 @@ let lastResults;
 let savedRowId = null;
 let feedbackState = { sentimentSent: false, briefDone: false };
 let briefStreamActive = false;
+let freeTextConfirmationShown = false;
 
 function init() {
   session = createSession();
@@ -67,12 +77,37 @@ function showNextQuestion() {
     return;
   }
 
+  // Show adaptive transition screen for first question in each adaptive layer
+  if (question.isAdaptive && question.isFirstAdaptiveForLayer) {
+    showAdaptiveTransition(question.adaptiveLayer, () => {
+      // Re-render this same question after transition
+      renderAdaptiveQuestion(question);
+    });
+    return;
+  }
+
+  renderQuestion(question);
+}
+
+function renderAdaptiveQuestion(question) {
+  // Update tier label and render normally
+  let label = question.tierLabel;
+  if (question.layerLabel) label += ' \u2014 ' + question.layerLabel;
+  tierLabel.textContent = label;
+  updateProgress();
+  renderQuestionCard(question);
+}
+
+function renderQuestion(question) {
   // Update tier label
   let label = question.tierLabel;
   if (question.layerLabel) label += ' — ' + question.layerLabel;
   tierLabel.textContent = label;
   updateProgress();
+  renderQuestionCard(question);
+}
 
+function renderQuestionCard(question) {
   // Build question card
   const card = document.createElement('div');
   card.className = 'question-card fade-in';
@@ -140,6 +175,14 @@ function handleAnswer(card, question, selectedOption, optionsContainer) {
     insight.textContent = question[insightKey];
     card.appendChild(insight);
     requestAnimationFrame(() => insight.classList.add('visible'));
+  }
+
+  // Check if adaptive layer just completed — show micro-prompt
+  if (question.isAdaptive && session.adaptiveFollowUp._layerJustCompleted) {
+    const completedLayer = session.adaptiveFollowUp._layerJustCompleted;
+    session.adaptiveFollowUp._layerJustCompleted = null;
+    setTimeout(() => showAdaptiveMicroPrompt(card, completedLayer), 400);
+    return;
   }
 
   // Check for CU2 free-text follow-up (option A = "Yes, we had a failure")
@@ -258,6 +301,7 @@ function showCU2FreeText(parentCard, parentQuestion) {
     submitBtn.textContent = 'Analyzing…';
     textarea.disabled = true;
     skipLink.style.display = 'none';
+    showFreeTextConfirmation(freeTextWrap);
     try {
       await analyzeCU2Response(session, text);
     } catch { /* silent */ }
@@ -317,11 +361,12 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
   fuCard.appendChild(fuText);
   fuCard.appendChild(fuOptions);
 
-  // "Tell us more" free-text link
+  // Scenario-specific micro-prompt link
+  const microPromptText = TASTE_MICRO_PROMPTS[parentQuestion.id] || 'Tell us more';
   const tellMore = document.createElement('a');
   tellMore.href = '#';
   tellMore.className = 'tell-us-more-link';
-  tellMore.textContent = 'Tell us more \u2192';
+  tellMore.textContent = microPromptText + ' \u2192';
   tellMore.addEventListener('click', (e) => {
     e.preventDefault();
     tellMore.style.display = 'none';
@@ -333,7 +378,7 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
 
   const textarea = document.createElement('textarea');
   textarea.className = 'taste-freetext';
-  textarea.placeholder = 'What else shaped your thinking? (optional)';
+  textarea.placeholder = 'One sentence is plenty.';
   textarea.rows = 3;
 
   const submitBtn = document.createElement('button');
@@ -344,6 +389,7 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
     if (!text) return;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Analyzing\u2026';
+    showFreeTextConfirmation(freeTextWrap);
     try {
       if (window.AssessmentAPI && window.AssessmentAPI.callAssessmentAPI) {
         const systemPrompt = 'You are analyzing a free-text response from a strategic AI readiness assessment. The user was asked why they made a particular choice in a scenario about AI implementation. Analyze their reasoning for:\n- Frame Recognition: Do they question assumptions or reframe the problem? (adjust: -1, 0, or +1)\n- Kill Discipline: Do they show willingness to stop or redirect? (adjust: -1, 0, or +1)\n- Edge-Case Instinct: Do they think about what could go wrong? (adjust: -1, 0, or +1)\nRespond with ONLY a JSON object: {"fr": 0, "kd": 0, "ec": 0} with values of -1, 0, or +1.';
@@ -382,6 +428,96 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
   parentCard.appendChild(fuCard);
   requestAnimationFrame(() => fuCard.classList.add('visible'));
   fuCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── Adaptive Follow-Up Transition & Micro-Prompt ────────
+
+function showAdaptiveTransition(layerName, onComplete) {
+  const displayName = LAYER_NAMES[layerName] || layerName;
+  const transition = document.createElement('div');
+  transition.className = 'question-card fade-in';
+  transition.innerHTML = `<div class="question-label" style="color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.8rem;">Deeper Dive</div><div class="question-text" style="margin-top: 0.75rem;">We\u2019d like to go a little deeper on ${displayName}.</div>`;
+  container.appendChild(transition);
+  requestAnimationFrame(() => transition.classList.add('visible'));
+  transition.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => {
+    onComplete();
+  }, 1500);
+}
+
+function showAdaptiveMicroPrompt(parentCard, layerName) {
+  const prompts = ADAPTIVE_MICRO_PROMPTS[layerName];
+  if (!prompts) { setTimeout(() => showNextQuestion(), 400); return; }
+
+  const fuCard = document.createElement('div');
+  fuCard.className = 'follow-up-card fade-in';
+
+  const fuText = document.createElement('div');
+  fuText.className = 'follow-up-text';
+  fuText.textContent = prompts.prompt;
+
+  const freeTextWrap = document.createElement('div');
+  freeTextWrap.className = 'cu2-freetext-wrap';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'taste-freetext';
+  input.placeholder = prompts.placeholder;
+  input.style.cssText = 'width: 100%; padding: 0.75rem; font-size: 0.95rem;';
+
+  const controls = document.createElement('div');
+  controls.className = 'cu2-controls';
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'taste-freetext-submit';
+  submitBtn.textContent = 'Submit';
+
+  const skipLink = document.createElement('a');
+  skipLink.href = '#';
+  skipLink.className = 'cu2-skip-link';
+  skipLink.textContent = 'Skip \u2192';
+
+  skipLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    setTimeout(() => showNextQuestion(), 400);
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const text = input.value.trim();
+    if (!text) return;
+    session.adaptiveFreeText[layerName] = text;
+    showFreeTextConfirmation(freeTextWrap);
+    submitBtn.textContent = 'Thanks!';
+    submitBtn.disabled = true;
+    input.disabled = true;
+    skipLink.style.display = 'none';
+    setTimeout(() => showNextQuestion(), 600);
+  });
+
+  controls.appendChild(submitBtn);
+  controls.appendChild(skipLink);
+  freeTextWrap.appendChild(input);
+  freeTextWrap.appendChild(controls);
+  fuCard.appendChild(fuText);
+  fuCard.appendChild(freeTextWrap);
+
+  parentCard.appendChild(fuCard);
+  requestAnimationFrame(() => fuCard.classList.add('visible'));
+  fuCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── Free-Text Value Confirmation (Part 6) ──────────────
+
+function showFreeTextConfirmation(parentEl) {
+  if (freeTextConfirmationShown) return;
+  freeTextConfirmationShown = true;
+  const msg = document.createElement('p');
+  msg.className = 'freetext-confirmation';
+  msg.textContent = 'This will shape your executive brief.';
+  msg.style.cssText = 'color: var(--accent); font-style: italic; font-size: 0.85rem; margin-top: 0.5rem; opacity: 1; transition: opacity 0.5s;';
+  parentEl.appendChild(msg);
+  setTimeout(() => { msg.style.opacity = '0'; }, 2000);
+  setTimeout(() => { msg.remove(); }, 2500);
 }
 
 // ─── Email Capture ───────────────────────────────────────
@@ -634,6 +770,62 @@ function showResults() {
     noteEl.classList.add('hidden');
   }
 
+  // Post-results reflection prompt
+  const briefSectionForReflection = document.getElementById('executive-brief-section');
+  if (briefSectionForReflection && briefSectionForReflection.parentNode) {
+    const reflectionDiv = document.createElement('div');
+    reflectionDiv.className = 'result-section reflection-prompt fade-in';
+    reflectionDiv.id = 'reflection-prompt';
+    reflectionDiv.style.cssText = 'padding: 1.5rem 0; text-align: center;';
+
+    const reflectionQ = document.createElement('p');
+    reflectionQ.textContent = 'Did anything surprise you?';
+    reflectionQ.style.cssText = 'color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;';
+
+    const reflectionWrap = document.createElement('div');
+    reflectionWrap.style.cssText = 'display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap; max-width: 500px; margin: 0 auto;';
+
+    const reflectionInput = document.createElement('input');
+    reflectionInput.type = 'text';
+    reflectionInput.className = 'reflection-input';
+    reflectionInput.placeholder = 'One sentence \u2014 this shapes your executive brief.';
+    reflectionInput.maxLength = 300;
+    reflectionInput.style.cssText = 'flex: 1; min-width: 200px; padding: 0.6rem 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem; border-radius: 4px;';
+
+    const reflectionBtn = document.createElement('button');
+    reflectionBtn.className = 'taste-freetext-submit';
+    reflectionBtn.textContent = 'Submit';
+
+    const reflectionSkip = document.createElement('a');
+    reflectionSkip.href = '#';
+    reflectionSkip.className = 'cu2-skip-link';
+    reflectionSkip.textContent = 'Skip';
+    reflectionSkip.style.cssText = 'font-size: 0.85rem; margin-left: 0.5rem;';
+
+    reflectionBtn.addEventListener('click', () => {
+      const text = reflectionInput.value.trim();
+      if (!text) return;
+      session.reflectionResponse = text;
+      reflectionBtn.textContent = 'Thanks!';
+      reflectionBtn.disabled = true;
+      reflectionInput.disabled = true;
+      reflectionSkip.style.display = 'none';
+    });
+
+    reflectionSkip.addEventListener('click', (e) => {
+      e.preventDefault();
+      reflectionDiv.style.display = 'none';
+    });
+
+    reflectionWrap.appendChild(reflectionInput);
+    reflectionWrap.appendChild(reflectionBtn);
+    reflectionWrap.appendChild(reflectionSkip);
+    reflectionDiv.appendChild(reflectionQ);
+    reflectionDiv.appendChild(reflectionWrap);
+
+    briefSectionForReflection.parentNode.insertBefore(reflectionDiv, briefSectionForReflection);
+  }
+
   // Retake button — replace to avoid stacking listeners on repeated retakes
   const retakeBtn = document.getElementById('retake-btn');
   const freshRetakeBtn = retakeBtn.cloneNode(true);
@@ -660,7 +852,10 @@ function showResults() {
     lastResults = null;
     savedRowId = null;
     feedbackState = { sentimentSent: false, briefDone: false };
-    // Remove feedback elements from previous run
+    freeTextConfirmationShown = false;
+    // Remove feedback and reflection elements from previous run
+    const oldReflection = document.getElementById('reflection-prompt');
+    if (oldReflection) oldReflection.remove();
     const oldSentiment = document.getElementById('feedback-sentiment');
     if (oldSentiment) oldSentiment.remove();
     const oldOpen = document.getElementById('feedback-open');
@@ -886,14 +1081,6 @@ function renderMondayActions(container, bulletLines, animDelay) {
 
   bulletLines.forEach((raw, idx) => {
     const text = raw.replace(/^\s*[-*]\s+/, '');
-    // Only split on explicit **bold** — description pattern from the model prompt
-    const boldMatch = text.match(/^\*\*(.+?)\*\*\s*[—–:\-]\s*(.+)$/);
-    let actionTitle = null;
-    let actionDesc = null;
-    if (boldMatch) {
-      actionTitle = boldMatch[1];
-      actionDesc = boldMatch[2];
-    }
 
     const card = document.createElement('div');
     card.className = 'monday-action-card fade-in';
@@ -906,23 +1093,10 @@ function renderMondayActions(container, bulletLines, animDelay) {
     const content = document.createElement('div');
     content.className = 'monday-action-content';
 
-    if (actionTitle) {
-      const title = document.createElement('div');
-      title.className = 'monday-action-title';
-      title.textContent = actionTitle;
-      content.appendChild(title);
-
-      const desc = document.createElement('div');
-      desc.className = 'monday-action-desc';
-      desc.textContent = actionDesc;
-      content.appendChild(desc);
-    } else {
-      // No explicit delimiter — render as single block, no split
-      const desc = document.createElement('div');
-      desc.className = 'monday-action-desc';
-      desc.innerHTML = parseBriefMarkdown(text);
-      content.appendChild(desc);
-    }
+    const desc = document.createElement('div');
+    desc.className = 'monday-action-desc';
+    desc.innerHTML = parseBriefMarkdown(text);
+    content.appendChild(desc);
 
     card.appendChild(number);
     card.appendChild(content);
