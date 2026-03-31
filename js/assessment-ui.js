@@ -72,7 +72,7 @@ function showNextQuestion() {
   const question = getNextQuestion(session);
 
   if (!question) {
-    showEmailCapture();
+    showResults();
     return;
   }
 
@@ -521,54 +521,6 @@ function showFreeTextConfirmation(parentEl) {
 
 // ─── Email Capture ───────────────────────────────────────
 
-function showEmailCapture() {
-  document.getElementById('assessment-active').classList.add('hidden');
-  const captureEl = document.getElementById('email-capture');
-  captureEl.classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  const input = document.getElementById('capture-email');
-  const error = document.getElementById('capture-error');
-  const submitBtn = document.getElementById('capture-submit');
-  const skipBtn = document.getElementById('capture-skip');
-
-  input.focus();
-
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  // Clear validation on input
-  input.addEventListener('input', () => {
-    input.classList.remove('invalid');
-    error.classList.remove('visible');
-  });
-
-  submitBtn.addEventListener('click', () => {
-    const email = input.value.trim();
-    if (!email || !validateEmail(email)) {
-      input.classList.add('invalid');
-      error.classList.add('visible');
-      return;
-    }
-
-    // Store captured email for use after results render
-    session._capturedEmail = email;
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Loading your results\u2026';
-    skipBtn.style.display = 'none';
-
-    captureEl.classList.add('hidden');
-    showResults();
-  });
-
-  skipBtn.addEventListener('click', () => {
-    captureEl.classList.add('hidden');
-    showResults();
-  });
-}
-
 // ─── Results ──────────────────────────────────────────────
 
 function createHorizonGroup(label, subtitle, actions) {
@@ -780,17 +732,6 @@ function showResults() {
     resultsEl.classList.add('hidden');
     container.innerHTML = '';
     document.getElementById('assessment-intro').classList.remove('hidden');
-    // Reset email capture screen
-    const captureEl = document.getElementById('email-capture');
-    captureEl.classList.add('hidden');
-    const captureInput = document.getElementById('capture-email');
-    captureInput.value = '';
-    captureInput.classList.remove('invalid');
-    document.getElementById('capture-error').classList.remove('visible');
-    const captureSubmit = document.getElementById('capture-submit');
-    captureSubmit.disabled = false;
-    captureSubmit.textContent = 'Send & Show My Results';
-    document.getElementById('capture-skip').style.display = '';
     // Hide detailed results for next run
     const detailedResults = document.getElementById('detailed-results');
     if (detailedResults) detailedResults.classList.add('hidden');
@@ -798,9 +739,6 @@ function showResults() {
     lastResults = null;
     savedRowId = null;
     freeTextConfirmationShown = false;
-    // Remove reflection element from previous run
-    const oldReflection = document.getElementById('reflection-prompt');
-    if (oldReflection) oldReflection.remove();
     // Remove brief-sent confirmation from previous run
     const oldBriefConfirm = document.querySelector('.brief-sent-confirm');
     if (oldBriefConfirm) oldBriefConfirm.remove();
@@ -899,58 +837,6 @@ function revealDetailedResults() {
   if (!detailedResults || !detailedResults.classList.contains('hidden')) return;
 
   detailedResults.classList.remove('hidden');
-
-  // Add reflection prompt at the end of detailed results
-  const reflectionDiv = document.createElement('div');
-  reflectionDiv.className = 'result-section reflection-prompt fade-in';
-  reflectionDiv.id = 'reflection-prompt';
-  reflectionDiv.style.cssText = 'padding: 1.5rem 0; text-align: center;';
-
-  const reflectionQ = document.createElement('p');
-  reflectionQ.textContent = 'Did anything surprise you?';
-  reflectionQ.style.cssText = 'color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;';
-
-  const reflectionWrap = document.createElement('div');
-  reflectionWrap.style.cssText = 'display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap; max-width: 500px; margin: 0 auto;';
-
-  const reflectionInput = document.createElement('input');
-  reflectionInput.type = 'text';
-  reflectionInput.className = 'reflection-input';
-  reflectionInput.placeholder = 'One sentence \u2014 what stood out?';
-  reflectionInput.maxLength = 300;
-  reflectionInput.style.cssText = 'flex: 1; min-width: 200px; padding: 0.6rem 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem; border-radius: 4px;';
-
-  const reflectionBtn = document.createElement('button');
-  reflectionBtn.className = 'taste-freetext-submit';
-  reflectionBtn.textContent = 'Submit';
-
-  const reflectionSkip = document.createElement('a');
-  reflectionSkip.href = '#';
-  reflectionSkip.className = 'cu2-skip-link';
-  reflectionSkip.textContent = 'Skip';
-  reflectionSkip.style.cssText = 'font-size: 0.85rem; margin-left: 0.5rem;';
-
-  reflectionBtn.addEventListener('click', () => {
-    const text = reflectionInput.value.trim();
-    if (!text) return;
-    session.reflectionResponse = text;
-    reflectionBtn.textContent = 'Thanks!';
-    reflectionBtn.disabled = true;
-    reflectionInput.disabled = true;
-    reflectionSkip.style.display = 'none';
-  });
-
-  reflectionSkip.addEventListener('click', (e) => {
-    e.preventDefault();
-    reflectionDiv.style.display = 'none';
-  });
-
-  reflectionWrap.appendChild(reflectionInput);
-  reflectionWrap.appendChild(reflectionBtn);
-  reflectionWrap.appendChild(reflectionSkip);
-  reflectionDiv.appendChild(reflectionQ);
-  reflectionDiv.appendChild(reflectionWrap);
-  detailedResults.appendChild(reflectionDiv);
 
   // Stagger fade-in of each section inside detailed-results
   const sections = detailedResults.querySelectorAll('.result-section');
@@ -1139,6 +1025,7 @@ function initExecutiveBrief() {
     const email = freshForm.querySelector('#brief-email').value.trim();
     const company = freshForm.querySelector('#brief-company').value.trim();
     const role = freshForm.querySelector('#brief-role').value.trim();
+    const briefFocus = freshForm.querySelector('#brief-focus') ? freshForm.querySelector('#brief-focus').value.trim() : '';
 
     if (!name || !email || !company || !role) return;
 
@@ -1155,6 +1042,9 @@ function initExecutiveBrief() {
     session._contactEmail = email;
     session._contactCompany = company;
     session._contactRole = role;
+    if (briefFocus) {
+      session.reflectionResponse = briefFocus;
+    }
 
     // Update D1 record with contact info
     if (savedRowId) {
@@ -1350,46 +1240,6 @@ async function autoSaveResults() {
     // Silent fail — anonymous save is best-effort
   }
 
-  // If email was captured pre-results, update D1 row and send email
-  if (session._capturedEmail) {
-    const email = session._capturedEmail;
-
-    // Update D1 row with email
-    if (savedRowId) {
-      try {
-        await fetch('/api/submit-assessment', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: savedRowId, email }),
-        });
-      } catch { /* silent */ }
-    }
-
-    // Send results email via Resend
-    const plan = lastResults.actionPlan;
-    const actions = [
-      plan.rightNow,
-      ...(plan.thisWeek || []),
-      plan.thisMonth,
-    ].filter(Boolean);
-
-    const resultsData = {
-      verdict: lastResults.verdict,
-      composite: lastResults.composite,
-      bindingConstraint: lastResults.bindingConstraint,
-      layerScores: lastResults.layerScores,
-      tasteSignature: lastResults.tasteSignature ? lastResults.tasteSignature.name : null,
-      actions,
-    };
-
-    try {
-      await fetch('/api-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'send-results', email, results: resultsData }),
-      });
-    } catch { /* silent */ }
-  }
 }
 
 // ─── Boot ─────────────────────────────────────────────────

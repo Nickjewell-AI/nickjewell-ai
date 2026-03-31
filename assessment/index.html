@@ -624,97 +624,6 @@
     }
 
     /* Email Capture Screen */
-    .email-capture-screen {
-      text-align: center;
-      padding: 4rem 1rem;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-    .email-capture-eyebrow {
-      font-family: var(--font-body);
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 1rem;
-    }
-    .email-capture-heading {
-      font-family: var(--font-display);
-      font-size: clamp(1.25rem, 3vw, 1.75rem);
-      font-weight: 400;
-      color: var(--text-primary);
-      margin: 0 0 2rem;
-    }
-    .email-capture-input {
-      width: 100%;
-      background: var(--bg-card);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      border-radius: 0;
-      font-size: 1rem;
-      font-family: var(--font-body);
-      padding: 0.875rem 1rem;
-      margin-bottom: 1rem;
-      box-sizing: border-box;
-    }
-    .email-capture-input:focus {
-      border-color: var(--accent);
-      outline: none;
-    }
-    .email-capture-input.invalid {
-      border-color: var(--verdict-red);
-    }
-    .email-capture-error {
-      font-size: 0.8rem;
-      color: var(--verdict-red);
-      margin: -0.5rem 0 1rem;
-      display: none;
-    }
-    .email-capture-error.visible {
-      display: block;
-    }
-    .email-capture-submit {
-      display: inline-block;
-      font-family: var(--font-body);
-      font-size: 0.92rem;
-      font-weight: 500;
-      color: #080808;
-      background: var(--accent);
-      border: none;
-      padding: 0.875rem 2rem;
-      cursor: pointer;
-      letter-spacing: 0.02em;
-      transition: background 0.2s;
-      width: 100%;
-    }
-    .email-capture-submit:hover:not(:disabled) {
-      background: var(--accent-hover);
-    }
-    .email-capture-submit:disabled {
-      opacity: 0.85;
-      cursor: default;
-    }
-    .email-capture-skip {
-      display: inline-block;
-      margin-top: 1.25rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      text-decoration: underline;
-      cursor: pointer;
-      background: none;
-      border: none;
-      font-family: var(--font-body);
-    }
-    .email-capture-skip:hover {
-      color: var(--text-secondary);
-    }
-    .email-capture-privacy {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      margin-top: 1.5rem;
-    }
-
     .retake-wrapper {
       text-align: center;
       margin-top: 3rem;
@@ -1308,19 +1217,6 @@
         <div id="assessment-flow"></div>
       </div>
 
-      <!-- Email Capture -->
-      <div id="email-capture" class="hidden">
-        <div class="email-capture-screen">
-          <div class="email-capture-eyebrow">Your Results Are Ready</div>
-          <h2 class="email-capture-heading">Where should we send a copy?</h2>
-          <input type="email" id="capture-email" class="email-capture-input" placeholder="your@company.com" aria-label="Email address">
-          <p id="capture-error" class="email-capture-error">Please enter a valid email address.</p>
-          <button id="capture-submit" class="email-capture-submit">Send &amp; Show My Results</button>
-          <button id="capture-skip" class="email-capture-skip">Skip &mdash; just show my results</button>
-          <p class="email-capture-privacy">Your email is used only to deliver your results. No spam, no list.</p>
-        </div>
-      </div>
-
       <!-- Results -->
       <div id="assessment-results" class="assessment-results hidden">
         <div class="results-header result-section">
@@ -1344,9 +1240,10 @@
               <input type="email" id="brief-email" placeholder="Email" autocomplete="email" required />
               <input type="text" id="brief-company" placeholder="Company" autocomplete="organization" required />
               <input type="text" id="brief-role" placeholder="Role" autocomplete="job-title" required />
+              <input type="text" id="brief-focus" placeholder="Anything you want the brief to address? (optional)" maxlength="300" />
             </div>
-            <button type="submit" class="brief-contact-submit">Generate My Executive Brief &rarr;</button>
-            <p class="brief-inbox-note">We'll also send it to your inbox so you don't lose it.</p>
+            <button type="submit" class="brief-contact-submit">Generate My Executive Brief</button>
+            <p class="brief-inbox-note">Your brief, scores, and a personalized action plan &mdash; delivered to your inbox.</p>
           </form>
           <p class="brief-status hidden"></p>
           <div class="brief-text-container hidden"></div>

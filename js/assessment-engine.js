@@ -1469,8 +1469,8 @@ function buildBriefContext(session, results) {
   // Post-results reflection
   if (session.reflectionResponse) {
     lines.push('');
-    lines.push('=== POST-RESULTS REFLECTION ===');
-    lines.push('What surprised them: ' + session.reflectionResponse);
+    lines.push('=== BRIEF FOCUS REQUEST ===');
+    lines.push('The user specifically asked the brief to address: ' + session.reflectionResponse);
   }
 
   // Taste reasoning selections
