@@ -519,8 +519,6 @@ function showFreeTextConfirmation(parentEl) {
   setTimeout(() => { msg.remove(); }, 2500);
 }
 
-// ─── Email Capture ───────────────────────────────────────
-
 // ─── Results ──────────────────────────────────────────────
 
 function createHorizonGroup(label, subtitle, actions) {
