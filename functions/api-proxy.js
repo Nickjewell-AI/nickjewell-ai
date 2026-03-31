@@ -111,6 +111,8 @@ function corsHeaders(origin) {
 function isAllowedOrigin(origin) {
   if (!origin) return false;
   if (origin === 'https://nickjewell.ai' || origin === 'https://www.nickjewell.ai') return true;
+  // Allow Cloudflare Preview URLs for dev branch testing
+  if (/\.nickjewell-ai\.pages\.dev$/.test(new URL(origin).hostname)) return true;
   // Allow localhost for dev
   if (origin.startsWith('http://localhost:') || origin === 'http://localhost') return true;
   if (origin.startsWith('http://127.0.0.1:') || origin === 'http://127.0.0.1') return true;

@@ -13,6 +13,8 @@ const {
   TASTE_REASONING,
   TASTE_LEADINS,
   buildBriefContext,
+  ADAPTIVE_MICRO_PROMPTS,
+  getModuleQuestions,
 } = window.AssessmentEngine;
 
 const LAYER_NAMES = {
@@ -20,6 +22,13 @@ const LAYER_NAMES = {
   architecture: 'Architecture',
   accountability: 'Accountability',
   culture: 'Culture',
+};
+
+const TASTE_MICRO_PROMPTS = {
+  T1: "What\u2019s the first thing you\u2019d actually check?",
+  T2: "What\u2019s the real problem the CEO is trying to solve?",
+  T3: "What would tip your decision?",
+  T4: "What\u2019s the edge case that worries you most?",
 };
 
 let session;
@@ -30,8 +39,8 @@ let tierLabel;
 let assessmentStartTime;
 let lastResults;
 let savedRowId = null;
-let feedbackState = { sentimentSent: false, briefDone: false };
 let briefStreamActive = false;
+let freeTextConfirmationShown = false;
 
 function init() {
   session = createSession();
@@ -67,12 +76,37 @@ function showNextQuestion() {
     return;
   }
 
+  // Show adaptive transition screen for first question in each adaptive layer
+  if (question.isAdaptive && question.isFirstAdaptiveForLayer) {
+    showAdaptiveTransition(question.adaptiveLayer, () => {
+      // Re-render this same question after transition
+      renderAdaptiveQuestion(question);
+    });
+    return;
+  }
+
+  renderQuestion(question);
+}
+
+function renderAdaptiveQuestion(question) {
+  // Update tier label and render normally
+  let label = question.tierLabel;
+  if (question.layerLabel) label += ' \u2014 ' + question.layerLabel;
+  tierLabel.textContent = label;
+  updateProgress();
+  renderQuestionCard(question);
+}
+
+function renderQuestion(question) {
   // Update tier label
   let label = question.tierLabel;
   if (question.layerLabel) label += ' — ' + question.layerLabel;
   tierLabel.textContent = label;
   updateProgress();
+  renderQuestionCard(question);
+}
 
+function renderQuestionCard(question) {
   // Build question card
   const card = document.createElement('div');
   card.className = 'question-card fade-in';
@@ -140,6 +174,14 @@ function handleAnswer(card, question, selectedOption, optionsContainer) {
     insight.textContent = question[insightKey];
     card.appendChild(insight);
     requestAnimationFrame(() => insight.classList.add('visible'));
+  }
+
+  // Check if adaptive layer just completed — show micro-prompt
+  if (question.isAdaptive && session.adaptiveFollowUp._layerJustCompleted) {
+    const completedLayer = session.adaptiveFollowUp._layerJustCompleted;
+    session.adaptiveFollowUp._layerJustCompleted = null;
+    setTimeout(() => showAdaptiveMicroPrompt(card, completedLayer), 400);
+    return;
   }
 
   // Check for CU2 free-text follow-up (option A = "Yes, we had a failure")
@@ -258,6 +300,7 @@ function showCU2FreeText(parentCard, parentQuestion) {
     submitBtn.textContent = 'Analyzing…';
     textarea.disabled = true;
     skipLink.style.display = 'none';
+    showFreeTextConfirmation(freeTextWrap);
     try {
       await analyzeCU2Response(session, text);
     } catch { /* silent */ }
@@ -317,11 +360,12 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
   fuCard.appendChild(fuText);
   fuCard.appendChild(fuOptions);
 
-  // "Tell us more" free-text link
+  // Scenario-specific micro-prompt link
+  const microPromptText = TASTE_MICRO_PROMPTS[parentQuestion.id] || 'Tell us more';
   const tellMore = document.createElement('a');
   tellMore.href = '#';
   tellMore.className = 'tell-us-more-link';
-  tellMore.textContent = 'Tell us more \u2192';
+  tellMore.textContent = microPromptText + ' \u2192';
   tellMore.addEventListener('click', (e) => {
     e.preventDefault();
     tellMore.style.display = 'none';
@@ -333,7 +377,7 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
 
   const textarea = document.createElement('textarea');
   textarea.className = 'taste-freetext';
-  textarea.placeholder = 'What else shaped your thinking? (optional)';
+  textarea.placeholder = 'One sentence is plenty.';
   textarea.rows = 3;
 
   const submitBtn = document.createElement('button');
@@ -344,6 +388,7 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
     if (!text) return;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Analyzing\u2026';
+    showFreeTextConfirmation(freeTextWrap);
     try {
       if (window.AssessmentAPI && window.AssessmentAPI.callAssessmentAPI) {
         const systemPrompt = 'You are analyzing a free-text response from a strategic AI readiness assessment. The user was asked why they made a particular choice in a scenario about AI implementation. Analyze their reasoning for:\n- Frame Recognition: Do they question assumptions or reframe the problem? (adjust: -1, 0, or +1)\n- Kill Discipline: Do they show willingness to stop or redirect? (adjust: -1, 0, or +1)\n- Edge-Case Instinct: Do they think about what could go wrong? (adjust: -1, 0, or +1)\nRespond with ONLY a JSON object: {"fr": 0, "kd": 0, "ec": 0} with values of -1, 0, or +1.';
@@ -382,6 +427,96 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
   parentCard.appendChild(fuCard);
   requestAnimationFrame(() => fuCard.classList.add('visible'));
   fuCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── Adaptive Follow-Up Transition & Micro-Prompt ────────
+
+function showAdaptiveTransition(layerName, onComplete) {
+  const displayName = LAYER_NAMES[layerName] || layerName;
+  const transition = document.createElement('div');
+  transition.className = 'question-card fade-in';
+  transition.innerHTML = `<div class="question-label" style="color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.8rem;">Deeper Dive</div><div class="question-text" style="margin-top: 0.75rem;">We\u2019d like to go a little deeper on ${displayName}.</div>`;
+  container.appendChild(transition);
+  requestAnimationFrame(() => transition.classList.add('visible'));
+  transition.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => {
+    onComplete();
+  }, 1500);
+}
+
+function showAdaptiveMicroPrompt(parentCard, layerName) {
+  const prompts = ADAPTIVE_MICRO_PROMPTS[layerName];
+  if (!prompts) { setTimeout(() => showNextQuestion(), 400); return; }
+
+  const fuCard = document.createElement('div');
+  fuCard.className = 'follow-up-card fade-in';
+
+  const fuText = document.createElement('div');
+  fuText.className = 'follow-up-text';
+  fuText.textContent = prompts.prompt;
+
+  const freeTextWrap = document.createElement('div');
+  freeTextWrap.className = 'cu2-freetext-wrap';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'taste-freetext';
+  input.placeholder = prompts.placeholder;
+  input.style.cssText = 'width: 100%; padding: 0.75rem; font-size: 0.95rem;';
+
+  const controls = document.createElement('div');
+  controls.className = 'cu2-controls';
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'taste-freetext-submit';
+  submitBtn.textContent = 'Submit';
+
+  const skipLink = document.createElement('a');
+  skipLink.href = '#';
+  skipLink.className = 'cu2-skip-link';
+  skipLink.textContent = 'Skip \u2192';
+
+  skipLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    setTimeout(() => showNextQuestion(), 400);
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const text = input.value.trim();
+    if (!text) return;
+    session.adaptiveFreeText[layerName] = text;
+    showFreeTextConfirmation(freeTextWrap);
+    submitBtn.textContent = 'Thanks!';
+    submitBtn.disabled = true;
+    input.disabled = true;
+    skipLink.style.display = 'none';
+    setTimeout(() => showNextQuestion(), 600);
+  });
+
+  controls.appendChild(submitBtn);
+  controls.appendChild(skipLink);
+  freeTextWrap.appendChild(input);
+  freeTextWrap.appendChild(controls);
+  fuCard.appendChild(fuText);
+  fuCard.appendChild(freeTextWrap);
+
+  parentCard.appendChild(fuCard);
+  requestAnimationFrame(() => fuCard.classList.add('visible'));
+  fuCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── Free-Text Value Confirmation (Part 6) ──────────────
+
+function showFreeTextConfirmation(parentEl) {
+  if (freeTextConfirmationShown) return;
+  freeTextConfirmationShown = true;
+  const msg = document.createElement('p');
+  msg.className = 'freetext-confirmation';
+  msg.textContent = 'This will shape your executive brief.';
+  msg.style.cssText = 'color: var(--accent); font-style: italic; font-size: 0.85rem; margin-top: 0.5rem; opacity: 1; transition: opacity 0.5s;';
+  parentEl.appendChild(msg);
+  setTimeout(() => { msg.style.opacity = '0'; }, 2000);
+  setTimeout(() => { msg.remove(); }, 2500);
 }
 
 // ─── Email Capture ───────────────────────────────────────
@@ -618,11 +753,16 @@ function showResults() {
   actionsContainer.appendChild(monthGroup);
   setTimeout(() => monthGroup.classList.add('visible'), delay);
 
-  // Assessment depth note
+  // Assessment depth note — only list layers that remained quick-assessed
+  // (fewer than 3 total questions, excluding layers that got adaptive follow-ups)
   const noteEl = document.getElementById('assessed-note');
   if (results.moduleDepths) {
     const shallowLayers = Object.entries(results.moduleDepths)
-      .filter(([, d]) => d === 'shallow')
+      .filter(([layer, d]) => {
+        if (d !== 'shallow') return false;
+        const totalResponses = (session.layerResponses[layer] || []).length;
+        return totalResponses < 3;
+      })
       .map(([l]) => LAYER_NAMES[l]);
     if (shallowLayers.length > 0) {
       noteEl.textContent = `${shallowLayers.join(' and ')} received a quick assessment based on core diagnostic questions. Deeply assessed layers used the full question set for higher confidence scoring.`;
@@ -632,6 +772,62 @@ function showResults() {
     }
   } else {
     noteEl.classList.add('hidden');
+  }
+
+  // Post-results reflection prompt
+  const briefSectionForReflection = document.getElementById('executive-brief-section');
+  if (briefSectionForReflection && briefSectionForReflection.parentNode) {
+    const reflectionDiv = document.createElement('div');
+    reflectionDiv.className = 'result-section reflection-prompt fade-in';
+    reflectionDiv.id = 'reflection-prompt';
+    reflectionDiv.style.cssText = 'padding: 1.5rem 0; text-align: center;';
+
+    const reflectionQ = document.createElement('p');
+    reflectionQ.textContent = 'Did anything surprise you?';
+    reflectionQ.style.cssText = 'color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;';
+
+    const reflectionWrap = document.createElement('div');
+    reflectionWrap.style.cssText = 'display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap; max-width: 500px; margin: 0 auto;';
+
+    const reflectionInput = document.createElement('input');
+    reflectionInput.type = 'text';
+    reflectionInput.className = 'reflection-input';
+    reflectionInput.placeholder = 'One sentence \u2014 this shapes your executive brief.';
+    reflectionInput.maxLength = 300;
+    reflectionInput.style.cssText = 'flex: 1; min-width: 200px; padding: 0.6rem 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem; border-radius: 4px;';
+
+    const reflectionBtn = document.createElement('button');
+    reflectionBtn.className = 'taste-freetext-submit';
+    reflectionBtn.textContent = 'Submit';
+
+    const reflectionSkip = document.createElement('a');
+    reflectionSkip.href = '#';
+    reflectionSkip.className = 'cu2-skip-link';
+    reflectionSkip.textContent = 'Skip';
+    reflectionSkip.style.cssText = 'font-size: 0.85rem; margin-left: 0.5rem;';
+
+    reflectionBtn.addEventListener('click', () => {
+      const text = reflectionInput.value.trim();
+      if (!text) return;
+      session.reflectionResponse = text;
+      reflectionBtn.textContent = 'Thanks!';
+      reflectionBtn.disabled = true;
+      reflectionInput.disabled = true;
+      reflectionSkip.style.display = 'none';
+    });
+
+    reflectionSkip.addEventListener('click', (e) => {
+      e.preventDefault();
+      reflectionDiv.style.display = 'none';
+    });
+
+    reflectionWrap.appendChild(reflectionInput);
+    reflectionWrap.appendChild(reflectionBtn);
+    reflectionWrap.appendChild(reflectionSkip);
+    reflectionDiv.appendChild(reflectionQ);
+    reflectionDiv.appendChild(reflectionWrap);
+
+    briefSectionForReflection.parentNode.insertBefore(reflectionDiv, briefSectionForReflection);
   }
 
   // Retake button — replace to avoid stacking listeners on repeated retakes
@@ -653,80 +849,18 @@ function showResults() {
     captureSubmit.disabled = false;
     captureSubmit.textContent = 'Send & Show My Results';
     document.getElementById('capture-skip').style.display = '';
-    // Reset save-results visibility
-    const saveSection = document.getElementById('save-results');
-    if (saveSection) saveSection.classList.remove('hidden');
     session = createSession();
     lastResults = null;
     savedRowId = null;
-    feedbackState = { sentimentSent: false, briefDone: false };
-    // Remove feedback elements from previous run
-    const oldSentiment = document.getElementById('feedback-sentiment');
-    if (oldSentiment) oldSentiment.remove();
-    const oldOpen = document.getElementById('feedback-open');
-    if (oldOpen) oldOpen.remove();
+    freeTextConfirmationShown = false;
+    // Remove reflection element from previous run
+    const oldReflection = document.getElementById('reflection-prompt');
+    if (oldReflection) oldReflection.remove();
   });
 
   // Auto-save anonymous results
   autoSaveResults();
 
-  // Save Results email — hide if email already captured
-  if (session._capturedEmail) {
-    const saveSection = document.getElementById('save-results');
-    if (saveSection) saveSection.classList.add('hidden');
-  } else {
-    initSaveResults(results);
-  }
-
-  // Feedback: reset state and render sentiment after action plan, before save results
-  feedbackState = { sentimentSent: false, briefDone: false };
-  // Remove any existing feedback elements to prevent duplicates
-  const existingSentiment = document.getElementById('feedback-sentiment');
-  if (existingSentiment) existingSentiment.remove();
-  const existingOpen = document.getElementById('feedback-open');
-  if (existingOpen) existingOpen.remove();
-
-  const saveSection = document.getElementById('save-results');
-  const briefSectionEl = document.getElementById('executive-brief-section');
-  if (saveSection && saveSection.parentNode) {
-    // Create sentiment element and insert before save results (after action plan)
-    const sentimentDiv = document.createElement('div');
-    sentimentDiv.className = 'feedback-sentiment';
-    sentimentDiv.id = 'feedback-sentiment';
-    sentimentDiv.innerHTML = '<p class="feedback-prompt">Was this useful?</p><div class="feedback-options"></div>';
-    const optionsDiv = sentimentDiv.querySelector('.feedback-options');
-    [
-      { value: 'spot_on', label: 'Spot on' },
-      { value: 'felt_off', label: 'Something felt off' },
-      { value: 'not_for_me', label: 'Not for me' },
-    ].forEach(({ value, label }) => {
-      const btn = document.createElement('button');
-      btn.className = 'feedback-btn';
-      btn.setAttribute('data-sentiment', value);
-      btn.textContent = label;
-      btn.addEventListener('click', () => {
-        btn.classList.add('selected');
-        submitFeedbackSentiment(value, sentimentDiv);
-      });
-      optionsDiv.appendChild(btn);
-    });
-    saveSection.parentNode.insertBefore(sentimentDiv, saveSection);
-
-    // Defensive guard: remove any duplicate feedback-sentiment elements
-    const allSentiments = document.querySelectorAll('.feedback-sentiment');
-    if (allSentiments.length > 1) {
-      for (let i = 1; i < allSentiments.length; i++) allSentiments[i].remove();
-    }
-
-    // Create open-text element and insert after brief section
-    if (briefSectionEl) {
-      renderFeedbackOpen(briefSectionEl.parentNode);
-      const openEl = document.getElementById('feedback-open');
-      if (openEl) {
-        briefSectionEl.parentNode.insertBefore(openEl, briefSectionEl.nextSibling);
-      }
-    }
-  }
 
   // Executive Brief CTA
   initExecutiveBrief();
@@ -800,75 +934,6 @@ function hideStickyBriefCTA() {
   stickyObservers = [];
 }
 
-// ─── Save Results Email ─────────────────────────────────
-
-function initSaveResults(results) {
-  const btn = document.getElementById('save-email-btn');
-  const input = document.getElementById('save-email');
-  const status = document.getElementById('save-results-status');
-  const form = document.querySelector('.save-results-form');
-
-  if (!btn) return;
-
-  // Replace to avoid stacking listeners on retake
-  const freshBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(freshBtn, btn);
-
-  freshBtn.addEventListener('click', async () => {
-    console.log('Save button clicked');
-    const email = input.value.trim();
-    if (!email || !email.includes('@')) {
-      status.textContent = 'Please enter a valid email address.';
-      status.className = 'save-results-status error';
-      status.classList.remove('hidden');
-      return;
-    }
-
-    freshBtn.disabled = true;
-    freshBtn.textContent = 'Sending...';
-    status.classList.add('hidden');
-
-    const plan = results.actionPlan;
-    const actions = [
-      plan.rightNow,
-      ...(plan.thisWeek || []),
-      plan.thisMonth,
-    ].filter(Boolean);
-
-    const resultsData = {
-      verdict: results.verdict,
-      composite: results.composite,
-      bindingConstraint: results.bindingConstraint,
-      layerScores: results.layerScores,
-      tasteSignature: results.tasteSignature ? results.tasteSignature.name : null,
-      actions,
-    };
-
-    try {
-      const res = await fetch('/api-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'send-results', email, results: resultsData }),
-      });
-
-      if (res.ok) {
-        status.textContent = 'Results sent! Check your inbox.';
-        status.className = 'save-results-status';
-        status.classList.remove('hidden');
-        form.classList.add('hidden');
-      } else {
-        throw new Error('Send failed');
-      }
-    } catch {
-      status.textContent = 'Something went wrong. Try again.';
-      status.className = 'save-results-status error';
-      status.classList.remove('hidden');
-      freshBtn.disabled = false;
-      freshBtn.textContent = 'Send Results';
-    }
-  });
-}
-
 // ─── Executive Brief ─────────────────────────────────────
 
 function renderMondayActions(container, bulletLines, animDelay) {
@@ -886,14 +951,6 @@ function renderMondayActions(container, bulletLines, animDelay) {
 
   bulletLines.forEach((raw, idx) => {
     const text = raw.replace(/^\s*[-*]\s+/, '');
-    // Only split on explicit **bold** — description pattern from the model prompt
-    const boldMatch = text.match(/^\*\*(.+?)\*\*\s*[—–:\-]\s*(.+)$/);
-    let actionTitle = null;
-    let actionDesc = null;
-    if (boldMatch) {
-      actionTitle = boldMatch[1];
-      actionDesc = boldMatch[2];
-    }
 
     const card = document.createElement('div');
     card.className = 'monday-action-card fade-in';
@@ -906,23 +963,10 @@ function renderMondayActions(container, bulletLines, animDelay) {
     const content = document.createElement('div');
     content.className = 'monday-action-content';
 
-    if (actionTitle) {
-      const title = document.createElement('div');
-      title.className = 'monday-action-title';
-      title.textContent = actionTitle;
-      content.appendChild(title);
-
-      const desc = document.createElement('div');
-      desc.className = 'monday-action-desc';
-      desc.textContent = actionDesc;
-      content.appendChild(desc);
-    } else {
-      // No explicit delimiter — render as single block, no split
-      const desc = document.createElement('div');
-      desc.className = 'monday-action-desc';
-      desc.innerHTML = parseBriefMarkdown(text);
-      content.appendChild(desc);
-    }
+    const desc = document.createElement('div');
+    desc.className = 'monday-action-desc';
+    desc.innerHTML = parseBriefMarkdown(text);
+    content.appendChild(desc);
 
     card.appendChild(number);
     card.appendChild(content);
@@ -954,9 +998,11 @@ function renderBrief(container, text) {
     // Skip blank lines
     if (!line.trim()) { i++; continue; }
 
-    // Markdown header: ## Title
-    if (/^##\s+/.test(line)) {
-      const headerText = line.replace(/^##\s+/, '');
+    // Markdown headings: # → h2, ## → h3, ### → h4
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const headerText = headingMatch[2];
 
       // Detect "What To Do Monday" section
       if (/what\s+to\s+do\s+monday/i.test(headerText)) {
@@ -966,7 +1012,7 @@ function renderBrief(container, text) {
         // Collect all bullet lines in this section
         const bullets = [];
         while (i < lines.length) {
-          if (/^##\s+/.test(lines[i])) break; // next section
+          if (/^#{1,3}\s+/.test(lines[i])) break; // next section
           if (/^\s*[-*]\s+/.test(lines[i])) {
             bullets.push(lines[i]);
           }
@@ -980,7 +1026,8 @@ function renderBrief(container, text) {
       }
 
       inMondaySection = false;
-      const h = document.createElement('h3');
+      const tag = level === 1 ? 'h2' : level === 2 ? 'h3' : 'h4';
+      const h = document.createElement(tag);
       h.className = 'brief-section-header';
       h.textContent = headerText;
       h.style.animationDelay = animDelay + 'ms';
@@ -1009,7 +1056,7 @@ function renderBrief(container, text) {
 
     // Regular paragraph: collect consecutive non-blank, non-header, non-bullet lines
     let paraText = '';
-    while (i < lines.length && lines[i].trim() && !/^##\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i])) {
+    while (i < lines.length && lines[i].trim() && !/^#{1,3}\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i])) {
       paraText += (paraText ? ' ' : '') + lines[i].trim();
       i++;
     }
@@ -1125,21 +1172,56 @@ async function generateBrief(statusEl, briefContainer) {
 
   const contextStr = buildBriefContext(currentSession, currentResults);
 
+  let streamBuffer = '';
+  let currentStreamEl = null; // current text node or span for appending inline text
+
+  function flushLine(line) {
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const tag = level === 1 ? 'h2' : level === 2 ? 'h3' : 'h4';
+      const h = document.createElement(tag);
+      h.className = 'brief-section-header';
+      h.textContent = headingMatch[2];
+      briefContainer.appendChild(h);
+      currentStreamEl = null;
+    } else if (line.trim()) {
+      if (!currentStreamEl || currentStreamEl.tagName !== 'SPAN') {
+        currentStreamEl = document.createElement('span');
+        currentStreamEl.className = 'brief-chunk';
+        briefContainer.appendChild(currentStreamEl);
+      }
+      currentStreamEl.textContent += line;
+    } else {
+      // Blank line — start a new text block
+      currentStreamEl = null;
+    }
+  }
+
   const result = await window.AssessmentAPI.generateExecutiveBrief({
     system: systemPrompt,
     messages: [{ role: 'user', content: contextStr }],
     onChunk: (text) => {
-      const span = document.createElement('span');
-      span.className = 'brief-chunk';
-      span.textContent = text;
-      briefContainer.appendChild(span);
+      streamBuffer += text;
+      // Process all complete lines (ending with newline)
+      const parts = streamBuffer.split('\n');
+      // Last element is the incomplete line — keep it in the buffer
+      streamBuffer = parts.pop();
+      for (const line of parts) {
+        flushLine(line);
+      }
     },
   });
+
+  // Flush any remaining buffered text
+  if (streamBuffer.trim()) {
+    flushLine(streamBuffer);
+  }
 
   // Remove loading indicator
   loadingEl.remove();
 
-  // Handle result
+  // Handle result — re-render with full formatting (lists, bold, etc.)
   if (result && typeof result === 'string') {
     briefContainer.innerHTML = '';
     renderBrief(briefContainer, result);
@@ -1157,9 +1239,6 @@ async function generateBrief(statusEl, briefContainer) {
     briefContainer.classList.add('hidden');
   }
   briefStreamActive = false;
-  // Show open feedback even if brief errored
-  feedbackState.briefDone = true;
-  maybeShowOpenFeedback();
 }
 
 // ─── Auto-Save ─────────────────────────────────────────
@@ -1249,99 +1328,6 @@ async function autoSaveResults() {
       });
     } catch { /* silent */ }
   }
-}
-
-// ─── Feedback ─────────────────────────────────────────────
-
-async function submitFeedbackSentiment(sentiment, wrapper) {
-  feedbackState.sentimentSent = true;
-
-  // Replace buttons with thank-you
-  wrapper.innerHTML = '';
-  const thanks = document.createElement('p');
-  thanks.className = 'feedback-thankyou';
-  thanks.setAttribute('role', 'status');
-  thanks.setAttribute('aria-live', 'polite');
-  thanks.textContent = 'Thank you.';
-  wrapper.appendChild(thanks);
-
-  try {
-    await fetch('/api-proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'submit_feedback',
-        assessment_id: savedRowId,
-        sentiment,
-        page_context: 'results',
-      }),
-    });
-  } catch { /* silent */ }
-
-  maybeShowOpenFeedback();
-}
-
-function maybeShowOpenFeedback() {
-  if (feedbackState.sentimentSent && feedbackState.briefDone) {
-    const el = document.getElementById('feedback-open');
-    if (el) el.style.display = 'block';
-  }
-}
-
-function renderFeedbackOpen(parentEl) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'feedback-open';
-  wrapper.id = 'feedback-open';
-  wrapper.style.display = 'none';
-
-  const prompt = document.createElement('p');
-  prompt.textContent = 'What should we know?';
-
-  const textarea = document.createElement('textarea');
-  textarea.className = 'feedback-textarea';
-  textarea.id = 'feedback-text';
-  textarea.placeholder = 'Anything that felt off, surprised you, or could be better.';
-  textarea.maxLength = 2000;
-  textarea.setAttribute('aria-label', 'Share your feedback on the assessment');
-
-  const submitBtn = document.createElement('button');
-  submitBtn.className = 'feedback-submit';
-  submitBtn.id = 'feedback-submit-btn';
-  submitBtn.textContent = 'Submit';
-
-  submitBtn.addEventListener('click', async () => {
-    const text = textarea.value.trim();
-    if (!text) return;
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending...';
-    textarea.disabled = true;
-
-    try {
-      await fetch('/api-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'submit_feedback',
-          assessment_id: savedRowId,
-          feedback_text: text,
-          page_context: 'brief',
-        }),
-      });
-    } catch { /* silent */ }
-
-    wrapper.innerHTML = '';
-    const thanks = document.createElement('p');
-    thanks.className = 'feedback-thankyou';
-    thanks.setAttribute('role', 'status');
-    thanks.setAttribute('aria-live', 'polite');
-    thanks.textContent = 'Heard. Thank you.';
-    wrapper.appendChild(thanks);
-  });
-
-  wrapper.appendChild(prompt);
-  wrapper.appendChild(textarea);
-  wrapper.appendChild(submitBtn);
-  parentEl.appendChild(wrapper);
 }
 
 // ─── Boot ─────────────────────────────────────────────────

@@ -972,6 +972,15 @@ function getTasteCharacterization(dims) {
   return highest.map(k => sentences[k]).join(' ');
 }
 
+// ─── Adaptive Follow-Up Micro-Prompts ────────────────────
+
+const ADAPTIVE_MICRO_PROMPTS = {
+  foundation: { prompt: 'In one sentence \u2014 what\u2019s the biggest gap in your data?', placeholder: 'One sentence is plenty.' },
+  architecture: { prompt: 'What breaks first when your team doubles?', placeholder: 'One sentence is plenty.' },
+  accountability: { prompt: 'Who actually gets the call when something goes wrong?', placeholder: 'One sentence is plenty.' },
+  culture: { prompt: 'What\u2019s the thing nobody says out loud about AI at your company?', placeholder: 'One sentence is plenty.' },
+};
+
 // ─── Session State ────────────────────────────────────────
 
 function createSession() {
@@ -993,6 +1002,13 @@ function createSession() {
     followUpResponses: {},
     industry: null,
     complete: false,
+    adaptiveFollowUp: {
+      pending: [],
+      currentLayerIndex: 0,
+      currentQuestionIndex: 0,
+      _layerJustCompleted: null,
+    },
+    adaptiveFreeText: {},
   };
 }
 
@@ -1047,7 +1063,57 @@ function getNextQuestion(session) {
       session.currentModuleIndex++;
       session.currentQuestionIndex = 0;
     }
-    // Done with Tier 2 — advance to Tier 3
+    // Check for adaptive follow-up before advancing to Tier 3
+    if (!session._adaptiveChecked) {
+      session._adaptiveChecked = true;
+      const pending = [];
+      for (const layer of ['foundation', 'architecture', 'accountability', 'culture']) {
+        const responses = session.layerResponses[layer];
+        if (responses.length > 0 && responses.length < 3) {
+          const score = scoreLayer(responses);
+          if (score !== null && score <= 33) {
+            pending.push(layer);
+          }
+        }
+      }
+      session.adaptiveFollowUp.pending = pending;
+      session.adaptiveFollowUp.currentLayerIndex = 0;
+      session.adaptiveFollowUp.currentQuestionIndex = 0;
+    }
+
+    // Serve adaptive follow-up questions
+    if (session.adaptiveFollowUp.pending.length > 0) {
+      while (session.adaptiveFollowUp.currentLayerIndex < session.adaptiveFollowUp.pending.length) {
+        const layerName = session.adaptiveFollowUp.pending[session.adaptiveFollowUp.currentLayerIndex];
+        const allLayerQs = getModuleQuestions(layerName, null);
+        const answeredIds = new Set(session.layerResponses[layerName].map(r => r.questionId));
+        const unanswered = allLayerQs.filter(q => !answeredIds.has(q.id));
+        const maxAdaptive = Math.min(2, unanswered.length);
+
+        if (session.adaptiveFollowUp.currentQuestionIndex < maxAdaptive) {
+          const baseQ = unanswered[session.adaptiveFollowUp.currentQuestionIndex];
+          const useLowDepth = session.knowledgeDepth === 'low' && baseQ.lowDepthVariant;
+          const q = useLowDepth
+            ? { ...baseQ, text: baseQ.lowDepthVariant.text, options: baseQ.lowDepthVariant.options }
+            : baseQ;
+          session._currentAdaptiveLayer = layerName;
+          return {
+            tier: 2,
+            tierLabel: 'Deeper Dive',
+            layerLabel: layerName.charAt(0).toUpperCase() + layerName.slice(1),
+            isAdaptive: true,
+            adaptiveLayer: layerName,
+            isFirstAdaptiveForLayer: session.adaptiveFollowUp.currentQuestionIndex === 0,
+            ...q,
+          };
+        }
+        // Done with this layer's adaptive questions
+        session.adaptiveFollowUp.currentLayerIndex++;
+        session.adaptiveFollowUp.currentQuestionIndex = 0;
+      }
+    }
+
+    // Done with Tier 2 + adaptive — advance to Tier 3
     session.tier = 3;
     session.currentQuestionIndex = 0;
   }
@@ -1082,13 +1148,34 @@ function recordAnswer(session, questionId, optionKey, score) {
     }
     session.currentQuestionIndex++;
   } else if (session.tier === 2) {
-    const moduleName = session.modules[session.currentModuleIndex];
-    session.layerResponses[moduleName].push({
-      questionId,
-      answer: optionKey,
-      score: score ?? 0,
-    });
-    session.currentQuestionIndex++;
+    if (session._currentAdaptiveLayer) {
+      const layerName = session._currentAdaptiveLayer;
+      session.layerResponses[layerName].push({
+        questionId,
+        answer: optionKey,
+        score: score ?? 0,
+      });
+      session.adaptiveFollowUp.currentQuestionIndex++;
+      session._currentAdaptiveLayer = null;
+      // Check if this layer's adaptive questions are exhausted
+      const allLayerQs = getModuleQuestions(layerName, null);
+      const answeredIds = new Set(session.layerResponses[layerName].map(r => r.questionId));
+      const unanswered = allLayerQs.filter(q => !answeredIds.has(q.id));
+      const maxAdaptive = Math.min(2, unanswered.length);
+      if (session.adaptiveFollowUp.currentQuestionIndex >= maxAdaptive) {
+        session.adaptiveFollowUp._layerJustCompleted = layerName;
+      } else {
+        session.adaptiveFollowUp._layerJustCompleted = null;
+      }
+    } else {
+      const moduleName = session.modules[session.currentModuleIndex];
+      session.layerResponses[moduleName].push({
+        questionId,
+        answer: optionKey,
+        score: score ?? 0,
+      });
+      session.currentQuestionIndex++;
+    }
   } else if (session.tier === 3) {
     session.tasteResponses.push({
       questionId,
@@ -1104,10 +1191,18 @@ function recordFollowUp(session, followUpId, optionKey, parentQuestionId, effect
   session.followUpResponses[followUpId] = { answer: optionKey, parentQuestionId };
   // If the follow-up adjusts the parent question's score
   if (effect === 'adjustScore' && newScore !== undefined) {
-    const moduleName = session.modules[session.currentModuleIndex];
-    const responses = session.layerResponses[moduleName];
-    const parent = responses.find(r => r.questionId === parentQuestionId);
-    if (parent) parent.score = newScore;
+    // Find the layer that contains this parent question
+    let responses = null;
+    for (const [, layerResponses] of Object.entries(session.layerResponses)) {
+      if (layerResponses.find(r => r.questionId === parentQuestionId)) {
+        responses = layerResponses;
+        break;
+      }
+    }
+    if (responses) {
+      const parent = responses.find(r => r.questionId === parentQuestionId);
+      if (parent) parent.score = newScore;
+    }
   }
 }
 
@@ -1173,6 +1268,15 @@ function getTotalQuestions(session) {
   for (const mod of session.modules) {
     const depthFilter = session.moduleDepths[mod] === 'shallow' ? 'shallow' : null;
     total += getModuleQuestions(mod, depthFilter).length;
+  }
+  // Include adaptive follow-up questions once determined
+  if (session.adaptiveFollowUp && session.adaptiveFollowUp.pending.length) {
+    for (const layer of session.adaptiveFollowUp.pending) {
+      const allQs = getModuleQuestions(layer, null);
+      const answeredIds = new Set(session.layerResponses[layer].map(r => r.questionId));
+      const unanswered = allQs.filter(q => !answeredIds.has(q.id));
+      total += Math.min(2, unanswered.length);
+    }
   }
   return total;
 }
@@ -1353,6 +1457,22 @@ function buildBriefContext(session, results) {
     }
   }
 
+  // Adaptive follow-up free-text
+  if (session.adaptiveFreeText && Object.keys(session.adaptiveFreeText).length) {
+    lines.push('');
+    lines.push('=== ADAPTIVE FOLLOW-UP FREE-TEXT ===');
+    for (const [layer, text] of Object.entries(session.adaptiveFreeText)) {
+      lines.push(layer.charAt(0).toUpperCase() + layer.slice(1) + ': ' + text);
+    }
+  }
+
+  // Post-results reflection
+  if (session.reflectionResponse) {
+    lines.push('');
+    lines.push('=== POST-RESULTS REFLECTION ===');
+    lines.push('What surprised them: ' + session.reflectionResponse);
+  }
+
   // Taste reasoning selections
   if (session.tasteReasoningSelections || session.tasteReasoningDims) {
     lines.push('');
@@ -1379,5 +1499,7 @@ window.AssessmentEngine = {
   TASTE_REASONING,
   TASTE_LEADINS,
   buildBriefContext,
+  ADAPTIVE_MICRO_PROMPTS,
+  getModuleQuestions,
 };
 })();

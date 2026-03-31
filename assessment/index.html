@@ -1117,15 +1117,18 @@
 
     .brief-section-header {
       font-family: var(--font-display);
-      font-size: 1.15rem;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--accent);
       margin: 2rem 0 0.75rem;
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
       opacity: 0;
       animation: brief-fade-in 0.6s ease forwards;
     }
+
+    h2.brief-section-header { font-size: 1.35rem; }
+    h3.brief-section-header { font-size: 1.15rem; }
+    h4.brief-section-header { font-size: 1rem; }
 
     .brief-section-header:first-child {
       margin-top: 0;
@@ -1355,19 +1358,6 @@
         </div>
 
         <p id="assessed-note" class="assessed-note hidden"></p>
-
-        <div class="result-section" id="save-results">
-          <div class="result-section-title">Save Your Results</div>
-          <div class="save-results-card">
-            <p class="save-results-text">Get a copy of these results in your inbox — reference them later or share with your team.</p>
-            <div class="save-results-form">
-              <input type="email" id="save-email" class="save-email-input" placeholder="your@company.com" aria-label="Email address">
-              <button id="save-email-btn" class="save-email-btn">Send Results</button>
-            </div>
-            <p class="save-results-privacy">No spam. No list. Just your results.</p>
-            <p id="save-results-status" class="save-results-status hidden"></p>
-          </div>
-        </div>
 
         <div class="result-section" id="executive-brief-section">
           <hr class="brief-divider">
