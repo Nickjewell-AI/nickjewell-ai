@@ -31,6 +31,7 @@ let assessmentStartTime;
 let lastResults;
 let savedRowId = null;
 let feedbackState = { sentimentSent: false, briefDone: false };
+let briefStreamActive = false;
 
 function init() {
   session = createSession();
@@ -885,33 +886,13 @@ function renderMondayActions(container, bulletLines, animDelay) {
 
   bulletLines.forEach((raw, idx) => {
     const text = raw.replace(/^\s*[-*]\s+/, '');
-    // Parse **bold** — explanation, or **bold**: explanation, or just plain text
+    // Only split on explicit **bold** — description pattern from the model prompt
     const boldMatch = text.match(/^\*\*(.+?)\*\*\s*[—–:\-]\s*(.+)$/);
-    let actionTitle, actionDesc;
+    let actionTitle = null;
+    let actionDesc = null;
     if (boldMatch) {
       actionTitle = boldMatch[1];
       actionDesc = boldMatch[2];
-    } else if (text.includes('—') || text.includes('–')) {
-      actionTitle = text.split(/\s*[—–]\s*/)[0];
-      actionDesc = text.split(/\s*[—–]\s*/).slice(1).join(' — ');
-    } else {
-      // No dash found — use first sentence as title, rest as description
-      const periodIdx = text.indexOf('.');
-      if (periodIdx > 0 && periodIdx < text.length - 1) {
-        actionTitle = text.slice(0, periodIdx + 1);
-        actionDesc = text.slice(periodIdx + 1).trim();
-      } else {
-        actionTitle = text;
-        actionDesc = '';
-      }
-    }
-    // Cap title at 100 characters, splitting at nearest word boundary
-    if (actionTitle.length > 100) {
-      let cutoff = actionTitle.lastIndexOf(' ', 100);
-      if (cutoff <= 0) cutoff = 100;
-      const overflow = actionTitle.slice(cutoff).trim();
-      actionTitle = actionTitle.slice(0, cutoff);
-      if (overflow) actionDesc = overflow + (actionDesc ? ' — ' + actionDesc : '');
     }
 
     const card = document.createElement('div');
@@ -925,17 +906,21 @@ function renderMondayActions(container, bulletLines, animDelay) {
     const content = document.createElement('div');
     content.className = 'monday-action-content';
 
-    const title = document.createElement('div');
-    title.className = 'monday-action-title';
-    // Strip any remaining ** markdown
-    title.textContent = actionTitle.replace(/\*\*/g, '');
+    if (actionTitle) {
+      const title = document.createElement('div');
+      title.className = 'monday-action-title';
+      title.textContent = actionTitle;
+      content.appendChild(title);
 
-    content.appendChild(title);
-
-    if (actionDesc) {
       const desc = document.createElement('div');
       desc.className = 'monday-action-desc';
-      desc.textContent = actionDesc.replace(/\*\*/g, '');
+      desc.textContent = actionDesc;
+      content.appendChild(desc);
+    } else {
+      // No explicit delimiter — render as single block, no split
+      const desc = document.createElement('div');
+      desc.className = 'monday-action-desc';
+      desc.innerHTML = parseBriefMarkdown(text);
       content.appendChild(desc);
     }
 
@@ -947,6 +932,14 @@ function renderMondayActions(container, bulletLines, animDelay) {
   });
 
   return animDelay + bulletLines.length * 150;
+}
+
+function parseBriefMarkdown(str) {
+  // Escape HTML entities first to prevent injection
+  str = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // **bold** → <strong>
+  str = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return str;
 }
 
 function renderBrief(container, text) {
@@ -1005,7 +998,7 @@ function renderBrief(container, text) {
       while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
         const li = document.createElement('li');
         li.className = 'brief-list-item';
-        li.textContent = lines[i].replace(/^\s*[-*]\s+/, '').replace(/\*\*/g, '');
+        li.innerHTML = parseBriefMarkdown(lines[i].replace(/^\s*[-*]\s+/, ''));
         ul.appendChild(li);
         i++;
       }
@@ -1023,7 +1016,7 @@ function renderBrief(container, text) {
     if (paraText) {
       const p = document.createElement('p');
       p.className = 'brief-paragraph';
-      p.textContent = paraText.replace(/\*\*/g, '');
+      p.innerHTML = parseBriefMarkdown(paraText);
       p.style.animationDelay = animDelay + 'ms';
       container.appendChild(p);
       animDelay += 100;
@@ -1062,6 +1055,7 @@ function initExecutiveBrief() {
 
   freshForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (briefStreamActive) return;
 
     const name = freshForm.querySelector('#brief-name').value.trim();
     const email = freshForm.querySelector('#brief-email').value.trim();
@@ -1069,6 +1063,14 @@ function initExecutiveBrief() {
     const role = freshForm.querySelector('#brief-role').value.trim();
 
     if (!name || !email || !company || !role) return;
+
+    // Disable submit button immediately to prevent double-clicks
+    const submitBtn = freshForm.querySelector('button[type="submit"], input[type="submit"], button:not([type])');
+    const originalBtnText = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
+    }
 
     // Save contact info to session
     session._contactName = name;
@@ -1092,11 +1094,21 @@ function initExecutiveBrief() {
     // Hide form and preview, generate brief
     freshForm.classList.add('hidden');
     if (briefPreview) briefPreview.classList.add('hidden');
-    generateBrief(statusEl, briefContainer);
+    generateBrief(statusEl, briefContainer).catch(() => {
+      // On failure, restore the form so user can retry
+      freshForm.classList.remove('hidden');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
+    });
   });
 }
 
 async function generateBrief(statusEl, briefContainer) {
+  if (briefStreamActive) return;
+  briefStreamActive = true;
+
   hideStickyBriefCTA();
   const currentSession = session;
   const currentResults = lastResults;
@@ -1144,6 +1156,7 @@ async function generateBrief(statusEl, briefContainer) {
     statusEl.classList.remove('hidden');
     briefContainer.classList.add('hidden');
   }
+  briefStreamActive = false;
   // Show open feedback even if brief errored
   feedbackState.briefDone = true;
   maybeShowOpenFeedback();
