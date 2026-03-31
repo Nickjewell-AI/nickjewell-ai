@@ -1117,15 +1117,18 @@
 
     .brief-section-header {
       font-family: var(--font-display);
-      font-size: 1.15rem;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--accent);
       margin: 2rem 0 0.75rem;
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
       opacity: 0;
       animation: brief-fade-in 0.6s ease forwards;
     }
+
+    h2.brief-section-header { font-size: 1.35rem; }
+    h3.brief-section-header { font-size: 1.15rem; }
+    h4.brief-section-header { font-size: 1rem; }
 
     .brief-section-header:first-child {
       margin-top: 0;

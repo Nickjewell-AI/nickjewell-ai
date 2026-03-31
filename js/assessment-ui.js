@@ -753,11 +753,16 @@ function showResults() {
   actionsContainer.appendChild(monthGroup);
   setTimeout(() => monthGroup.classList.add('visible'), delay);
 
-  // Assessment depth note
+  // Assessment depth note — only list layers that remained quick-assessed
+  // (fewer than 3 total questions, excluding layers that got adaptive follow-ups)
   const noteEl = document.getElementById('assessed-note');
   if (results.moduleDepths) {
     const shallowLayers = Object.entries(results.moduleDepths)
-      .filter(([, d]) => d === 'shallow')
+      .filter(([layer, d]) => {
+        if (d !== 'shallow') return false;
+        const totalResponses = (session.layerResponses[layer] || []).length;
+        return totalResponses < 3;
+      })
       .map(([l]) => LAYER_NAMES[l]);
     if (shallowLayers.length > 0) {
       noteEl.textContent = `${shallowLayers.join(' and ')} received a quick assessment based on core diagnostic questions. Deeply assessed layers used the full question set for higher confidence scoring.`;
@@ -1072,9 +1077,11 @@ function renderBrief(container, text) {
     // Skip blank lines
     if (!line.trim()) { i++; continue; }
 
-    // Markdown header: ## Title
-    if (/^##\s+/.test(line)) {
-      const headerText = line.replace(/^##\s+/, '');
+    // Markdown headings: # → h2, ## → h3, ### → h4
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const headerText = headingMatch[2];
 
       // Detect "What To Do Monday" section
       if (/what\s+to\s+do\s+monday/i.test(headerText)) {
@@ -1084,7 +1091,7 @@ function renderBrief(container, text) {
         // Collect all bullet lines in this section
         const bullets = [];
         while (i < lines.length) {
-          if (/^##\s+/.test(lines[i])) break; // next section
+          if (/^#{1,3}\s+/.test(lines[i])) break; // next section
           if (/^\s*[-*]\s+/.test(lines[i])) {
             bullets.push(lines[i]);
           }
@@ -1098,7 +1105,8 @@ function renderBrief(container, text) {
       }
 
       inMondaySection = false;
-      const h = document.createElement('h3');
+      const tag = level === 1 ? 'h2' : level === 2 ? 'h3' : 'h4';
+      const h = document.createElement(tag);
       h.className = 'brief-section-header';
       h.textContent = headerText;
       h.style.animationDelay = animDelay + 'ms';
@@ -1127,7 +1135,7 @@ function renderBrief(container, text) {
 
     // Regular paragraph: collect consecutive non-blank, non-header, non-bullet lines
     let paraText = '';
-    while (i < lines.length && lines[i].trim() && !/^##\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i])) {
+    while (i < lines.length && lines[i].trim() && !/^#{1,3}\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i])) {
       paraText += (paraText ? ' ' : '') + lines[i].trim();
       i++;
     }
