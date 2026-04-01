@@ -1428,6 +1428,8 @@ async function autoSaveResults() {
     binding_constraint: lastResults.bindingConstraint,
     all_responses: allResponses,
     time_to_complete_seconds: timeToComplete,
+    taste_normalized: lastResults.tasteNormalized || null,
+    scenario_set: lastResults.scenarioSet ? lastResults.scenarioSet.join(',') : null,
   };
 
   try {

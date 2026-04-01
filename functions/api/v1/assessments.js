@@ -30,6 +30,7 @@ export async function onRequest(context) {
   const industry = url.searchParams.get('industry');
   const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit')) || 50, 1), 200);
   const offset = Math.max(parseInt(url.searchParams.get('offset')) || 0, 0);
+  const sort = url.searchParams.get('sort') === 'asc' ? 'ASC' : 'DESC';
 
   let sql = 'SELECT * FROM assessment_results WHERE 1=1';
   const params = [];
@@ -43,7 +44,7 @@ export async function onRequest(context) {
     params.push(industry);
   }
 
-  sql += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?';
+  sql += ` ORDER BY id ${sort} LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
   try {
