@@ -296,6 +296,21 @@ async function selectOption(page, key) {
 export async function extractResults(page) {
   await waitForResults(page);
 
+  // Debug: log what's actually on the results page
+  const pageState = await page.evaluate(() => {
+    return {
+      resultsVisible: !document.getElementById('assessment-results')?.classList.contains('hidden'),
+      detailedVisible: !document.getElementById('detailed-results')?.classList.contains('hidden'),
+      verdictText: document.getElementById('verdict-label')?.textContent,
+      layerBarsCount: document.querySelectorAll('#layer-bars .layer-bar-row').length,
+      layerBarsHTML: document.getElementById('layer-bars')?.innerHTML.substring(0, 500),
+      tasteVisible: !document.getElementById('taste-signature')?.classList.contains('hidden'),
+      bodyClasses: document.body.className,
+      url: window.location.href,
+    };
+  });
+  console.log('[extractResults] page state:', JSON.stringify(pageState, null, 2));
+
   const rawVerdict = await page.$eval('#verdict-label', el => el.textContent.trim());
   const verdict = rawVerdict.charAt(0).toUpperCase() + rawVerdict.slice(1).toLowerCase();
   const compositeScore = await page.$eval('#verdict-score', el => el.textContent.trim());
