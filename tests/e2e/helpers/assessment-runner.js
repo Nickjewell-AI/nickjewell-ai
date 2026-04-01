@@ -296,16 +296,6 @@ async function selectOption(page, key) {
 export async function extractResults(page) {
   await waitForResults(page);
 
-  // Force all results sections visible
-  await page.evaluate(() => {
-    document.querySelectorAll('.hidden').forEach(el => {
-      if (el.closest('#assessment-results')) {
-        el.classList.remove('hidden');
-      }
-    });
-  });
-  await page.waitForTimeout(1000);
-
   const rawVerdict = await page.$eval('#verdict-label', el => el.textContent.trim());
   const verdict = rawVerdict.charAt(0).toUpperCase() + rawVerdict.slice(1).toLowerCase();
   const compositeScore = await page.$eval('#verdict-score', el => el.textContent.trim()).catch(() => '');

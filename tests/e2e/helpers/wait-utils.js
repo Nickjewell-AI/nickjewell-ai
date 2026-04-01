@@ -9,7 +9,14 @@ export async function waitForQuestionCard(page, opts = {}) {
 export async function waitForResults(page) {
   await page.waitForSelector('#assessment-results:not(.hidden)', { timeout: 15000 });
   await page.waitForSelector('#verdict-label', { timeout: 5000 });
-  await page.waitForTimeout(500);
+
+  // Force-reveal all hidden sections within results
+  await page.evaluate(() => {
+    document.querySelectorAll('#assessment-results .hidden').forEach(el => {
+      el.classList.remove('hidden');
+    });
+  });
+  await page.waitForTimeout(1000);
 }
 
 export async function waitForBriefStream(page) {
