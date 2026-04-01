@@ -992,6 +992,7 @@ function createSession() {
       _layerJustCompleted: null,
     },
     adaptiveFreeText: {},
+    tasteFreeText: null,
   };
 }
 
@@ -1465,6 +1466,12 @@ function buildBriefContext(session, results) {
     if (session.tasteReasoningDims) {
       lines.push('Reasoning adjustments — FR: ' + session.tasteReasoningDims.frameRecognition + ', KD: ' + session.tasteReasoningDims.killDiscipline + ', EC: ' + session.tasteReasoningDims.edgeCaseInstinct);
     }
+  }
+
+  if (session.tasteFreeText) {
+    lines.push('');
+    lines.push('=== TASTE FREE-TEXT (Post-Scenarios) ===');
+    lines.push('The user added: ' + session.tasteFreeText);
   }
 
   return lines.join('\n');

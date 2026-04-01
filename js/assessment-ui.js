@@ -43,6 +43,7 @@ let lastResults;
 let savedRowId = null;
 let briefStreamActive = false;
 let freeTextConfirmationShown = false;
+let postTastePromptShown = false;
 let currentModuleCard = null;
 let currentModuleName = null;
 
@@ -102,6 +103,11 @@ function showNextQuestion() {
   const question = getNextQuestion(session);
 
   if (!question) {
+    if (!postTastePromptShown) {
+      postTastePromptShown = true;
+      showPostTastePrompt();
+      return;
+    }
     showResults();
     return;
   }
@@ -450,8 +456,8 @@ function showCU2FreeText(parentCard, parentQuestion) {
 function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
   const reasoning = TASTE_REASONING[parentQuestion.id];
 
-  const fuCard = document.createElement('div');
-  fuCard.className = 'follow-up-card fade-in';
+  const reasoningBlock = document.createElement('div');
+  reasoningBlock.className = 'module-question fade-in';
 
   const leadIn = TASTE_LEADINS[parentQuestion.id]?.[selectedOption.key] || 'What was the biggest factor in your thinking?';
 
@@ -471,7 +477,7 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
     btn.addEventListener('click', () => {
       if (rLocked) return;
       rLocked = true;
-      fuOptions.querySelectorAll('.option-button').forEach((b) => b.classList.remove('selected'));
+      fuOptions.querySelectorAll('.option-button').forEach((b) => { b.classList.remove('selected'); b.setAttribute('aria-checked', 'false'); });
       btn.classList.add('selected');
       setTimeout(() => {
         fuOptions.querySelectorAll('.option-button').forEach((b) => { b.disabled = true; b.classList.add('disabled'); });
@@ -482,76 +488,87 @@ function showTasteReasoning(parentCard, parentQuestion, selectedOption) {
     fuOptions.appendChild(btn);
   });
 
-  fuCard.appendChild(fuText);
-  fuCard.appendChild(fuOptions);
+  reasoningBlock.appendChild(fuText);
+  reasoningBlock.appendChild(fuOptions);
+  parentCard.appendChild(reasoningBlock);
 
-  // Scenario-specific micro-prompt link
-  const microPromptText = TASTE_MICRO_PROMPTS[parentQuestion.id] || 'Tell us more';
-  const tellMore = document.createElement('a');
-  tellMore.href = '#';
-  tellMore.className = 'tell-us-more-link';
-  tellMore.textContent = microPromptText + ' \u2192';
-  tellMore.addEventListener('click', (e) => {
-    e.preventDefault();
-    tellMore.style.display = 'none';
-    freeTextWrap.classList.remove('hidden');
-  });
+  requestAnimationFrame(() => reasoningBlock.classList.add('visible'));
+
+  // Scroll to reasoning block with nav offset
+  setTimeout(() => {
+    const navHeight = document.querySelector('.nav')?.offsetHeight || 70;
+    const blockTop = reasoningBlock.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: blockTop - navHeight - 24, behavior: 'smooth' });
+  }, 50);
+}
+
+function showPostTastePrompt() {
+  const card = document.createElement('div');
+  card.className = 'question-card fade-in';
+
+  const label = document.createElement('div');
+  label.className = 'question-label';
+  label.textContent = 'One Last Thing';
+
+  const text = document.createElement('div');
+  text.className = 'question-text';
+  text.textContent = 'Anything you want to add about your thinking on these scenarios — or anything you want the executive brief to address?';
 
   const freeTextWrap = document.createElement('div');
-  freeTextWrap.className = 'taste-freetext-wrap hidden';
+  freeTextWrap.className = 'cu2-freetext-wrap';
 
   const textarea = document.createElement('textarea');
   textarea.className = 'taste-freetext';
-  textarea.placeholder = 'One sentence is plenty.';
+  textarea.placeholder = 'One sentence is plenty. (optional)';
   textarea.rows = 3;
+
+  const controls = document.createElement('div');
+  controls.className = 'cu2-controls';
 
   const submitBtn = document.createElement('button');
   submitBtn.className = 'taste-freetext-submit';
   submitBtn.textContent = 'Submit';
-  submitBtn.addEventListener('click', async () => {
-    const text = textarea.value.trim();
-    if (!text) return;
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Analyzing\u2026';
-    showFreeTextConfirmation(freeTextWrap);
-    try {
-      if (window.AssessmentAPI && window.AssessmentAPI.callAssessmentAPI) {
-        const systemPrompt = 'You are analyzing a free-text response from a strategic AI readiness assessment. The user was asked why they made a particular choice in a scenario about AI implementation. Analyze their reasoning for:\n- Frame Recognition: Do they question assumptions or reframe the problem? (adjust: -1, 0, or +1)\n- Kill Discipline: Do they show willingness to stop or redirect? (adjust: -1, 0, or +1)\n- Edge-Case Instinct: Do they think about what could go wrong? (adjust: -1, 0, or +1)\nRespond with ONLY a JSON object: {"fr": 0, "kd": 0, "ec": 0} with values of -1, 0, or +1.';
-        const userMsg = `Scenario: ${parentQuestion.text}\nTheir answer: ${selectedOption.text}\nWhy they chose it: ${text}`;
-        const result = await window.AssessmentAPI.callAssessmentAPI({
-          system: systemPrompt,
-          messages: [{ role: 'user', content: userMsg }],
-          model: 'claude-sonnet-4-20250514',
-        });
-        if (result) {
-          try {
-            const jsonMatch = result.match(/\{[^}]+\}/);
-            if (jsonMatch) {
-              const parsed = JSON.parse(jsonMatch[0]);
-              if (!session.tasteReasoningDims) {
-                session.tasteReasoningDims = { frameRecognition: 0, killDiscipline: 0, edgeCaseInstinct: 0 };
-              }
-              const clamp = (v) => Math.max(-1, Math.min(1, Math.round(v) || 0));
-              session.tasteReasoningDims.frameRecognition += clamp(parsed.fr);
-              session.tasteReasoningDims.killDiscipline += clamp(parsed.kd);
-              session.tasteReasoningDims.edgeCaseInstinct += clamp(parsed.ec);
-            }
-          } catch { /* skip silently */ }
-        }
-      }
-    } catch { /* skip silently */ }
-    submitBtn.textContent = 'Thanks!';
+
+  const skipLink = document.createElement('a');
+  skipLink.href = '#';
+  skipLink.className = 'cu2-skip-link';
+  skipLink.textContent = 'Skip \u2192';
+
+  skipLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    showResults();
   });
 
+  submitBtn.addEventListener('click', () => {
+    const val = textarea.value.trim();
+    if (!val) return;
+    // Store for brief context — no API call
+    session.tasteFreeText = val;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Thanks!';
+    textarea.disabled = true;
+    skipLink.style.display = 'none';
+    showFreeTextConfirmation(freeTextWrap);
+    setTimeout(() => showResults(), 600);
+  });
+
+  controls.appendChild(submitBtn);
+  controls.appendChild(skipLink);
   freeTextWrap.appendChild(textarea);
-  freeTextWrap.appendChild(submitBtn);
+  freeTextWrap.appendChild(controls);
 
-  fuCard.appendChild(tellMore);
-  fuCard.appendChild(freeTextWrap);
+  card.appendChild(label);
+  card.appendChild(text);
+  card.appendChild(freeTextWrap);
+  container.appendChild(card);
 
-  parentCard.appendChild(fuCard);
-  requestAnimationFrame(() => fuCard.classList.add('visible'));
-  fuCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  requestAnimationFrame(() => card.classList.add('visible'));
+
+  setTimeout(() => {
+    const navHeight = document.querySelector('.nav')?.offsetHeight || 70;
+    const cardTop = card.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: cardTop - navHeight - 24, behavior: 'smooth' });
+  }, 50);
 }
 
 // ─── Adaptive Follow-Up Transition & Micro-Prompt ────────
@@ -862,6 +879,7 @@ function showResults() {
     lastResults = null;
     savedRowId = null;
     freeTextConfirmationShown = false;
+    postTastePromptShown = false;
     // Remove brief-sent confirmation from previous run
     const oldBriefConfirm = document.querySelector('.brief-sent-confirm');
     if (oldBriefConfirm) oldBriefConfirm.remove();
