@@ -296,39 +296,33 @@ async function selectOption(page, key) {
 export async function extractResults(page) {
   await waitForResults(page);
 
-  // Debug: log what's actually on the results page
-  const pageState = await page.evaluate(() => {
-    return {
-      resultsVisible: !document.getElementById('assessment-results')?.classList.contains('hidden'),
-      detailedVisible: !document.getElementById('detailed-results')?.classList.contains('hidden'),
-      verdictText: document.getElementById('verdict-label')?.textContent,
-      layerBarsCount: document.querySelectorAll('#layer-bars .layer-bar-row').length,
-      layerBarsHTML: document.getElementById('layer-bars')?.innerHTML.substring(0, 500),
-      tasteVisible: !document.getElementById('taste-signature')?.classList.contains('hidden'),
-      bodyClasses: document.body.className,
-      url: window.location.href,
-    };
+  // Force all results sections visible
+  await page.evaluate(() => {
+    document.querySelectorAll('.hidden').forEach(el => {
+      if (el.closest('#assessment-results')) {
+        el.classList.remove('hidden');
+      }
+    });
   });
-  console.log('[extractResults] page state:', JSON.stringify(pageState, null, 2));
+  await page.waitForTimeout(1000);
 
   const rawVerdict = await page.$eval('#verdict-label', el => el.textContent.trim());
   const verdict = rawVerdict.charAt(0).toUpperCase() + rawVerdict.slice(1).toLowerCase();
-  const compositeScore = await page.$eval('#verdict-score', el => el.textContent.trim());
-  const tasteName = await page.$eval('#taste-name', el => el.textContent.trim());
-  const dimFrame = await page.$eval('#dim-frame-val', el => el.textContent.trim());
-  const dimKill = await page.$eval('#dim-kill-val', el => el.textContent.trim());
-  const dimEdge = await page.$eval('#dim-edge-val', el => el.textContent.trim());
-  const constraintTitle = await page.$eval('#constraint-title', el => el.textContent.trim());
+  const compositeScore = await page.$eval('#verdict-score', el => el.textContent.trim()).catch(() => '');
+  const tasteName = await page.$eval('#taste-name', el => el.textContent.trim()).catch(() => '');
+  const dimFrame = await page.$eval('#dim-frame-val', el => el.textContent.trim()).catch(() => '');
+  const dimKill = await page.$eval('#dim-kill-val', el => el.textContent.trim()).catch(() => '');
+  const dimEdge = await page.$eval('#dim-edge-val', el => el.textContent.trim()).catch(() => '');
+  const constraintTitle = await page.$eval('#constraint-title', el => el.textContent.trim()).catch(() => '');
 
-  // Extract layer scores from the bars
-  const layerScores = await page.$$eval('#layer-bars .layer-bar-row', rows =>
+  // Fixed selectors to match actual DOM structure
+  const layerScores = await page.$$eval('#layer-bars .layer-row', rows =>
     rows.map(row => ({
-      name: row.querySelector('.layer-bar-name')?.textContent?.trim(),
-      score: row.querySelector('.layer-bar-score')?.textContent?.trim(),
+      name: row.querySelector('.layer-name')?.textContent?.trim(),
+      score: row.querySelector('.layer-score-label')?.textContent?.trim(),
     }))
   );
 
-  // Check for action plan horizons
   const hasRightNow = await page.$('.horizon-group') !== null;
 
   return {
