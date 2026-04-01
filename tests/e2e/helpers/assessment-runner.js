@@ -117,36 +117,46 @@ export async function runAssessment(page, profile, opts = {}) {
 
 /**
  * Select an option by its key letter (A, B, C, D, E)
- * Targets the LAST options-list with enabled buttons (the current question).
+ * Uses page.evaluate to query the DOM directly inside the browser context,
+ * avoiding timing issues between Playwright handle resolution and live DOM.
  */
 async function selectOption(page, key) {
-  // Wait for enabled options to exist
-  await page.waitForSelector('.option-button:not([disabled])', { timeout: 10000 });
-  // Small delay for animation
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(500);
 
-  // Get ALL options lists on the page
-  const optionsLists = await page.$$('.options-list');
-  // The last options-list with enabled buttons is the current question
-  let targetButtons = [];
-  for (const list of optionsLists) {
-    const enabledBtns = await list.$$('.option-button:not([disabled])');
-    if (enabledBtns.length > 0) {
-      targetButtons = enabledBtns;
+  const clicked = await page.evaluate((targetKey) => {
+    // Get all options-lists on the page
+    const lists = document.querySelectorAll('.options-list');
+    // Find the last list that has enabled buttons — that's the current question
+    let targetList = null;
+    for (const list of lists) {
+      const enabled = list.querySelectorAll('.option-button:not([disabled])');
+      if (enabled.length > 0) targetList = list;
     }
-  }
+    if (!targetList) return { found: false, reason: 'no list with enabled buttons' };
 
-  for (const btn of targetButtons) {
-    const keyEl = await btn.$('.option-key');
-    if (keyEl) {
-      const keyText = await keyEl.textContent();
-      if (keyText.trim() === key) {
-        await btn.click();
-        return;
+    // Find the button with matching key in this list
+    const buttons = targetList.querySelectorAll('.option-button:not([disabled])');
+    for (const btn of buttons) {
+      const keyEl = btn.querySelector('.option-key');
+      if (keyEl && keyEl.textContent.trim() === targetKey) {
+        btn.click();
+        return { found: true };
       }
     }
+
+    // Debug: return what we found
+    const foundKeys = Array.from(buttons).map(b => {
+      const k = b.querySelector('.option-key');
+      return k ? k.textContent.trim() : '?';
+    });
+    return { found: false, reason: `key "${targetKey}" not in [${foundKeys.join(', ')}]` };
+  }, key);
+
+  if (!clicked.found) {
+    throw new Error(`selectOption failed: ${clicked.reason}`);
   }
-  throw new Error(`Could not find option with key "${key}" among enabled buttons`);
+
+  await page.waitForTimeout(400);
 }
 
 /**
