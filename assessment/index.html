@@ -229,6 +229,27 @@
       transform: translateY(0);
     }
 
+    /* Compound module cards — questions within */
+    .module-question {
+      padding-top: 1.5rem;
+      margin-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .module-question:first-child {
+      padding-top: 0;
+      margin-top: 0;
+      border-top: none;
+    }
+
+    .module-question.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     /* ─── Results ─── */
 
     .assessment-results {
@@ -909,6 +930,11 @@
         min-height: 48px;
         padding: 0.85rem 1rem;
         font-size: 0.88rem;
+      }
+
+      .module-question {
+        padding-top: 1.25rem;
+        margin-top: 1.25rem;
       }
 
       .taste-card,

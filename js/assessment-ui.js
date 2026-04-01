@@ -43,6 +43,8 @@ let lastResults;
 let savedRowId = null;
 let briefStreamActive = false;
 let freeTextConfirmationShown = false;
+let currentModuleCard = null;
+let currentModuleName = null;
 
 function init() {
   session = createSession();
@@ -104,7 +106,107 @@ function showNextQuestion() {
     return;
   }
 
+  // Tier 2: compound module cards
+  if (question.tier === 2) {
+    const moduleName = question.layerLabel;
+
+    // Same module as current card — add question inline
+    if (moduleName === currentModuleName && currentModuleCard) {
+      addQuestionToModuleCard(currentModuleCard, question);
+      return;
+    }
+
+    // New module — create new compound card
+    currentModuleName = moduleName;
+
+    // Update tier label
+    let label = question.tierLabel;
+    if (question.layerLabel) label += ' — ' + question.layerLabel;
+    tierLabel.textContent = label;
+    updateProgress();
+
+    // Create the module card
+    const card = document.createElement('div');
+    card.className = 'question-card fade-in module-card';
+    container.appendChild(card);
+    currentModuleCard = card;
+
+    // Add first question to it
+    addQuestionToModuleCard(card, question);
+
+    // Animate card in
+    requestAnimationFrame(() => card.classList.add('visible'));
+
+    // Scroll to card
+    setTimeout(() => {
+      const navHeight = document.querySelector('.nav')?.offsetHeight || 70;
+      const cardTop = card.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: cardTop - navHeight - 24, behavior: 'smooth' });
+    }, 50);
+    return;
+  }
+
+  // Tier 1 and Tier 3: individual cards (existing behavior)
+  currentModuleCard = null;
+  currentModuleName = null;
   renderQuestion(question);
+}
+
+function addQuestionToModuleCard(card, question) {
+  // Update tier label and progress
+  let label = question.tierLabel;
+  if (question.layerLabel) label += ' — ' + question.layerLabel;
+  tierLabel.textContent = label;
+  updateProgress();
+
+  const questionBlock = document.createElement('div');
+  questionBlock.className = 'module-question fade-in';
+
+  const qLabel = document.createElement('div');
+  qLabel.className = 'question-label';
+  qLabel.textContent = question.label;
+
+  const qText = document.createElement('div');
+  qText.className = 'question-text';
+  qText.textContent = question.text;
+
+  const options = document.createElement('div');
+  options.className = 'options-list';
+  options.setAttribute('role', 'radiogroup');
+
+  let locked = false;
+
+  question.options.forEach((opt) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button';
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', 'false');
+    btn.innerHTML = `<span class="option-key">${opt.key}</span><span class="option-text">${opt.text}</span>`;
+    btn.addEventListener('click', () => {
+      if (locked) return;
+      locked = true;
+      options.querySelectorAll('.option-button').forEach((b) => { b.classList.remove('selected'); b.setAttribute('aria-checked', 'false'); });
+      btn.classList.add('selected');
+      btn.setAttribute('aria-checked', 'true');
+      setTimeout(() => handleAnswer(card, question, opt, options), 250);
+    });
+    options.appendChild(btn);
+  });
+
+  questionBlock.appendChild(qLabel);
+  questionBlock.appendChild(qText);
+  questionBlock.appendChild(options);
+  card.appendChild(questionBlock);
+
+  // Animate in
+  requestAnimationFrame(() => questionBlock.classList.add('visible'));
+
+  // Scroll to the new question block within the card
+  setTimeout(() => {
+    const navHeight = document.querySelector('.nav')?.offsetHeight || 70;
+    const blockTop = questionBlock.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: blockTop - navHeight - 24, behavior: 'smooth' });
+  }, 50);
 }
 
 function renderAdaptiveQuestion(question) {
