@@ -101,7 +101,11 @@ export async function runAssessment(page, profile, opts = {}) {
     const reasoningHandled = await handleReasoningButtons(page);
     if (reasoningHandled) continue;
 
-    // 4. Check for regular option buttons with .option-key
+    // 4. Handle diagnostic follow-up questions (Y/N options, not in profile)
+    const followUpHandled = await handleFollowUpButtons(page);
+    if (followUpHandled) continue;
+
+    // 5. Check for regular option buttons with .option-key
     const hasOptions = await page.evaluate(() => {
       const lists = document.querySelectorAll('.options-list');
       for (const list of lists) {
@@ -204,6 +208,22 @@ async function handleReasoningButtons(page) {
   return false;
 }
 
+async function handleFollowUpButtons(page) {
+  const clicked = await page.evaluate(() => {
+    const btns = document.querySelectorAll('.follow-up-option:not([disabled]):not(.reasoning-option)');
+    if (btns.length > 0) {
+      btns[0].click();
+      return true;
+    }
+    return false;
+  });
+  if (clicked) {
+    await page.waitForTimeout(400);
+    return true;
+  }
+  return false;
+}
+
 /**
  * Select an option by its key letter (A, B, C, D, E).
  * Uses page.evaluate for atomic DOM interaction.
@@ -268,7 +288,8 @@ async function selectOption(page, key) {
 export async function extractResults(page) {
   await waitForResults(page);
 
-  const verdict = await page.$eval('#verdict-label', el => el.textContent.trim());
+  const rawVerdict = await page.$eval('#verdict-label', el => el.textContent.trim());
+  const verdict = rawVerdict.charAt(0).toUpperCase() + rawVerdict.slice(1).toLowerCase();
   const compositeScore = await page.$eval('#verdict-score', el => el.textContent.trim());
   const tasteName = await page.$eval('#taste-name', el => el.textContent.trim());
   const dimFrame = await page.$eval('#dim-frame-val', el => el.textContent.trim());
