@@ -88,7 +88,6 @@ export async function runAssessment(page, profile, opts = {}) {
 
   while (iterations < maxIterations) {
     iterations++;
-    console.log(`[runner] iteration ${iterations}, checking state...`);
 
     // 1. Check if results are showing
     const resultsVisible = await page.$('#assessment-results:not(.hidden)');
@@ -176,15 +175,19 @@ export async function runAssessment(page, profile, opts = {}) {
  * Returns true if a skip link was found and clicked.
  */
 async function handleSkipLink(page) {
-  const skipBtn = await page.$('.cu2-skip-link');
-  if (!skipBtn) return false;
-
-  const box = await skipBtn.boundingBox();
-  if (!box) return false;
-
-  await skipBtn.click();
-  await page.waitForTimeout(500);
-  return true;
+  const clicked = await page.evaluate(() => {
+    const link = document.querySelector('.cu2-skip-link');
+    if (link && link.offsetParent !== null) {
+      link.click();
+      return true;
+    }
+    return false;
+  });
+  if (clicked) {
+    await page.waitForTimeout(500);
+    return true;
+  }
+  return false;
 }
 
 /**
