@@ -48,7 +48,7 @@
     "expected": {
       "verdict": "Red",
       "signature": "Momentum",
-      "bindingConstraint": null
+      "bindingConstraint": ""
     }
   },
   "pragmatism": {
@@ -68,8 +68,8 @@
     },
     "taste": {
       "T1": { "answer": "B" },
-      "T2": { "answer": "D" },
-      "T3": { "answer": "B" }
+      "T2": { "answer": "B" },
+      "T3": { "answer": "D" }
     },
     "expected": {
       "verdict": "Amber",
