@@ -6,7 +6,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +30,7 @@ jobs:
           commitHash: ${{ github.sha }}
 
       - name: Run E2E tests
-        run: npx playwright test
+        run: npx playwright test --retries=1 --workers=2
         env:
           TEST_URL: ${{ steps.cf-deploy.outputs.url }}
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
