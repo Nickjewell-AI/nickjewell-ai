@@ -1,0 +1,11 @@
+{
+  "assessment_results": {
+    "selector": ".substack-cta",
+    "expected_text": "You have the diagnosis. The newsletter is the playbook",
+    "link_href": "nickjewellai.substack.com"
+  },
+  "footer_nav": {
+    "selector": ".footer-nav a[href*='substack']",
+    "expected_text": "The Binding Constr(ai)nt"
+  }
+}

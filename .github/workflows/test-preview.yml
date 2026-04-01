@@ -1,0 +1,45 @@
+name: E2E Tests — Preview
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for Cloudflare deployment
+        id: cf-deploy
+        uses: WalshyDev/cf-pages-await@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          project: nickjewell-ai
+          commitHash: ${{ github.sha }}
+
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          TEST_URL: ${{ steps.cf-deploy.outputs.url }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report-preview
+          path: tests/e2e/reports/
+          retention-days: 14

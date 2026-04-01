@@ -1,0 +1,83 @@
+{
+  "sophistication": {
+    "description": "C-Suite leader at scaling tech company. High scores everywhere, reframe-oriented Taste.",
+    "pulse": {
+      "P1": "A",
+      "P2": "C",
+      "P3": "C",
+      "P4": "D",
+      "P7": "D"
+    },
+    "diagnostic": {
+      "F1": "A", "F2": "A", "F3": "A",
+      "A1": "A", "A2": "A", "A3": "A",
+      "AC1": "A", "AC2": "A", "AC3": "A",
+      "CU1": "A", "CU2": "A", "CU3": "A"
+    },
+    "taste": {
+      "T1": { "answer": "D", "reasoning": "R1" },
+      "T2": { "answer": "D", "reasoning": "R2" },
+      "T3": { "answer": "D", "reasoning": "R1" },
+      "T4": { "answer": "D", "reasoning": "R2" }
+    },
+    "expected": {
+      "verdict": "Green",
+      "signature": "Sophistication",
+      "bindingConstraint": null
+    }
+  },
+  "momentum": {
+    "description": "Explorer at small company. Low scores, action-oriented Taste choices.",
+    "pulse": {
+      "P1": "D",
+      "P2": "A",
+      "P3": "D",
+      "P4": "A",
+      "P7": "A"
+    },
+    "diagnostic": {
+      "F1": "D", "F2": "D", "F3": "D",
+      "A1": "D", "A2": "D", "A3": "D",
+      "AC1": "D", "AC2": "D", "AC3": "D",
+      "CU1": "D", "CU2": "B", "CU3": "D"
+    },
+    "taste": {
+      "T1": { "answer": "A", "reasoning": "R1" },
+      "T2": { "answer": "A", "reasoning": "R1" },
+      "T3": { "answer": "A", "reasoning": "R1" },
+      "T4": { "answer": "A", "reasoning": "R1" }
+    },
+    "expected": {
+      "verdict": "Red",
+      "signature": "Momentum",
+      "bindingConstraint": "foundation"
+    }
+  },
+  "pragmatism": {
+    "description": "Implementer at mid-size financial services company. Mixed scores, balanced Taste.",
+    "pulse": {
+      "P1": "C",
+      "P2": "B",
+      "P3": "A",
+      "P4": "C",
+      "P7": "C"
+    },
+    "diagnostic": {
+      "F1": "B", "F2": "B", "F3": "B",
+      "A1": "B", "A2": "C", "A3": "B",
+      "AC1": "C", "AC2": "B", "AC3": "C",
+      "CU1": "B", "CU2": "A", "CU3": "B"
+    },
+    "taste": {
+      "T1": { "answer": "B", "reasoning": "R2" },
+      "T2": { "answer": "C", "reasoning": "R3" },
+      "T3": { "answer": "B", "reasoning": "R2" },
+      "T4": { "answer": "C", "reasoning": "R1" }
+    },
+    "expected": {
+      "verdict": "Amber",
+      "signature": "Pragmatism",
+      "bindingConstraint": "accountability"
+    }
+  }
+}

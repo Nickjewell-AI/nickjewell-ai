@@ -6,3 +6,9 @@ node_modules/
 desktop.ini
 *.log
 files.zip
+
+# Playwright
+tests/e2e/reports/
+test-results/
+playwright-report/
+blob-report/
