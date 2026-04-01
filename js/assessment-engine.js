@@ -518,7 +518,7 @@ const INDUSTRY_OPTIONS = {
     ],
     CU1: [
       { key: 'A', text: "We've already piloted tools with willing teams — adoption varied but the process exists", score: 4 },
-      { key: 'B', text: "Traders and analysts are excited, compliance is nervous, operations just wants fewer manual processes", score: 2 },
+      { key: 'B', text: "Front-line staff are excited, compliance is nervous, operations just wants fewer manual processes", score: 2 },
       { key: 'C', text: "The last time we changed a core workflow, it took 18 months of change management — this would be worse", score: 1 },
       { key: 'D', text: "AI is something leadership mentions in earnings calls — the people doing the work haven't seen a real plan", score: 0 },
       { key: 'E', text: "Client-facing teams would embrace it, back-office teams would resist — two different cultures in one firm", score: 2 },
