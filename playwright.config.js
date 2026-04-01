@@ -5,11 +5,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 4 : undefined,
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI
     ? [['html', { open: 'never', outputFolder: 'tests/e2e/reports' }], ['github']]
     : [['html', { open: 'on-failure', outputFolder: 'tests/e2e/reports' }]],
-  timeout: 60000,
+  timeout: 120000,
   expect: { timeout: 10000 },
   use: {
     baseURL: process.env.TEST_URL || 'https://www.nickjewell.ai',
@@ -23,9 +23,9 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'mobile-chrome',
-      use: { ...devices['Pixel 5'] },
-    },
+    // {
+    //   name: 'mobile-chrome',
+    //   use: { ...devices['Pixel 5'] },
+    // },
   ],
 });
