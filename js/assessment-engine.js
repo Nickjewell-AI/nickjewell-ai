@@ -10,9 +10,9 @@ const TIER1_QUESTIONS = [
     label: 'Role Context',
     text: 'What best describes your role in AI decisions at your organization?',
     options: [
-      { key: 'A', text: "I'm leading AI strategy (C-suite, VP, Director)" },
-      { key: 'B', text: "I'm evaluating whether we should adopt AI" },
-      { key: 'C', text: "I'm implementing AI projects (technical/project lead)" },
+      { key: 'A', text: "I'm the one making AI decisions for us" },
+      { key: 'B', text: "I'm figuring out whether AI makes sense for us" },
+      { key: 'C', text: "I'm hands-on building or implementing AI projects" },
       { key: 'D', text: "I'm trying to understand where we stand" },
     ],
   },
