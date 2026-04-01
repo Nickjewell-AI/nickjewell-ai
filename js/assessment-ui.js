@@ -82,6 +82,7 @@ function init() {
 
 function startAssessment() {
   assessmentStartTime = Date.now();
+  session._lastQuestionShown = Date.now();
   document.getElementById('assessment-intro').classList.add('hidden');
   document.getElementById('assessment-active').classList.remove('hidden');
   showNextQuestion();
@@ -133,6 +134,11 @@ function showNextQuestion() {
       showNextQuestion();
       return;
     }
+  }
+
+  // Reset timing clock when a new question is shown
+  if (question) {
+    session._lastQuestionShown = Date.now();
   }
 
   if (!question) {
@@ -1409,6 +1415,8 @@ async function autoSaveResults() {
     layers: session.layerResponses,
     taste: session.tasteResponses,
     followUps: session.followUpResponses,
+    timings: lastResults.responseTimings || {},
+    timingSummary: lastResults.timingSummary || null,
   };
 
   const payload = {

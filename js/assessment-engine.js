@@ -1021,6 +1021,12 @@ const TASTE_REASONING = {
 };
 
 function recordTasteReasoning(session, scenarioId, reasoningKey) {
+  // Capture response timing
+  const now = Date.now();
+  if (!session._lastQuestionShown) session._lastQuestionShown = now;
+  session.responseTimings[scenarioId + '_reasoning'] = now - session._lastQuestionShown;
+  session._lastQuestionShown = now;
+
   const scenario = TASTE_REASONING[scenarioId];
   if (!scenario) return;
   const option = scenario.options.find(o => o.key === reasoningKey);
@@ -1539,6 +1545,8 @@ function createSession() {
     adaptiveFreeText: {},
     tasteFreeText: null,
     scenarioSet: null,
+    responseTimings: {},
+    _lastQuestionShown: null,
   };
 }
 
@@ -1690,6 +1698,13 @@ function getNextQuestion(session) {
 
 // Records an answer and advances state
 function recordAnswer(session, questionId, optionKey, score) {
+  // Capture response timing
+  const now = Date.now();
+  if (!session._lastQuestionShown) session._lastQuestionShown = now;
+  const timingMs = now - session._lastQuestionShown;
+  session.responseTimings[questionId] = timingMs;
+  session._lastQuestionShown = now;
+
   if (session.tier === 1) {
     session.pulseAnswers[questionId] = optionKey;
     if (questionId === 'P3') {
@@ -1737,6 +1752,12 @@ function recordAnswer(session, questionId, optionKey, score) {
 
 // Records a follow-up answer (does not advance question index)
 function recordFollowUp(session, followUpId, optionKey, parentQuestionId, effect, newScore) {
+  // Capture response timing
+  const now = Date.now();
+  if (!session._lastQuestionShown) session._lastQuestionShown = now;
+  session.responseTimings[followUpId] = now - session._lastQuestionShown;
+  session._lastQuestionShown = now;
+
   session.followUpResponses[followUpId] = { answer: optionKey, parentQuestionId };
   // If the follow-up adjusts the parent question's score
   if (effect === 'adjustScore' && newScore !== undefined) {
@@ -1801,6 +1822,16 @@ function computeResults(session) {
     edgeCaseInstinct: Math.round((tasteDimensions.edgeCaseInstinct / DIMENSION_MAXES.edgeCaseInstinct) * 100),
   };
 
+  // Response timing summary
+  const timings = Object.values(session.responseTimings);
+  const timingSummary = timings.length ? {
+    total_ms: timings.reduce((a, b) => a + b, 0),
+    avg_ms: Math.round(timings.reduce((a, b) => a + b, 0) / timings.length),
+    slowest_ms: Math.max(...timings),
+    fastest_ms: Math.min(...timings),
+    count: timings.length,
+  } : null;
+
   return {
     layerScores,
     tasteDimensions,
@@ -1809,6 +1840,8 @@ function computeResults(session) {
     tasteCharacterization,
     tasteNormalized,
     scenarioSet: session.scenarioSet || null,
+    responseTimings: session.responseTimings,
+    timingSummary,
     verdict,
     composite,
     bindingConstraint,
