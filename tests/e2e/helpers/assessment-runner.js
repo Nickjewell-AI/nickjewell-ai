@@ -176,10 +176,14 @@ export async function runAssessment(page, profile, opts = {}) {
  */
 async function handleSkipLink(page) {
   const clicked = await page.evaluate(() => {
-    const link = document.querySelector('.cu2-skip-link');
-    if (link && link.offsetParent !== null) {
-      link.click();
-      return true;
+    const links = document.querySelectorAll('.cu2-skip-link');
+    for (let i = links.length - 1; i >= 0; i--) {
+      const link = links[i];
+      if (link.offsetParent !== null && !link.dataset.clicked) {
+        link.dataset.clicked = 'true';
+        link.click();
+        return true;
+      }
     }
     return false;
   });
