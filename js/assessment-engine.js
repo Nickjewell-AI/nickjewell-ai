@@ -427,7 +427,82 @@ const TASTE_QUESTIONS = [
       { key: 'D', text: 'Whether the current refund process should exist at all', score: 4 },
     ],
   },
+  {
+    id: 'T5',
+    layer: 'taste',
+    label: 'The Free Trial Trap',
+    text: "Your marketing lead signed up for an AI tool on a free trial. Three weeks in, the team 'can\\'t go back.' $18K annual license. No AI budget. IT hasn\\'t reviewed it. Trial expires Friday.",
+    options: [
+      { key: 'A', text: "Approve it — $18K is small and she's proven the value with three weeks of daily use.", score: 1 },
+      { key: 'B', text: 'Tell her you need IT to review it first, even if it means losing the trial.', score: 2 },
+      { key: 'C', text: "Ask what happens to company data already in the tool if you don't renew.", score: 3 },
+      { key: 'D', text: "Ask why the team 'can\\'t go back' — is the old way broken, or does the AI just feel faster?", score: 4 },
+    ],
+  },
+  {
+    id: 'T6',
+    layer: 'taste',
+    label: "The Intern's Dashboard",
+    text: "A summer intern built a sales forecasting dashboard using ChatGPT. It's been more accurate than your existing process for six weeks. Three directors rely on it. The intern leaves in two weeks.",
+    options: [
+      { key: 'A', text: 'Have the intern document it and assign someone to maintain it.', score: 2 },
+      { key: 'B', text: "Ask what happens when the forecast is wrong and a director makes a hiring decision based on it.", score: 2 },
+      { key: 'C', text: 'Use this as the business case to propose a formal AI pilot — the intern proved demand.', score: 4 },
+      { key: 'D', text: "Let it die — if nobody internal can build or maintain it, you have a dependency, not a capability.", score: 3 },
+    ],
+  },
+  {
+    id: 'T7',
+    layer: 'taste',
+    label: 'The Vendor Demo',
+    text: "A vendor demos their AI platform using your actual data. CEO and CFO want to move forward. $95K contract. During the demo, you noticed the AI confidently got a known number wrong by 15%. Nobody else caught it.",
+    options: [
+      { key: 'A', text: "Flag the error — if it got a known number wrong, what's it getting wrong that you can't verify?", score: 3 },
+      { key: 'B', text: "Move forward — one error in a live demo isn't a dealbreaker and leadership is aligned.", score: 1 },
+      { key: 'C', text: 'Ask the vendor how the model handles uncertainty — does it flag low confidence or present everything the same?', score: 4 },
+      { key: 'D', text: 'Ask your team what specific problem this solves that you can\'t solve with existing tools.', score: 2 },
+    ],
+  },
+  {
+    id: 'T8',
+    layer: 'taste',
+    label: 'The Compliance Cliff',
+    text: "Your AI claims system handles 40% of volume and has been in production 14 months. New regulations would require human review of every AI decision. Compliance would require 35 new hires — eliminating the cost savings.",
+    options: [
+      { key: 'A', text: 'Start hiring — compliance isn\'t optional and waiting for final rules is gambling.', score: 1 },
+      { key: 'B', text: "Submit a comment arguing your system's 99.2% accuracy record should qualify as meaningful review.", score: 3 },
+      { key: 'C', text: 'Model the break-even — at what point does the system still save money even with reviewers?', score: 3 },
+      { key: 'D', text: 'Build a hybrid where AI pre-processes and a smaller team reviews flagged cases only.', score: 4 },
+    ],
+  },
+  {
+    id: 'T9',
+    layer: 'taste',
+    label: 'The Platform Sunset',
+    text: "The platform your 12 production AI models run on just announced deprecation in 18 months. Three vendors are pitching migrations. Your CTO wants open-source. Your CFO wants cheapest. Nobody's asked whether all 12 models should survive.",
+    options: [
+      { key: 'A', text: "Audit which models actually deliver value — this is the moment to kill the ones that don't.", score: 4 },
+      { key: 'B', text: "Go open-source — you're forced to migrate anyway, invest the disruption in long-term flexibility.", score: 3 },
+      { key: 'C', text: 'Pick the fastest migration — 18 months sounds generous but enterprise migrations always take longer.', score: 2 },
+      { key: 'D', text: 'Map dependencies first — which customer-facing apps break during migration and in what order?', score: 2 },
+    ],
+  },
 ];
+
+// ─── Taste Scenario Sets (Maturity-Routed) ────────────────
+// Each set is balanced to identical dimensional ceilings: FR=6, KD=4, EC=5
+
+const TASTE_SCENARIO_SETS = {
+  exploring: ['T5', 'T6', 'T7'],   // P2=A: mid-market, first AI decisions
+  scaling: ['T1', 'T2', 'T3'],     // P2=B or C: growth-stage, existing scenarios
+  operating: ['T4', 'T8', 'T9'],   // P2=D: enterprise, optimization at scale
+};
+
+function getScenarioSet(maturityAnswer) {
+  if (maturityAnswer === 'A') return TASTE_SCENARIO_SETS.exploring;
+  if (maturityAnswer === 'D') return TASTE_SCENARIO_SETS.operating;
+  return TASTE_SCENARIO_SETS.scaling; // B or C
+}
 
 // ─── Taste Reasoning Follow-Ups ──────────────────────────
 
@@ -455,6 +530,36 @@ const TASTE_LEADINS = {
     B: "Thinking about how customers perceive AI handling their money — what drove that?",
     C: "Worrying about edge cases the agent wasn't trained on — what triggered that?",
     D: "Questioning whether the refund process should exist at all — what made you go there?",
+  },
+  T5: {
+    A: "Approving without review — what made that feel right?",
+    B: "Choosing governance over speed — what was behind that?",
+    C: "Going straight to data exposure — what triggered that?",
+    D: "Questioning whether they actually need it — what drove that?",
+  },
+  T6: {
+    A: "Keeping it running — what made continuity the priority?",
+    B: "Flagging the accountability gap — what triggered that?",
+    C: "Turning a hack into a formal pilot — what drove that reframe?",
+    D: "Letting it die takes discipline — what was behind that?",
+  },
+  T7: {
+    A: "Flagging the error before leadership signs — what drove that?",
+    B: "Moving forward despite the error — what made that feel right?",
+    C: "Asking about the model's self-awareness — what triggered that?",
+    D: "Stepping back from the solution entirely — what was behind that?",
+  },
+  T8: {
+    A: "Hiring immediately for compliance — what drove that urgency?",
+    B: "Pushing back on the regulation's frame — what was behind that?",
+    C: "Modeling the financial exposure first — what triggered that?",
+    D: "Rejecting the all-or-nothing framing — what drove that?",
+  },
+  T9: {
+    A: "Using the deadline to audit value — what made you see the opportunity?",
+    B: "Betting on open-source for the long game — what drove that?",
+    C: "Prioritizing speed over architecture — what was behind that?",
+    D: "Starting with blast radius — what triggered that instinct?",
   },
 };
 
@@ -489,6 +594,46 @@ const TASTE_REASONING = {
       { key: 'R2', text: 'Before automating refunds, I wanted to ask why we process so many refunds in the first place', fr: 2, kd: 1, ec: 0 },
       { key: 'R3', text: '4% errors on money means real customers losing real dollars — that risk felt unacceptable at scale', fr: 0, kd: 1, ec: 1 },
       { key: 'R4', text: "Even if it's accurate, customers might not trust a machine with their money — perception matters", fr: 0, kd: 0, ec: 0 },
+    ],
+  },
+  T5: {
+    options: [
+      { key: 'R1', text: "Company data is already in the tool — the risk exists whether we buy it or not", fr: 0, kd: 0, ec: 2 },
+      { key: 'R2', text: "$18K is noise — the real question is whether this sets a precedent for ungoverned AI adoption", fr: 2, kd: 0, ec: 0 },
+      { key: 'R3', text: "If IT kills it and the team loses three weeks of work, you've taught everyone not to experiment", fr: 0, kd: -1, ec: 1 },
+      { key: 'R4', text: "The fact they 'can't go back' after three weeks is either a great sign or a dependency — I want to know which", fr: 1, kd: 1, ec: 0 },
+    ],
+  },
+  T6: {
+    options: [
+      { key: 'R1', text: "Six weeks of accuracy doesn't mean week seven — what happens when the data pattern changes?", fr: 0, kd: 0, ec: 2 },
+      { key: 'R2', text: "The intern proved demand for better forecasting — that's the insight, not the dashboard itself", fr: 2, kd: 0, ec: 0 },
+      { key: 'R3', text: "Three directors making decisions on a tool nobody can explain is already a governance failure", fr: 0, kd: 1, ec: 1 },
+      { key: 'R4', text: "Keeping something you can't maintain is worse than letting it go — that's how technical debt starts", fr: 0, kd: 2, ec: 0 },
+    ],
+  },
+  T7: {
+    options: [
+      { key: 'R1', text: "A 15% error on known data means unknown errors on unknown data — that's the scary part", fr: 0, kd: 0, ec: 2 },
+      { key: 'R2', text: "CEO and CFO aligned is rare — I don't want to kill that momentum over a demo glitch", fr: 0, kd: -1, ec: 0 },
+      { key: 'R3', text: "The real question isn't whether the tool is accurate — it's whether it knows when it's not", fr: 2, kd: 0, ec: 0 },
+      { key: 'R4', text: "Before spending $95K, I want one specific use case where we can measure impact in 90 days", fr: 0, kd: 1, ec: 0 },
+    ],
+  },
+  T8: {
+    options: [
+      { key: 'R1', text: "Regulators don't care about accuracy records if you can't demonstrate compliance day one", fr: 0, kd: 1, ec: 1 },
+      { key: 'R2', text: "14 months of data showing 99.2% match with humans is the strongest comment we could submit", fr: 1, kd: 0, ec: 0 },
+      { key: 'R3', text: "The real risk is our competitor figures out a hybrid approach first while we're stuck overhiring", fr: 2, kd: 0, ec: 1 },
+      { key: 'R4', text: "Before hiring, I want to know which claims the AI handles — if they're simple, human review is fast and cheap", fr: 0, kd: 0, ec: 2 },
+    ],
+  },
+  T9: {
+    options: [
+      { key: 'R1', text: "Forced migrations are the only time organizations kill underperforming models — this is a gift disguised as crisis", fr: 2, kd: 1, ec: 0 },
+      { key: 'R2', text: "Customer-facing apps breaking during migration is the nightmare — sequence matters more than speed", fr: 0, kd: 0, ec: 2 },
+      { key: 'R3', text: "The CTO is right about open-source but wrong about timing — don't redesign under a deadline", fr: 1, kd: 1, ec: 0 },
+      { key: 'R4', text: "18 months sounds generous until you account for evaluation, migration, retraining, and UAT", fr: 0, kd: 0, ec: 1 },
     ],
   },
 };
@@ -603,18 +748,33 @@ function scoreTaste(tasteResponses) {
       T2: { A: 0, B: 0, C: 1, D: 2 },
       T3: { A: 0, B: 1, C: 0, D: 2 },
       T4: { A: 0, B: 0, C: 0, D: 2 },
+      T5: { A: 0, B: 0, C: 0, D: 2 },
+      T6: { A: 0, B: 0, C: 2, D: 0 },
+      T7: { A: 0, B: 0, C: 2, D: 0 },
+      T8: { A: 0, B: 2, C: 0, D: 2 },
+      T9: { A: 0, B: 2, C: 0, D: 0 },
     },
     killDiscipline: {
       T1: { A: 1, B: 0, C: 0, D: 0 },
       T2: { A: 0, B: 1, C: 0, D: 1 },
       T3: { A: 0, B: 1, C: 2, D: 1 },
       T4: { A: 1, B: 0, C: 0, D: 1 },
+      T5: { A: 0, B: 1, C: 0, D: 0 },
+      T6: { A: 0, B: 0, C: 0, D: 2 },
+      T7: { A: 0, B: 0, C: 0, D: 1 },
+      T8: { A: 0, B: 0, C: 0, D: 1 },
+      T9: { A: 2, B: 0, C: 0, D: 0 },
     },
     edgeCaseInstinct: {
       T1: { A: 0, B: 1, C: 2, D: 0 },
       T2: { A: 0, B: 0, C: 2, D: 0 },
       T3: { A: 0, B: 0, C: 0, D: 1 },
       T4: { A: 1, B: 1, C: 2, D: 0 },
+      T5: { A: 0, B: 0, C: 2, D: 0 },
+      T6: { A: 0, B: 1, C: 0, D: 0 },
+      T7: { A: 2, B: 0, C: 1, D: 0 },
+      T8: { A: 0, B: 0, C: 2, D: 0 },
+      T9: { A: 0, B: 0, C: 0, D: 1 },
     },
   };
 
@@ -631,11 +791,11 @@ function applyConsistencyModifier(dims, tasteResponses) {
   const letters = tasteResponses.map(r => r.answer);
   const unique = new Set(letters);
   if (unique.size === 1) {
-    // Same letter 4/4 — gaming penalty: subtract 2 from highest dimension
+    // Same letter 3/3 — gaming penalty: subtract 1 from highest dimension
     const highest = Object.keys(dims).reduce((a, b) => dims[a] >= dims[b] ? a : b);
-    dims[highest] = Math.max(0, dims[highest] - 2);
-  } else if (unique.size === 4) {
-    // All different letters — contextual thinking bonus
+    dims[highest] = Math.max(0, dims[highest] - 1);
+  } else if (unique.size === 3) {
+    // All different letters (3 of 3) — contextual thinking bonus
     dims.frameRecognition += 1;
   }
   return dims;
@@ -645,22 +805,25 @@ function getTasteSignature(dims) {
   const { frameRecognition, killDiscipline, edgeCaseInstinct } = dims;
   const total = frameRecognition + killDiscipline + edgeCaseInstinct;
   const allAbove2 = frameRecognition >= 2 && killDiscipline >= 2 && edgeCaseInstinct >= 2;
-  const allBetween2and5 = [frameRecognition, killDiscipline, edgeCaseInstinct].every(d => d >= 2 && d <= 5);
+  const allBetween1and4 = [frameRecognition, killDiscipline, edgeCaseInstinct].every(d => d >= 1 && d <= 4);
 
   // Momentum: low total or zero frame recognition
-  if (total <= 6 || frameRecognition === 0)
+  if (total <= 4 || frameRecognition === 0)
     return { name: 'Momentum', color: 'var(--taste-momentum)', description: 'Defaults to speed, hype, or inertia. Strength: fast execution when direction is right. Risk: expensive failures, automating the mess, hype-driven decisions.' };
-  // Sophistication: high frame recognition, balanced across all dimensions
-  if (frameRecognition >= 5 && allAbove2)
+
+  // Sophistication: high frame recognition, balanced
+  if (frameRecognition >= 4 && allAbove2)
     return { name: 'Sophistication', color: 'var(--taste-sophistication)', description: 'Defaults to reframing, first-principles thinking, and second-order effects. Strength: sees what others miss. Risk: over-analysis, slow to ship.' };
-  // Caution: edge-case instinct is highest and frame recognition is low
-  if (edgeCaseInstinct > killDiscipline && edgeCaseInstinct > frameRecognition && frameRecognition <= 3)
+
+  // Caution: edge-case instinct highest, frame recognition low
+  if (edgeCaseInstinct > killDiscipline && edgeCaseInstinct > frameRecognition && frameRecognition <= 2)
     return { name: 'Caution', color: 'var(--taste-caution)', description: 'Defaults to safety, risk management, and proven approaches. Strength: avoids catastrophic failure. Risk: misses high-leverage opportunities, slow adoption.' };
-  // Pragmatism: balanced dimensions, no extreme spikes or gaps
-  if (allBetween2and5)
+
+  // Pragmatism: balanced, no extreme spikes or gaps
+  if (allBetween1and4)
     return { name: 'Pragmatism', color: 'var(--taste-pragmatism)', description: 'Balances analysis with action. Tests assumptions empirically. Strength: gets things done well. Risk: may miss systemic issues.' };
 
-  // Fallback: determine by highest dimension
+  // Fallback
   if (frameRecognition >= killDiscipline && frameRecognition >= edgeCaseInstinct)
     return { name: 'Sophistication', color: 'var(--taste-sophistication)', description: 'Defaults to reframing, first-principles thinking, and second-order effects. Strength: sees what others miss. Risk: over-analysis, slow to ship.' };
   if (edgeCaseInstinct >= killDiscipline)
@@ -941,7 +1104,7 @@ function getTasteCharacterization(dims) {
   };
 
   // All low
-  if (total <= 6) return "Your instinct is toward action over analysis. That creates velocity when direction is right and expensive course corrections when it isn't.";
+  if (total <= 4) return "Your instinct is toward action over analysis. That creates velocity when direction is right and expensive course corrections when it isn't.";
 
   // All roughly equal (spread of 2 or less)
   if (max - min <= 2 && min >= 2) return "Your judgment is balanced — you see frames, risks, and stopping points with equal clarity. The risk is that balance can become indecision.";
@@ -993,6 +1156,7 @@ function createSession() {
     },
     adaptiveFreeText: {},
     tasteFreeText: null,
+    scenarioSet: null,
   };
 }
 
@@ -1018,6 +1182,8 @@ function getNextQuestion(session) {
     session.moduleDepths = {};
     for (const m of routing.deep) session.moduleDepths[m] = 'deep';
     for (const m of routing.shallow) session.moduleDepths[m] = 'shallow';
+    // Store maturity-routed scenario set for Taste
+    session.scenarioSet = getScenarioSet(session.pulseAnswers.P2);
     session.tier = 2;
     session.currentQuestionIndex = 0;
     session.currentModuleIndex = 0;
@@ -1111,13 +1277,14 @@ function getNextQuestion(session) {
     session.currentQuestionIndex = 0;
   }
 
-  // Tier 3: Taste Test
+  // Tier 3: Taste Test (maturity-routed — 3 scenarios per set)
   if (session.tier === 3) {
-    if (session.currentQuestionIndex < TASTE_QUESTIONS.length) {
+    const activeScenarios = TASTE_QUESTIONS.filter(q => session.scenarioSet.includes(q.id));
+    if (session.currentQuestionIndex < activeScenarios.length) {
       return {
         tier: 3,
         tierLabel: 'The Taste Test',
-        ...TASTE_QUESTIONS[session.currentQuestionIndex],
+        ...activeScenarios[session.currentQuestionIndex],
       };
     }
     // Done — calculate results
@@ -1218,9 +1385,9 @@ function computeResults(session) {
     tasteDimensions.killDiscipline += session.tasteReasoningDims.killDiscipline;
     tasteDimensions.edgeCaseInstinct += session.tasteReasoningDims.edgeCaseInstinct;
   }
-  tasteDimensions.frameRecognition = Math.max(0, Math.min(8, tasteDimensions.frameRecognition));
-  tasteDimensions.killDiscipline = Math.max(0, Math.min(6, tasteDimensions.killDiscipline));
-  tasteDimensions.edgeCaseInstinct = Math.max(0, Math.min(8, tasteDimensions.edgeCaseInstinct));
+  tasteDimensions.frameRecognition = Math.max(0, Math.min(6, tasteDimensions.frameRecognition));
+  tasteDimensions.killDiscipline = Math.max(0, Math.min(4, tasteDimensions.killDiscipline));
+  tasteDimensions.edgeCaseInstinct = Math.max(0, Math.min(5, tasteDimensions.edgeCaseInstinct));
   const tasteSignature = getTasteSignature(tasteDimensions);
   const tasteTotal = tasteDimensions.frameRecognition + tasteDimensions.killDiscipline + tasteDimensions.edgeCaseInstinct;
   const { verdict, composite } = calculateVerdict(layerScores, tasteSignature);
@@ -1233,12 +1400,22 @@ function computeResults(session) {
   const verdictFraming = getVerdictFraming(verdict);
   const tasteCharacterization = getTasteCharacterization(tasteDimensions);
 
+  // Internal percentage normalization (stored in D1, never surfaced to user)
+  const DIMENSION_MAXES = { frameRecognition: 6, killDiscipline: 4, edgeCaseInstinct: 5 };
+  const tasteNormalized = {
+    frameRecognition: Math.round((tasteDimensions.frameRecognition / DIMENSION_MAXES.frameRecognition) * 100),
+    killDiscipline: Math.round((tasteDimensions.killDiscipline / DIMENSION_MAXES.killDiscipline) * 100),
+    edgeCaseInstinct: Math.round((tasteDimensions.edgeCaseInstinct / DIMENSION_MAXES.edgeCaseInstinct) * 100),
+  };
+
   return {
     layerScores,
     tasteDimensions,
     tasteTotal,
     tasteSignature,
     tasteCharacterization,
+    tasteNormalized,
+    scenarioSet: session.scenarioSet || null,
     verdict,
     composite,
     bindingConstraint,
@@ -1253,7 +1430,8 @@ function computeResults(session) {
 
 // Count total questions for progress tracking
 function getTotalQuestions(session) {
-  let total = TIER1_QUESTIONS.length + TASTE_QUESTIONS.length;
+  const tasteCount = session.scenarioSet ? session.scenarioSet.length : 3;
+  let total = TIER1_QUESTIONS.length + tasteCount;
   for (const mod of session.modules) {
     const depthFilter = session.moduleDepths[mod] === 'shallow' ? 'shallow' : null;
     total += getModuleQuestions(mod, depthFilter).length;
@@ -1425,9 +1603,12 @@ function buildBriefContext(session, results) {
   lines.push('');
   lines.push('=== TASTE PROFILE ===');
   lines.push('Taste Signature: ' + results.tasteSignature.name);
-  lines.push('Frame Recognition: ' + results.tasteDimensions.frameRecognition + '/8');
-  lines.push('Kill Discipline: ' + results.tasteDimensions.killDiscipline + '/6');
-  lines.push('Edge-Case Instinct: ' + results.tasteDimensions.edgeCaseInstinct + '/8');
+  lines.push('Frame Recognition: ' + results.tasteDimensions.frameRecognition + '/6');
+  lines.push('Kill Discipline: ' + results.tasteDimensions.killDiscipline + '/4');
+  lines.push('Edge-Case Instinct: ' + results.tasteDimensions.edgeCaseInstinct + '/5');
+  if (results.scenarioSet) {
+    lines.push('Scenario Set: ' + results.scenarioSet.join(', '));
+  }
   if (results.tasteSignature.consistencyModifier) {
     lines.push('Consistency Modifier: ' + results.tasteSignature.consistencyModifier);
   }
@@ -1494,6 +1675,6 @@ window.AssessmentEngine = {
   ADAPTIVE_MICRO_PROMPTS,
   getModuleQuestions,
   TIER1_LENGTH: TIER1_QUESTIONS.length,
-  TASTE_LENGTH: TASTE_QUESTIONS.length,
+  TASTE_LENGTH: 3, // Fixed — all maturity-routed sets have 3 scenarios
 };
 })();
