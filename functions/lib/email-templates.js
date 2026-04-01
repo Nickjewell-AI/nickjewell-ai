@@ -180,8 +180,8 @@ export function buildBriefEmail(data) {
 
   <!-- Footer -->
   <tr><td style="border-top:1px solid #e0ddd8;padding-top:20px;">
-    <p style="color:#1a1a1a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0 0 6px;">I write about where AI implementation actually breaks.</p>
-    <p style="margin:0 0 16px;"><a href="https://nickjewellai.substack.com" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">The Binding Constraint on Substack &rarr;</a></p>
+    <p style="color:#1a1a1a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0 0 6px;">Each issue picks apart one constraint — and tells you what to do about it right now.</p>
+    <p style="margin:0 0 16px;"><a href="https://nickjewellai.substack.com" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">The Binding Constr(ai)nt &rarr;</a></p>
     <p style="color:#6b6560;font-size:12px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0;">nickjewell.ai</p>
   </td></tr>
 
