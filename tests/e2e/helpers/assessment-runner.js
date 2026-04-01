@@ -88,6 +88,7 @@ export async function runAssessment(page, profile, opts = {}) {
 
   while (iterations < maxIterations) {
     iterations++;
+    console.log(`[runner] iteration ${iterations}, checking state...`);
 
     // 1. Check if results are showing
     const resultsVisible = await page.$('#assessment-results:not(.hidden)');
