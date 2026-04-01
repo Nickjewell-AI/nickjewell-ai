@@ -645,6 +645,53 @@
     }
 
     /* Email Capture Screen */
+    .email-capture-screen {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 2rem 0;
+    }
+    .capture-heading {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .capture-subtext {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .capture-list-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+    .capture-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 2rem;
+    }
+    .capture-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+    }
+    .capture-diamond {
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .capture-privacy {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+    }
+
     .retake-wrapper {
       text-align: center;
       margin-top: 3rem;
@@ -670,53 +717,6 @@
     .retake-btn:hover {
       border-color: var(--accent);
       color: var(--text-primary);
-    }
-
-    /* Sticky Brief CTA */
-    .brief-sticky-cta {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(15, 15, 15, 0.95);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-top: 1px solid var(--accent);
-      padding: 0.75rem 2rem;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      gap: 1.5rem;
-      z-index: 100;
-    }
-    .brief-sticky-cta.visible {
-      display: flex;
-    }
-    .brief-sticky-cta span {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-    .brief-sticky-btn {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--bg-primary);
-      background: var(--accent);
-      padding: 0.5rem 1.5rem;
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-    .brief-sticky-btn:hover {
-      background: var(--accent-hover);
-    }
-
-    @media print {
-      .brief-sticky-cta {
-        display: none !important;
-      }
     }
 
     .hidden {
@@ -957,29 +957,6 @@
       border: none;
       border-top: 1px solid var(--border);
       margin: 2rem 0 1.5rem;
-    }
-
-    .brief-subtext {
-      font-family: var(--font-body);
-      font-size: 0.95rem;
-      color: var(--text-primary);
-      line-height: 1.5;
-      margin-bottom: 0.5rem;
-    }
-
-    .brief-subtext-detail {
-      font-family: var(--font-body);
-      font-size: 0.88rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      margin-bottom: 1.5rem;
-    }
-
-    .brief-inbox-note {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-top: 0.75rem;
-      margin-bottom: 0;
     }
 
     .detailed-results {
@@ -1245,7 +1222,33 @@
 
       <!-- Results -->
       <div id="assessment-results" class="assessment-results hidden">
-        <div class="results-header result-section">
+        <div id="email-capture-screen" class="email-capture-screen hidden">
+          <h2 class="capture-heading">Assessment Complete</h2>
+          <p class="capture-subtext">We've analyzed your responses across all five layers and built your personalized diagnostic.</p>
+
+          <p class="capture-list-label">Here's what's ready for you:</p>
+          <div class="capture-list">
+            <div class="capture-item"><span class="capture-diamond">&#9670;</span> Your AI readiness verdict</div>
+            <div class="capture-item"><span class="capture-diamond">&#9670;</span> Diagnostic scores across all four capability layers</div>
+            <div class="capture-item"><span class="capture-diamond">&#9670;</span> Your Taste signature — how you make AI decisions under uncertainty</div>
+            <div class="capture-item"><span class="capture-diamond">&#9670;</span> Your binding constraint — the single layer holding you back</div>
+            <div class="capture-item"><span class="capture-diamond">&#9670;</span> A personalized action plan for the next 30 days</div>
+            <div class="capture-item"><span class="capture-diamond">&#9670;</span> A streaming executive brief tailored to your industry and company size</div>
+          </div>
+
+          <form id="capture-form" class="brief-contact-form">
+            <div class="brief-contact-fields">
+              <input type="text" id="capture-name" placeholder="Name" autocomplete="name" required />
+              <input type="email" id="capture-email" placeholder="Email" autocomplete="email" required />
+              <input type="text" id="capture-company" placeholder="Company" autocomplete="organization" required />
+              <input type="text" id="capture-role" placeholder="Role" autocomplete="job-title" required />
+            </div>
+            <button type="submit" class="brief-contact-submit">See My Results</button>
+            <p class="capture-privacy">Your complete diagnostic will also be delivered to your inbox. No list. No spam. Just your results.</p>
+          </form>
+        </div>
+
+        <div class="results-header result-section hidden">
           <h2>Your Assessment Results</h2>
           <div id="verdict-badge" class="verdict-badge">
             <span id="verdict-label"></span>
@@ -1255,22 +1258,9 @@
           <p id="verdict-summary" class="verdict-summary"></p>
         </div>
 
-        <div class="result-section" id="executive-brief-section">
+        <div class="result-section hidden" id="executive-brief-section">
           <hr class="brief-divider">
           <div class="result-section-title">Executive Brief</div>
-          <p class="brief-subtext">Your personalized executive brief is ready to generate.</p>
-          <p class="brief-subtext-detail">A streaming AI analysis of what your results mean, where you're vulnerable, and what to do in the next 30 days.</p>
-          <form id="brief-contact-form" class="brief-contact-form">
-            <div class="brief-contact-fields">
-              <input type="text" id="brief-name" placeholder="Name" autocomplete="name" required />
-              <input type="email" id="brief-email" placeholder="Email" autocomplete="email" required />
-              <input type="text" id="brief-company" placeholder="Company" autocomplete="organization" required />
-              <input type="text" id="brief-role" placeholder="Role" autocomplete="job-title" required />
-              <input type="text" id="brief-focus" placeholder="Anything you want the brief to address? (optional)" maxlength="300" />
-            </div>
-            <button type="submit" class="brief-contact-submit">Generate My Executive Brief</button>
-            <p class="brief-inbox-note">Your brief, scores, and a personalized action plan &mdash; delivered to your inbox.</p>
-          </form>
           <p class="brief-status hidden"></p>
           <div class="brief-text-container hidden"></div>
         </div>
@@ -1327,7 +1317,7 @@
         </div>
 
         <div class="substack-cta" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-          <a href="https://nickjewellai.substack.com/subscribe" target="_blank" rel="noopener" class="btn-secondary" style="font-size: 0.88rem;">You have the diagnosis. The newsletter is the playbook &rarr;</a>
+          <a href="https://nickjewellai.substack.com/subscribe" target="_blank" rel="noopener" class="btn-secondary" style="font-size: 0.88rem;">Your diagnosis is personal. The newsletter shows how others are solving the same constraints &rarr;</a>
         </div>
 
         <div class="retake-wrapper">
@@ -1337,12 +1327,6 @@
 
     </div>
   </main>
-
-  <!-- Sticky Brief CTA -->
-  <div class="brief-sticky-cta" id="brief-sticky-cta">
-    <span>Your Executive Brief is ready</span>
-    <a href="#executive-brief-section" class="brief-sticky-btn">Get My Brief</a>
-  </div>
 
   <footer class="footer">
     <nav class="footer-nav" aria-label="Footer navigation">
@@ -1358,8 +1342,8 @@
   </footer>
 
   <script src="../js/api.js"></script>
-  <script src="../js/assessment-engine.js?v=5"></script>
-  <script src="../js/assessment-ui.js?v=10"></script>
+  <script src="../js/assessment-engine.js?v=6"></script>
+  <script src="../js/assessment-ui.js?v=11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const hamburger = document.querySelector('.nav-hamburger');

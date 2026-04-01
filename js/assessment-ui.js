@@ -914,6 +914,9 @@ function showResults() {
     // Hide detailed results for next run
     const detailedResults = document.getElementById('detailed-results');
     if (detailedResults) detailedResults.classList.add('hidden');
+    document.getElementById('email-capture-screen')?.classList.add('hidden');
+    document.querySelector('.results-header')?.classList.add('hidden');
+    document.getElementById('executive-brief-section')?.classList.add('hidden');
     session = createSession();
     lastResults = null;
     savedRowId = null;
@@ -922,120 +925,127 @@ function showResults() {
     briefStreamActive = false;
     currentModuleCard = null;
     currentModuleName = null;
-    // Hide sticky brief bar
-    hideStickyBriefCTA();
     // Remove brief-sent confirmation from previous run
     const oldBriefConfirm = document.querySelector('.brief-sent-confirm');
     if (oldBriefConfirm) oldBriefConfirm.remove();
   });
 
-  // Auto-save anonymous results
+  // Auto-save anonymous results (before gate — no contact info yet)
   autoSaveResults();
 
-  // Executive Brief CTA
-  initExecutiveBrief();
-
-  // Fade in verdict header + brief section only (detailed results are gated)
-  const verdictHeader = resultsEl.querySelector('.results-header');
-  const briefSection = document.getElementById('executive-brief-section');
-  if (verdictHeader) {
-    verdictHeader.classList.add('fade-in');
-    setTimeout(() => verdictHeader.classList.add('visible'), 200);
-  }
-  if (briefSection) {
-    briefSection.classList.add('fade-in');
-    setTimeout(() => briefSection.classList.add('visible'), 450);
-  }
-
-  // Admin bypass — auto-show detailed results without requiring form
+  // Admin bypass — skip capture, show everything immediately
   const isAdmin = new URLSearchParams(window.location.search).has('admin_key');
   if (isAdmin) {
-    revealDetailedResults();
+    showAllResults();
+    return;
   }
 
-  // Sticky brief CTA — show when verdict scrolled past, hide when brief section visible
-  initStickyBriefCTA();
+  // Show email capture screen (hide results until form submitted)
+  const captureScreen = document.getElementById('email-capture-screen');
+  if (captureScreen) {
+    captureScreen.classList.remove('hidden');
+    captureScreen.classList.add('fade-in');
+    setTimeout(() => captureScreen.classList.add('visible'), 100);
+  }
+
+  // Set up capture form handler
+  initCaptureForm();
 
   } catch (err) {
     console.error('showResults error:', err);
-    // Ensure results are visible even if something fails
     document.getElementById('assessment-results').classList.remove('hidden');
   }
 }
 
-// ─── Sticky Brief CTA ─────────────────────────────────
+// ─── Email Capture Form ─────────────────────────────────
 
-let stickyObservers = [];
+function initCaptureForm() {
+  const form = document.getElementById('capture-form');
+  if (!form) return;
 
-function initStickyBriefCTA() {
-  const stickyCta = document.getElementById('brief-sticky-cta');
-  if (!stickyCta) return;
+  const freshForm = form.cloneNode(true);
+  form.parentNode.replaceChild(freshForm, form);
 
-  // Clean up any previous observers (retake)
-  stickyObservers.forEach(obs => obs.disconnect());
-  stickyObservers = [];
-  stickyCta.classList.remove('visible');
+  freshForm.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-  const verdictSection = document.querySelector('.results-header');
-  const briefSection = document.getElementById('executive-brief-section');
-  if (!verdictSection || !briefSection) return;
+    const name = freshForm.querySelector('#capture-name').value.trim();
+    const email = freshForm.querySelector('#capture-email').value.trim();
+    const company = freshForm.querySelector('#capture-company').value.trim();
+    const role = freshForm.querySelector('#capture-role').value.trim();
 
-  let pastVerdict = false;
-  let briefVisible = false;
+    if (!name || !email || !company || !role) return;
 
-  function updateVisibility() {
-    if (pastVerdict && !briefVisible) {
-      stickyCta.classList.add('visible');
-    } else {
-      stickyCta.classList.remove('visible');
+    // Store on session for brief generation and email delivery
+    session._contactName = name;
+    session._contactEmail = email;
+    session._contactCompany = company;
+    session._contactRole = role;
+
+    // Update D1 record with contact info
+    if (savedRowId) {
+      fetch('/api/submit-assessment', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: savedRowId, name, email, company, role }),
+      }).catch(() => {});
     }
+
+    // Disable button
+    const btn = freshForm.querySelector('button[type="submit"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Loading your results...';
+    }
+
+    // Hide capture screen
+    document.getElementById('email-capture-screen').classList.add('hidden');
+
+    // Show everything
+    showAllResults();
+  });
+}
+
+function showAllResults() {
+  // Show verdict header
+  const resultsHeader = document.querySelector('.results-header');
+  if (resultsHeader) {
+    resultsHeader.classList.remove('hidden');
+    resultsHeader.classList.add('fade-in');
+    setTimeout(() => resultsHeader.classList.add('visible'), 100);
   }
 
-  // Show when verdict is scrolled past
-  const verdictObs = new IntersectionObserver((entries) => {
-    pastVerdict = !entries[0].isIntersecting;
-    updateVisibility();
-  }, { threshold: 0 });
-  verdictObs.observe(verdictSection);
-  stickyObservers.push(verdictObs);
-
-  // Hide when brief section enters viewport
-  const briefObs = new IntersectionObserver((entries) => {
-    briefVisible = entries[0].isIntersecting;
-    updateVisibility();
-  }, { threshold: 0.1 });
-  briefObs.observe(briefSection);
-  stickyObservers.push(briefObs);
-}
-
-function hideStickyBriefCTA() {
-  const stickyCta = document.getElementById('brief-sticky-cta');
-  if (stickyCta) stickyCta.classList.remove('visible');
-  stickyObservers.forEach(obs => obs.disconnect());
-  stickyObservers = [];
-}
-
-// ─── Detailed Results Reveal ─────────────────────────────
-
-function revealDetailedResults() {
-  const detailedResults = document.getElementById('detailed-results');
-  if (!detailedResults || !detailedResults.classList.contains('hidden')) return;
-
-  detailedResults.classList.remove('hidden');
-
-  // Stagger fade-in of each section inside detailed-results
-  const sections = detailedResults.querySelectorAll('.result-section');
-  sections.forEach((sec, i) => {
-    sec.classList.add('fade-in');
-    setTimeout(() => sec.classList.add('visible'), 200 + i * 250);
-  });
-
-  // Animate layer bar fills now that they're visible
-  setTimeout(() => {
-    detailedResults.querySelectorAll('.layer-bar-fill[data-target-width]').forEach((bar) => {
-      bar.style.width = bar.dataset.targetWidth;
+  // Show detailed results — NO gating
+  const detailed = document.getElementById('detailed-results');
+  if (detailed) {
+    detailed.classList.remove('hidden');
+    const sections = detailed.querySelectorAll('.result-section');
+    sections.forEach((sec, i) => {
+      sec.classList.add('fade-in');
+      setTimeout(() => sec.classList.add('visible'), 300 + i * 200);
     });
-  }, 400);
+    setTimeout(() => {
+      detailed.querySelectorAll('.layer-bar-fill[data-target-width]').forEach(bar => {
+        bar.style.width = bar.dataset.targetWidth;
+      });
+    }, 500);
+  }
+
+  // Show executive brief section and auto-trigger
+  const briefSection = document.getElementById('executive-brief-section');
+  if (briefSection) {
+    briefSection.classList.remove('hidden');
+    briefSection.classList.add('fade-in');
+    setTimeout(() => briefSection.classList.add('visible'), 800);
+  }
+
+  // Auto-trigger brief generation if contact info exists
+  if (session._contactEmail && lastResults) {
+    setTimeout(() => triggerBriefGeneration(), 1000);
+  }
+
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ─── Executive Brief ─────────────────────────────────────
@@ -1175,85 +1185,24 @@ function renderBrief(container, text) {
   }
 }
 
-function initExecutiveBrief() {
+function triggerBriefGeneration() {
+  if (briefStreamActive) return;
+
   const section = document.getElementById('executive-brief-section');
   if (!section) return;
 
   const statusEl = section.querySelector('.brief-status');
   const briefContainer = section.querySelector('.brief-text-container');
-  const contactForm = document.getElementById('brief-contact-form');
 
-  // Reset brief UI state for retakes
+  // Reset brief UI state
   statusEl.classList.add('hidden');
   statusEl.textContent = '';
   briefContainer.innerHTML = '';
   briefContainer.classList.add('hidden');
-  contactForm.classList.remove('hidden');
 
-  // Replace form to remove any previous submit listeners
-  const freshForm = contactForm.cloneNode(true);
-  contactForm.parentNode.replaceChild(freshForm, contactForm);
-
-  // Pre-fill if user already provided contact info this session
-  if (session._contactName) {
-    freshForm.querySelector('#brief-name').value = session._contactName;
-    freshForm.querySelector('#brief-email').value = session._contactEmail;
-    freshForm.querySelector('#brief-company').value = session._contactCompany;
-    freshForm.querySelector('#brief-role').value = session._contactRole;
-  }
-
-  freshForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (briefStreamActive) return;
-
-    const name = freshForm.querySelector('#brief-name').value.trim();
-    const email = freshForm.querySelector('#brief-email').value.trim();
-    const company = freshForm.querySelector('#brief-company').value.trim();
-    const role = freshForm.querySelector('#brief-role').value.trim();
-    const briefFocus = freshForm.querySelector('#brief-focus') ? freshForm.querySelector('#brief-focus').value.trim() : '';
-
-    if (!name || !email || !company || !role) return;
-
-    // Disable submit button immediately to prevent double-clicks
-    const submitBtn = freshForm.querySelector('button[type="submit"], input[type="submit"], button:not([type])');
-    const originalBtnText = submitBtn ? submitBtn.textContent : '';
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="brief-spinner"></span>Generating your brief\u2026';
-    }
-
-    // Save contact info to session
-    session._contactName = name;
-    session._contactEmail = email;
-    session._contactCompany = company;
-    session._contactRole = role;
-    if (briefFocus) {
-      session.reflectionResponse = briefFocus;
-    }
-
-    // Update D1 record with contact info
-    if (savedRowId) {
-      try {
-        await fetch('/api/submit-assessment', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: savedRowId, name, email, company, role }),
-        });
-      } catch (err) {
-        // Silent fail — brief generation proceeds regardless
-      }
-    }
-
-    // Hide form, generate brief
-    freshForm.classList.add('hidden');
-    generateBrief(statusEl, briefContainer).catch(() => {
-      // On failure, restore the form so user can retry
-      freshForm.classList.remove('hidden');
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalBtnText;
-      }
-    });
+  generateBrief(statusEl, briefContainer).catch(() => {
+    statusEl.textContent = 'Brief generation is temporarily unavailable. Your deterministic results above are still fully accurate.';
+    statusEl.classList.remove('hidden');
   });
 }
 
@@ -1261,7 +1210,6 @@ async function generateBrief(statusEl, briefContainer) {
   if (briefStreamActive) return;
   briefStreamActive = true;
 
-  hideStickyBriefCTA();
   const currentSession = session;
   const currentResults = lastResults;
 
@@ -1355,9 +1303,6 @@ async function generateBrief(statusEl, briefContainer) {
   if (result && typeof result === 'string') {
     briefContainer.innerHTML = '';
     renderBrief(briefContainer, result);
-
-    // Reveal detailed results below the brief
-    revealDetailedResults();
 
     // Fire-and-forget: email the brief to the user
     if (session._contactEmail && lastResults) {
