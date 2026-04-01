@@ -76,10 +76,11 @@ const FOUNDATION_QUESTIONS = [
     label: 'Data Accessibility',
     text: 'If an AI system needed to pull your last 12 months of customer interactions right now, what would it find?',
     options: [
-      { key: 'A', text: 'Clean, structured data in one system with API access', score: 4 },
-      { key: 'B', text: 'Data across 2-3 systems, mostly structured, some manual joining needed', score: 3 },
-      { key: 'C', text: 'Data scattered across many systems, formats vary, significant gaps', score: 1 },
-      { key: 'D', text: "I honestly don't know what it would find", score: 0 },
+      { key: 'A', text: "One primary system, API-ready — someone could query it by end of day", score: 4 },
+      { key: 'B', text: "A few systems that someone on the team knows how to join with a script or weekly export", score: 3 },
+      { key: 'C', text: "Spreadsheets, legacy systems, tribal knowledge — you'd spend weeks just finding it all", score: 1 },
+      { key: 'D', text: "I genuinely wouldn't know where to start looking", score: 0 },
+      { key: 'E', text: "Depends which part of the org — some teams are clean, others are a mess", score: 2 },
     ],
     lowDepthVariant: {
       text: "How would you describe your organization's data situation?",
@@ -99,10 +100,10 @@ const FOUNDATION_QUESTIONS = [
     label: 'Governance Reality',
     text: 'Does your organization have a data governance policy?',
     options: [
-      { key: 'A', text: "Yes, and it's actively enforced with designated owners", score: 4 },
-      { key: 'B', text: "Yes, it exists as a document but I'm not sure how it's enforced", score: 1 },
-      { key: 'C', text: "We're working on one", score: 2 },
-      { key: 'D', text: "No / I don't know", score: 0 },
+      { key: 'A', text: "Yes — specific people own it, and there are consequences when it's violated", score: 4 },
+      { key: 'B', text: "There's a policy document somewhere, but I couldn't tell you who enforces it", score: 1 },
+      { key: 'C', text: "It's in progress — someone's been assigned to it", score: 2 },
+      { key: 'D', text: "No, or I've never seen one", score: 0 },
     ],
     lowDepthVariant: {
       text: 'As far as you know, does your organization have rules about how data is managed and who owns it?',
@@ -132,10 +133,10 @@ const FOUNDATION_QUESTIONS = [
     label: 'Data Quality Pain',
     text: 'Has data quality ever blocked or significantly slowed an AI or analytics project?',
     options: [
-      { key: 'A', text: 'Yes, and we fixed the root cause', score: 4 },
-      { key: 'B', text: "Yes, and it's still a problem", score: 2 },
-      { key: 'C', text: "Not that I know of — but we haven't tried much yet", score: 1 },
-      { key: 'D', text: 'No, our data is solid', score: 3 },
+      { key: 'A', text: "Yes — we hit a wall, traced it to the source, and fixed the pipeline", score: 4 },
+      { key: 'B', text: "Yes — it keeps coming up and we keep working around it", score: 2 },
+      { key: 'C', text: "Not yet, but mostly because we haven't pushed far enough to find out", score: 1 },
+      { key: 'D', text: "No — our data consistently passes quality checks", score: 3 },
     ],
     lowDepthVariant: {
       text: 'Has bad or missing data ever caused problems for a project or initiative at your organization?',
@@ -157,10 +158,11 @@ const ARCHITECTURE_QUESTIONS = [
     label: 'Process Mapping',
     text: 'Could you draw your most critical business workflow end-to-end on a whiteboard right now — including every handoff between teams and systems?',
     options: [
-      { key: 'A', text: "Yes, it's well-documented and current", score: 4 },
-      { key: 'B', text: "Mostly — I know the main flow but there are handoffs I'd have to investigate", score: 3 },
-      { key: 'C', text: 'It would be rough — a lot happens informally or through workarounds', score: 1 },
-      { key: 'D', text: 'No — our processes are complex and not well-documented', score: 0 },
+      { key: 'A', text: "Yes — we have current documentation that matches how work actually flows", score: 4 },
+      { key: 'B', text: "I could draw the main path, but there are handoffs and workarounds I'd have to ask around about", score: 3 },
+      { key: 'C', text: "Rough sketch at best — half of it runs on informal agreements and someone's Slack messages", score: 1 },
+      { key: 'D', text: "No — I'd be guessing at most of it", score: 0 },
+      { key: 'E', text: "Some workflows are well-mapped, others are black boxes depending on the team", score: 2 },
     ],
     lowDepthVariant: {
       text: 'How well do people in your organization understand your key business processes from start to finish?',
@@ -180,9 +182,9 @@ const ARCHITECTURE_QUESTIONS = [
     label: 'The Redesign Question',
     text: 'When was the last time a major business process was fundamentally redesigned (not just patched or updated)?',
     options: [
-      { key: 'A', text: 'Within the last year', score: 4 },
-      { key: 'B', text: '1-3 years ago', score: 3 },
-      { key: 'C', text: 'Longer ago / never', score: 1 },
+      { key: 'A', text: "Within the last year — we rethought how it works, not just tweaked it", score: 4 },
+      { key: 'B', text: "1–3 years ago", score: 3 },
+      { key: 'C', text: "Longer ago, or never — we patch what we have", score: 1 },
       { key: 'D', text: "I don't know", score: 0 },
     ],
     lowDepthVariant: {
@@ -203,10 +205,10 @@ const ARCHITECTURE_QUESTIONS = [
     label: 'The Kevin Test',
     text: 'Are there any critical data flows or processes that depend on a specific person running something manually (a script, an export, a report)?',
     options: [
-      { key: 'A', text: 'No — our critical flows are fully automated and documented', score: 4 },
-      { key: 'B', text: "Maybe one or two — but they're not mission-critical", score: 3 },
-      { key: 'C', text: "Yes — more than I'd like to admit", score: 1 },
-      { key: 'D', text: "I'm not sure", score: 0 },
+      { key: 'A', text: "No — if someone quit tomorrow, the critical stuff keeps running", score: 4 },
+      { key: 'B', text: "One or two, but they're not the important stuff", score: 3 },
+      { key: 'C', text: "Yes — there's at least one person whose vacation makes everyone nervous", score: 1 },
+      { key: 'D', text: "I'm not sure, which probably means yes", score: 0 },
     ],
     lowDepthVariant: {
       text: 'Are there things that only work because one specific person knows how to do them?',
@@ -241,10 +243,11 @@ const ACCOUNTABILITY_QUESTIONS = [
     label: 'Named Owner',
     text: 'If your AI system produced a bad outcome at 2am on a Saturday, who specifically gets called?',
     options: [
-      { key: 'A', text: 'A specific named individual with authority to act', score: 4 },
-      { key: 'B', text: 'An on-call rotation with clear escalation paths', score: 4 },
-      { key: 'C', text: "It would depend / I'd have to figure out who to call", score: 1 },
-      { key: 'D', text: 'Our AI governance committee would handle it at the next meeting', score: 0 },
+      { key: 'A', text: "I can name the person — they have authority to act and they'd answer the phone", score: 4 },
+      { key: 'B', text: "There's an on-call rotation with clear escalation paths", score: 4 },
+      { key: 'C', text: "I'd have to make some calls to figure out who owns it", score: 1 },
+      { key: 'D', text: "It would wait for the next governance meeting", score: 0 },
+      { key: 'E', text: "The org has a process for this, but I personally couldn't tell you who gets called", score: 2 },
     ],
     lowDepthVariant: {
       text: 'If something went wrong with an AI system at your company, is there a clear person or process to handle it?',
@@ -264,10 +267,10 @@ const ACCOUNTABILITY_QUESTIONS = [
     label: 'Kill History',
     text: 'Has your organization ever killed an AI or technology project mid-flight because it wasn\'t working?',
     options: [
-      { key: 'A', text: 'Yes — and the person who made that call was supported', score: 4 },
-      { key: 'B', text: 'Yes — but it was politically difficult', score: 2 },
-      { key: 'C', text: 'No — projects generally run until budget is exhausted', score: 0 },
-      { key: 'D', text: 'Not that I\'m aware of', score: 0 },
+      { key: 'A', text: "Yes — someone pulled the plug and was backed, not blamed", score: 4 },
+      { key: 'B', text: "Yes — but it took too long and there were political casualties", score: 2 },
+      { key: 'C', text: "No — things tend to run until the budget runs out or the sponsor moves on", score: 0 },
+      { key: 'D', text: "Not that I know of", score: 0 },
     ],
     lowDepthVariant: {
       text: 'Has your organization ever stopped a technology project because it wasn\'t delivering results?',
@@ -287,10 +290,10 @@ const ACCOUNTABILITY_QUESTIONS = [
     label: 'Pre-Defined Failure Criteria',
     text: 'Before launching an AI initiative, do you define specific conditions under which you\'d pause or stop it?',
     options: [
-      { key: 'A', text: 'Yes — documented failure criteria before every launch', score: 4 },
-      { key: 'B', text: "Informally — we'd know it if we saw it", score: 2 },
-      { key: 'C', text: 'No — we evaluate as we go', score: 1 },
-      { key: 'D', text: "I don't think so", score: 0 },
+      { key: 'A', text: "Yes — written kill criteria before anything launches", score: 4 },
+      { key: 'B', text: "Not formally, but the team would recognize failure when they saw it", score: 2 },
+      { key: 'C', text: "No — we figure it out as we go and adjust", score: 1 },
+      { key: 'D', text: "I don't think that conversation happens", score: 0 },
     ],
     lowDepthVariant: {
       text: 'When your organization starts an AI or tech project, does anyone define upfront what would cause you to stop or change course?',
@@ -313,10 +316,11 @@ const CULTURE_QUESTIONS = [
     label: 'Workflow Redesign',
     text: "Has any job role or daily workflow at your organization been fundamentally changed because of AI (not just 'now you also have this AI tool')?",
     options: [
-      { key: 'A', text: 'Yes — roles have been redefined, not just augmented', score: 4 },
-      { key: 'B', text: "We've added AI tools but the work itself hasn't changed much", score: 1 },
-      { key: 'C', text: "We're planning to but haven't yet", score: 2 },
-      { key: 'D', text: 'No', score: 0 },
+      { key: 'A', text: "Yes — people's actual jobs look different now, not just their toolbars", score: 4 },
+      { key: 'B', text: "We've added AI tools, but everyone's still doing the same work the same way", score: 1 },
+      { key: 'C', text: "We're planning to, but it hasn't happened yet", score: 2 },
+      { key: 'D', text: "No", score: 0 },
+      { key: 'E', text: "In some pockets yes, but most of the org hasn't felt it yet", score: 2 },
     ],
     lowDepthVariant: {
       text: "Has AI actually changed how people do their jobs at your organization, or is it more of an add-on?",
@@ -335,9 +339,10 @@ const CULTURE_QUESTIONS = [
     label: 'Honest Failure',
     text: "Can you describe an AI initiative at your organization that didn't work, and what you learned from it?",
     options: [
-      { key: 'A', text: "Yes — we had a specific failure and extracted real lessons from it", score: 4 },
-      { key: 'B', text: "Everything we've tried has worked well", score: 0 },
-      { key: 'C', text: "We haven't tried enough to fail yet", score: 2 },
+      { key: 'A', text: "Yes — I can name the project, what went wrong, and what we changed because of it", score: 4 },
+      { key: 'B', text: "Everything we've tried has worked", score: 0 },
+      { key: 'C', text: "We haven't tried enough to have a real failure yet", score: 2 },
+      { key: 'D', text: "Failures have happened, but they got quietly shelved — nobody talks about them", score: 1 },
     ],
     lowDepthVariant: {
       text: "Has any AI or tech initiative at your organization not worked out? What happened?",
@@ -356,10 +361,10 @@ const CULTURE_QUESTIONS = [
     label: 'Safety to Dissent',
     text: "If someone in a meeting said 'I don't think we're ready for this AI initiative,' what would happen?",
     options: [
-      { key: 'A', text: "They'd be taken seriously and asked to explain their concerns", score: 4 },
-      { key: 'B', text: 'It would depend on their seniority', score: 2 },
-      { key: 'C', text: 'It would slow things down and probably be unwelcome', score: 1 },
-      { key: 'D', text: "That wouldn't happen — there's too much momentum behind AI", score: 0 },
+      { key: 'A', text: "They'd be heard — someone would ask 'tell me more' regardless of their title", score: 4 },
+      { key: 'B', text: "Depends who says it — a VP gets listened to, a manager gets steamrolled", score: 2 },
+      { key: 'C', text: "It would be unwelcome — the room would move past it quickly", score: 1 },
+      { key: 'D', text: "Nobody's going to be the person who slows this down", score: 0 },
     ],
     lowDepthVariant: {
       text: "If someone pushed back on an AI initiative at your company, how would that go over?",
