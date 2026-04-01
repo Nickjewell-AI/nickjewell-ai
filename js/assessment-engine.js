@@ -445,10 +445,10 @@ const TASTE_LEADINS = {
     D: "Going straight to the CEO's underlying intent — what drove that instinct?",
   },
   T3: {
-    A: "Giving it more time with clearer metrics — what was behind that?",
-    B: "Pivoting to something more measurable rather than killing it — what drove that?",
-    C: "Pulling the plug after 18 months and $400K — what made that feel right?",
-    D: "Bringing in an outside review before deciding — what triggered that?",
+    A: "Extending the runway is a gamble — 6 more months means 6 more months of unclear ROI. What's behind that instinct?",
+    B: "Pivoting instead of killing keeps the team alive but changes the mission. What drove that over a clean break?",
+    C: "Killing a project with an invested sponsor and a passionate team takes conviction. What drove that?",
+    D: "Calling in an outside review means admitting the people closest to it can't make this call. What triggered that?",
   },
   T4: {
     A: "Focusing on the 4% error rate — what made that the primary concern?",
