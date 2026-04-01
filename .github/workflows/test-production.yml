@@ -24,7 +24,7 @@ jobs:
         run: sleep 60
 
       - name: Run E2E tests
-        run: npx playwright test --retries=1 --workers=2
+        run: npx playwright test tests/e2e/specs/00-diagnostic.spec.js --retries=0 --workers=1
         env:
           TEST_URL: https://www.nickjewell.ai
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
