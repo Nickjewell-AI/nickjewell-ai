@@ -880,6 +880,11 @@ function showResults() {
     savedRowId = null;
     freeTextConfirmationShown = false;
     postTastePromptShown = false;
+    briefStreamActive = false;
+    currentModuleCard = null;
+    currentModuleName = null;
+    // Hide sticky brief bar
+    hideStickyBriefCTA();
     // Remove brief-sent confirmation from previous run
     const oldBriefConfirm = document.querySelector('.brief-sent-confirm');
     if (oldBriefConfirm) oldBriefConfirm.remove();
