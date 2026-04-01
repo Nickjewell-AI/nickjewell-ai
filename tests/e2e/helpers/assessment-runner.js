@@ -2,12 +2,79 @@ import { SEL } from './selectors.js';
 import { waitForQuestionCard, waitForResults, waitForProgressUpdate } from './wait-utils.js';
 
 /**
+ * Build a flat label→answer lookup from a profile.
+ * Uses question labels as they appear in the DOM (from assessment-engine.js).
+ */
+function buildAnswerMap(profile) {
+  const map = {};
+
+  // Pulse questions — label text → answer key
+  const pulseLabels = {
+    P1: 'Role Context',
+    P2: 'AI Maturity Stage',
+    P3: 'Industry Context',
+    P4: 'Biggest Concern',
+    P7: 'Organization Size',
+  };
+  for (const [id, label] of Object.entries(pulseLabels)) {
+    if (profile.pulse[id]) {
+      map[label] = profile.pulse[id];
+    }
+  }
+
+  // Diagnostic questions — label text → answer key
+  // Labels must match assessment-engine.js EXACTLY
+  const diagLabels = {
+    F1: 'Data Accessibility',
+    F2: 'Governance Reality',
+    F3: 'Data Quality Pain',
+    A1: 'Process Mapping',
+    A2: 'The Redesign Question',
+    A3: 'The Kevin Test',
+    AC1: 'Named Owner',
+    AC2: 'Kill History',
+    AC3: 'Pre-Defined Failure Criteria',
+    CU1: 'Workflow Redesign',
+    CU2: 'Honest Failure',
+    CU3: 'Safety to Dissent',
+  };
+  for (const [id, label] of Object.entries(diagLabels)) {
+    if (profile.diagnostic[id]) {
+      map[label] = profile.diagnostic[id];
+    }
+  }
+
+  // Taste scenarios — label text → { answer, reasoning }
+  const tasteLabels = {
+    T1: 'The Pilot Dilemma',
+    T2: 'The Shiny Object Test',
+    T3: 'The Kill Decision',
+    T4: 'The Agent Question',
+    T5: 'The Free Trial Trap',
+    T6: "The Intern's Dashboard",
+    T7: 'The Vendor Demo',
+    T8: 'The Compliance Cliff',
+    T9: 'The Platform Sunset',
+  };
+  for (const [id, label] of Object.entries(tasteLabels)) {
+    if (profile.taste[id]) {
+      map[label] = profile.taste[id].answer || 'A';
+    }
+  }
+
+  return map;
+}
+
+/**
  * Run a complete assessment from start to results using a predefined answer profile.
+ * Uses DOM observation (question labels) instead of question counting.
  * @param {Page} page - Playwright page object
  * @param {Object} profile - Answer profile from fixtures
  * @param {Object} opts - Options: { fillBrief: bool, briefData: {}, skipPostTaste: bool }
  */
 export async function runAssessment(page, profile, opts = {}) {
+  const answerMap = buildAnswerMap(profile);
+
   // Navigate to assessment
   await page.goto('/assessment/');
   await page.waitForLoadState('networkidle');
@@ -16,87 +83,71 @@ export async function runAssessment(page, profile, opts = {}) {
   await page.click(SEL.startBtn);
   await waitForQuestionCard(page);
 
-  // Answer all questions until results appear
-  // Handles Pulse, Diagnostic, adaptive follow-ups, and Taste dynamically
-  let questionCount = 0;
-  const maxQuestions = 30; // safety valve
+  let iterations = 0;
+  const maxIterations = 60; // safety valve (includes waits)
 
-  while (questionCount < maxQuestions) {
-    // Check if results are showing
+  while (iterations < maxIterations) {
+    iterations++;
+
+    // 1. Check if results are showing
     const resultsVisible = await page.$('#assessment-results:not(.hidden)');
     if (resultsVisible) break;
 
-    // Check for post-taste prompt (skip or submit)
-    const skipBtn = await page.$('.cu2-skip-link');
-    if (skipBtn) {
-      const isVisible = await skipBtn.boundingBox();
-      if (isVisible) {
-        await skipBtn.click();
-        await page.waitForTimeout(500);
-        continue;
-      }
-    }
+    // 2. Check for skip links (post-taste prompt, CU2 free-text, adaptive micro-prompt)
+    const handled = await handleSkipLink(page);
+    if (handled) continue;
 
-    // Check if there are enabled option buttons
-    const enabledBtns = await page.$$('.option-button:not([disabled])');
-    if (enabledBtns.length === 0) {
+    // 3. Check for reasoning buttons (taste follow-ups — no .option-key, just .option-text)
+    const reasoningHandled = await handleReasoningButtons(page);
+    if (reasoningHandled) continue;
+
+    // 4. Check for regular option buttons with .option-key
+    const hasOptions = await page.evaluate(() => {
+      const lists = document.querySelectorAll('.options-list');
+      for (const list of lists) {
+        const enabled = list.querySelectorAll('.option-button:not([disabled])');
+        for (const btn of enabled) {
+          if (btn.querySelector('.option-key')) return true;
+        }
+      }
+      return false;
+    });
+
+    if (!hasOptions) {
+      // No actionable elements yet — wait and retry
       await page.waitForTimeout(500);
       continue;
     }
 
-    // Check tier label to determine which answer set to use
-    const tierText = await page.$eval('#tier-label', el => el.textContent).catch(() => '');
-
-    // Determine which answer key to use
-    let answerKey = 'A'; // default
-
-    if (tierText.includes('Pulse') || tierText.includes('The Pulse')) {
-      // Get the question label to identify which pulse question
-      const labels = await page.$$('.question-label');
-      const lastLabel = labels.length > 0 ? await labels[labels.length - 1].textContent() : '';
-
-      if (lastLabel.includes('Role')) answerKey = profile.pulse.P1 || 'A';
-      else if (lastLabel.includes('Maturity')) answerKey = profile.pulse.P2 || 'A';
-      else if (lastLabel.includes('Industry')) answerKey = profile.pulse.P3 || 'A';
-      else if (lastLabel.includes('Concern')) answerKey = profile.pulse.P4 || 'A';
-      else if (lastLabel.includes('Size')) answerKey = profile.pulse.P7 || 'A';
-      else answerKey = 'A';
-    } else if (tierText.includes('Taste')) {
-      // Find which taste scenario we're on
-      const tasteKeys = Object.keys(profile.taste);
-      const tasteIndex = Math.min(
-        questionCount - Object.keys(profile.pulse).length - Object.keys(profile.diagnostic).length,
-        tasteKeys.length - 1
-      );
-      if (tasteIndex >= 0 && tasteKeys[tasteIndex]) {
-        const tasteData = profile.taste[tasteKeys[tasteIndex]];
-        answerKey = tasteData.answer || 'A';
+    // 5. Read the current question label from the DOM
+    const currentLabel = await page.evaluate(() => {
+      // Get all question labels, find the last one that has enabled sibling options
+      const labels = document.querySelectorAll('.question-label');
+      // Walk backwards to find the label associated with the current (enabled) options
+      for (let i = labels.length - 1; i >= 0; i--) {
+        const label = labels[i];
+        const parent = label.closest('.question-card') || label.closest('.module-question');
+        if (parent) {
+          const optsList = parent.querySelector('.options-list');
+          if (optsList && optsList.querySelector('.option-button:not([disabled])')) {
+            return label.textContent.trim();
+          }
+        }
       }
+      // Fallback: return last label
+      if (labels.length > 0) return labels[labels.length - 1].textContent.trim();
+      return '';
+    });
 
-      // Click taste answer, then handle reasoning follow-up
-      await selectOption(page, answerKey);
-      await page.waitForTimeout(500);
-
-      // Look for reasoning buttons
-      const reasoningBtns = await page.$$('.reasoning-option:not([disabled])');
-      if (reasoningBtns.length > 0 && reasoningBtns[0]) {
-        await reasoningBtns[0].click();
-        await page.waitForTimeout(400);
-      }
-      questionCount++;
-      continue;
-    } else {
-      // Diagnostic — use profile answers or default to A
-      const diagKeys = Object.keys(profile.diagnostic);
-      const diagIndex = questionCount - Object.keys(profile.pulse).length;
-      if (diagIndex >= 0 && diagIndex < diagKeys.length) {
-        answerKey = profile.diagnostic[diagKeys[diagIndex]] || 'A';
-      }
+    // 6. Look up the answer key from the profile
+    let answerKey = 'A'; // safe default
+    if (currentLabel && answerMap[currentLabel]) {
+      answerKey = answerMap[currentLabel];
     }
 
+    // 7. Click the option
     await selectOption(page, answerKey);
     await page.waitForTimeout(400);
-    questionCount++;
   }
 
   // Wait for results
@@ -116,23 +167,75 @@ export async function runAssessment(page, profile, opts = {}) {
 }
 
 /**
- * Select an option by its key letter (A, B, C, D, E)
- * Uses page.evaluate to query the DOM directly inside the browser context,
- * avoiding timing issues between Playwright handle resolution and live DOM.
+ * Handle skip links for post-taste prompt, CU2 free-text, adaptive micro-prompt.
+ * Returns true if a skip link was found and clicked.
+ */
+async function handleSkipLink(page) {
+  const skipBtn = await page.$('.cu2-skip-link');
+  if (!skipBtn) return false;
+
+  const box = await skipBtn.boundingBox();
+  if (!box) return false;
+
+  await skipBtn.click();
+  await page.waitForTimeout(500);
+  return true;
+}
+
+/**
+ * Handle taste reasoning follow-up buttons.
+ * These have class .reasoning-option and NO .option-key span.
+ * Returns true if reasoning buttons were found and one was clicked.
+ */
+async function handleReasoningButtons(page) {
+  const clicked = await page.evaluate(() => {
+    const reasoningBtns = document.querySelectorAll('.reasoning-option:not([disabled])');
+    if (reasoningBtns.length > 0) {
+      reasoningBtns[0].click();
+      return true;
+    }
+    return false;
+  });
+
+  if (clicked) {
+    await page.waitForTimeout(500);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Select an option by its key letter (A, B, C, D, E).
+ * Uses page.evaluate for atomic DOM interaction.
+ * Only matches buttons that have a .option-key span.
  */
 async function selectOption(page, key) {
-  await page.waitForTimeout(500);
+  // Wait for enabled option buttons with keys to be present
+  await page.waitForFunction(
+    () => {
+      const lists = document.querySelectorAll('.options-list');
+      for (const list of lists) {
+        const enabled = list.querySelectorAll('.option-button:not([disabled])');
+        for (const btn of enabled) {
+          if (btn.querySelector('.option-key')) return true;
+        }
+      }
+      return false;
+    },
+    { timeout: 5000 }
+  ).catch(() => null);
 
   const clicked = await page.evaluate((targetKey) => {
     // Get all options-lists on the page
     const lists = document.querySelectorAll('.options-list');
-    // Find the last list that has enabled buttons — that's the current question
+    // Find the last list that has enabled buttons WITH .option-key
     let targetList = null;
     for (const list of lists) {
       const enabled = list.querySelectorAll('.option-button:not([disabled])');
-      if (enabled.length > 0) targetList = list;
+      const hasKeys = Array.from(enabled).some(btn => btn.querySelector('.option-key'));
+      if (enabled.length > 0 && hasKeys) targetList = list;
     }
-    if (!targetList) return { found: false, reason: 'no list with enabled buttons' };
+    if (!targetList) return { found: false, reason: 'no list with enabled keyed buttons' };
 
     // Find the button with matching key in this list
     const buttons = targetList.querySelectorAll('.option-button:not([disabled])');
@@ -140,14 +243,14 @@ async function selectOption(page, key) {
       const keyEl = btn.querySelector('.option-key');
       if (keyEl && keyEl.textContent.trim() === targetKey) {
         btn.click();
-        return { found: true };
+        return { found: true, label: targetKey };
       }
     }
 
     // Debug: return what we found
     const foundKeys = Array.from(buttons).map(b => {
       const k = b.querySelector('.option-key');
-      return k ? k.textContent.trim() : '?';
+      return k ? k.textContent.trim() : '(reasoning)';
     });
     return { found: false, reason: `key "${targetKey}" not in [${foundKeys.join(', ')}]` };
   }, key);
