@@ -16,57 +16,87 @@ export async function runAssessment(page, profile, opts = {}) {
   await page.click(SEL.startBtn);
   await waitForQuestionCard(page);
 
-  // Answer Pulse questions (P1, P2, P3, P4, P7)
-  const pulseAnswers = profile.pulse;
-  for (const [questionId, answerKey] of Object.entries(pulseAnswers)) {
-    await selectOption(page, answerKey);
-    await waitForQuestionCard(page);
-  }
+  // Answer all questions until results appear
+  // Handles Pulse, Diagnostic, adaptive follow-ups, and Taste dynamically
+  let questionCount = 0;
+  const maxQuestions = 30; // safety valve
 
-  // Answer Diagnostic questions — compound cards
-  // The engine determines which modules and how many questions per module
-  // We answer based on profile.diagnostic which maps question IDs to answer keys
-  const diagnosticAnswers = profile.diagnostic;
-  const diagnosticKeys = Object.keys(diagnosticAnswers);
+  while (questionCount < maxQuestions) {
+    // Check if results are showing
+    const resultsVisible = await page.$('#assessment-results:not(.hidden)');
+    if (resultsVisible) break;
 
-  for (let i = 0; i < diagnosticKeys.length; i++) {
-    const answerKey = diagnosticAnswers[diagnosticKeys[i]];
-    // Wait for the next answerable question to appear
-    await page.waitForSelector('.option-button:not([disabled])', { timeout: 10000 });
-    await selectOption(page, answerKey);
-    await waitForQuestionCard(page);
-  }
-
-  // Answer Taste scenarios
-  const tasteAnswers = profile.taste;
-  for (const [scenarioId, data] of Object.entries(tasteAnswers)) {
-    // Select scenario answer
-    await selectOption(page, data.answer);
-    await page.waitForTimeout(400);
-
-    // Select reasoning follow-up (appears inline on same card)
-    if (data.reasoning) {
-      await page.waitForSelector('.taste-reasoning-btn', { timeout: 5000 });
-      const reasoningBtns = await page.$$('.taste-reasoning-btn');
-      for (const btn of reasoningBtns) {
-        const text = await btn.getAttribute('data-key');
-        if (text === data.reasoning) {
-          await btn.click();
-          break;
-        }
-      }
-      await page.waitForTimeout(400);
-    }
-  }
-
-  // Post-Taste free text prompt
-  if (opts.skipPostTaste !== false) {
-    // Look for skip button or submit empty
-    const skipBtn = await page.$(SEL.postTasteSkip);
+    // Check for post-taste prompt (skip or submit)
+    const skipBtn = await page.$('.cu2-skip-link');
     if (skipBtn) {
-      await skipBtn.click();
+      const isVisible = await skipBtn.boundingBox();
+      if (isVisible) {
+        await skipBtn.click();
+        await page.waitForTimeout(500);
+        continue;
+      }
     }
-    await page.waitForTimeout(500);
+
+    // Check if there are enabled option buttons
+    const enabledBtns = await page.$$('.option-button:not([disabled])');
+    if (enabledBtns.length === 0) {
+      await page.waitForTimeout(500);
+      continue;
+    }
+
+    // Check tier label to determine which answer set to use
+    const tierText = await page.$eval('#tier-label', el => el.textContent).catch(() => '');
+
+    // Determine which answer key to use
+    let answerKey = 'A'; // default
+
+    if (tierText.includes('Pulse') || tierText.includes('The Pulse')) {
+      // Get the question label to identify which pulse question
+      const labels = await page.$$('.question-label');
+      const lastLabel = labels.length > 0 ? await labels[labels.length - 1].textContent() : '';
+
+      if (lastLabel.includes('Role')) answerKey = profile.pulse.P1 || 'A';
+      else if (lastLabel.includes('Maturity')) answerKey = profile.pulse.P2 || 'A';
+      else if (lastLabel.includes('Industry')) answerKey = profile.pulse.P3 || 'A';
+      else if (lastLabel.includes('Concern')) answerKey = profile.pulse.P4 || 'A';
+      else if (lastLabel.includes('Size')) answerKey = profile.pulse.P7 || 'A';
+      else answerKey = 'A';
+    } else if (tierText.includes('Taste')) {
+      // Find which taste scenario we're on
+      const tasteKeys = Object.keys(profile.taste);
+      const tasteIndex = Math.min(
+        questionCount - Object.keys(profile.pulse).length - Object.keys(profile.diagnostic).length,
+        tasteKeys.length - 1
+      );
+      if (tasteIndex >= 0 && tasteKeys[tasteIndex]) {
+        const tasteData = profile.taste[tasteKeys[tasteIndex]];
+        answerKey = tasteData.answer || 'A';
+      }
+
+      // Click taste answer, then handle reasoning follow-up
+      await selectOption(page, answerKey);
+      await page.waitForTimeout(500);
+
+      // Look for reasoning buttons
+      const reasoningBtns = await page.$$('.reasoning-option:not([disabled])');
+      if (reasoningBtns.length > 0 && reasoningBtns[0]) {
+        await reasoningBtns[0].click();
+        await page.waitForTimeout(400);
+      }
+      questionCount++;
+      continue;
+    } else {
+      // Diagnostic — use profile answers or default to A
+      const diagKeys = Object.keys(profile.diagnostic);
+      const diagIndex = questionCount - Object.keys(profile.pulse).length;
+      if (diagIndex >= 0 && diagIndex < diagKeys.length) {
+        answerKey = profile.diagnostic[diagKeys[diagIndex]] || 'A';
+      }
+    }
+
+    await selectOption(page, answerKey);
+    await page.waitForTimeout(400);
+    questionCount++;
   }
 
   // Wait for results
@@ -87,11 +117,26 @@ export async function runAssessment(page, profile, opts = {}) {
 
 /**
  * Select an option by its key letter (A, B, C, D, E)
+ * Targets the LAST options-list with enabled buttons (the current question).
  */
 async function selectOption(page, key) {
-  // Find the last visible, non-disabled options list
-  const optionBtns = await page.$$('.option-button:not([disabled])');
-  for (const btn of optionBtns) {
+  // Wait for enabled options to exist
+  await page.waitForSelector('.option-button:not([disabled])', { timeout: 10000 });
+  // Small delay for animation
+  await page.waitForTimeout(300);
+
+  // Get ALL options lists on the page
+  const optionsLists = await page.$$('.options-list');
+  // The last options-list with enabled buttons is the current question
+  let targetButtons = [];
+  for (const list of optionsLists) {
+    const enabledBtns = await list.$$('.option-button:not([disabled])');
+    if (enabledBtns.length > 0) {
+      targetButtons = enabledBtns;
+    }
+  }
+
+  for (const btn of targetButtons) {
     const keyEl = await btn.$('.option-key');
     if (keyEl) {
       const keyText = await keyEl.textContent();
