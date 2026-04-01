@@ -378,6 +378,388 @@ const CULTURE_QUESTIONS = [
   },
 ];
 
+// ─── Industry-Specific Option Variants ───────────────────
+// Maps P3 industry key to question-level option overrides.
+// Scores are identical to generic options — only text changes.
+// CU2 excluded (special free-text handling).
+
+const INDUSTRY_OPTIONS = {
+  // P3 key 'B' = Healthcare
+  B: {
+    F1: [
+      { key: 'A', text: "One EMR system, API-ready — our clinical data team could query it by end of day", score: 4 },
+      { key: 'B', text: "Patient records in the EMR, billing in a separate system, referrals tracked in someone's Outlook inbox", score: 3 },
+      { key: 'C', text: "Paper charts still being scanned, three different EMR instances from past acquisitions, and a billing system from 2011", score: 1 },
+      { key: 'D', text: "I genuinely wouldn't know where to start — clinical, billing, and operational data are all different worlds here", score: 0 },
+      { key: 'E', text: "Depends on the department — radiology is clean, but primary care is a mess and behavioral health is basically paper", score: 2 },
+    ],
+    F2: [
+      { key: 'A', text: "Yes — our compliance officer owns it, and there are consequences when it's violated", score: 4 },
+      { key: 'B', text: "We have HIPAA policies, but data governance beyond compliance? I couldn't tell you who owns that", score: 1 },
+      { key: 'C', text: "Our CMIO is building one — it's in progress", score: 2 },
+      { key: 'D', text: "We have HIPAA basics but nothing about how data flows between clinical and operational systems", score: 0 },
+    ],
+    F3: [
+      { key: 'A', text: "We have ongoing data quality dashboards — our clinical informatics team reviews them weekly", score: 4 },
+      { key: 'B', text: "We did a data audit when we migrated EMR systems, but that was years ago", score: 2 },
+      { key: 'C', text: "We know there are quality issues — duplicate patient records, missing fields, inconsistent coding — but nobody's done a formal audit", score: 1 },
+      { key: 'D', text: "I don't think anyone has ever looked at it from an AI-readiness perspective", score: 0 },
+    ],
+    A1: [
+      { key: 'A', text: "We have standard interfaces and an integration engine — new connections take days, not months", score: 4 },
+      { key: 'B', text: "Our IT team has done integrations before, but each one is a custom project — usually takes a quarter", score: 3 },
+      { key: 'C', text: "We'd probably need to build a manual export process — our systems don't talk to each other easily", score: 1 },
+      { key: 'D', text: "We've never connected an external tool to our clinical systems — I'm not sure it's even allowed", score: 0 },
+      { key: 'E', text: "Some departments have modern connections, others are running systems that predate our current leadership", score: 2 },
+    ],
+    A2: [
+      { key: 'A', text: "Cloud-hosted EMR, modern data warehouse, our infrastructure team would welcome it", score: 4 },
+      { key: 'B', text: "Mostly stable, but we're still running some legacy clinical systems that require workarounds", score: 2 },
+      { key: 'C', text: "We're mid-migration — half the org is on the new system, half is still on the old one", score: 1 },
+      { key: 'D', text: "We're on systems that were implemented before meaningful use — everything is a workaround", score: 0 },
+    ],
+    A3: [
+      { key: 'A', text: "Our clinical informatics team and IT could start scoping within a week", score: 4 },
+      { key: 'B', text: "We'd need to hire or contract — we have clinical domain experts but no AI/ML talent", score: 2 },
+      { key: 'C', text: "We'd start vendor shopping — building internally isn't realistic", score: 1 },
+      { key: 'D', text: "We'd form a committee to figure out what to do", score: 0 },
+    ],
+    AC1: [
+      { key: 'A', text: "A specific clinical leader with budget authority and performance metrics tied to it", score: 4 },
+      { key: 'B', text: "Probably the practice manager or department head, but it hasn't been formally decided", score: 2 },
+      { key: 'C', text: "It would likely be shared between clinical leadership and IT — which means nobody owns it", score: 1 },
+      { key: 'D', text: "Whoever the vendor assigns as our account manager, realistically", score: 0 },
+      { key: 'E', text: "Depends on the department — some have strong clinical informatics leads, others have nobody", score: 2 },
+    ],
+    AC2: [
+      { key: 'A', text: "Our clinical governance framework has a defined process for adverse events — AI errors would follow the same path", score: 4 },
+      { key: 'B', text: "Someone would escalate it, but there's no formal protocol for AI-specific errors", score: 2 },
+      { key: 'C', text: "It would probably get handled informally — the physician would override it and move on", score: 1 },
+      { key: 'D', text: "I'm not sure anyone has thought about that scenario", score: 0 },
+    ],
+    AC3: [
+      { key: 'A', text: "Defined clinical outcomes, patient satisfaction scores, and operational efficiency metrics with baselines already in place", score: 4 },
+      { key: 'B', text: "We'd track usage and adoption, but tying it to clinical outcomes would be harder", score: 2 },
+      { key: 'C', text: "Leadership would ask 'is it working?' and someone would put together a slide deck", score: 1 },
+      { key: 'D', text: "We'd probably know it's working if nobody complains", score: 0 },
+    ],
+    CU1: [
+      { key: 'A', text: "We've already piloted tools with willing departments — adoption varied but the process exists", score: 4 },
+      { key: 'B', text: "Some physicians are excited, nursing staff is skeptical, administration just wants efficiency", score: 2 },
+      { key: 'C', text: "The last time IT changed a clinical workflow, it took two years of fighting — this would be worse", score: 1 },
+      { key: 'D', text: "AI is a buzzword leadership uses in board meetings — the floor staff hasn't heard a real plan", score: 0 },
+      { key: 'E', text: "Larger departments or specialty groups would embrace it — smaller teams would resist", score: 2 },
+    ],
+    CU3: [
+      { key: 'A', text: "Their concerns would be heard and taken seriously — patient safety always wins", score: 4 },
+      { key: 'B', text: "Depends on who said it — an attending would be heard, a resident might not be", score: 2 },
+      { key: 'C', text: "It probably wouldn't be welcome — leadership has committed to the AI initiative publicly", score: 1 },
+      { key: 'D', text: "Nobody would push back — 'innovation' is seen as inevitable here", score: 0 },
+    ],
+  },
+  // P3 key 'A' = Financial Services
+  A: {
+    F1: [
+      { key: 'A', text: "One core banking or CRM system, API-ready — our data team could query it by end of day", score: 4 },
+      { key: 'B', text: "Client records in the CRM, transaction data in the core system, compliance docs in a shared drive nobody trusts", score: 3 },
+      { key: 'C', text: "Spreadsheets, legacy mainframe reports, and relationship data that lives in bankers' heads", score: 1 },
+      { key: 'D', text: "I genuinely wouldn't know where to start — client, transaction, and risk data are all different systems owned by different teams", score: 0 },
+      { key: 'E', text: "Depends on the business line — wealth management is clean, lending is a mess, compliance is somewhere in between", score: 2 },
+    ],
+    F2: [
+      { key: 'A', text: "Yes — our risk and compliance team owns it, and regulatory exams keep it enforced", score: 4 },
+      { key: 'B', text: "We have regulatory compliance policies, but data governance beyond what the regulators require? That's murky", score: 1 },
+      { key: 'C', text: "Our Chief Data Officer is building one — it's in progress", score: 2 },
+      { key: 'D', text: "We meet regulatory minimums but nobody owns how data actually flows between front office and back office", score: 0 },
+    ],
+    F3: [
+      { key: 'A', text: "We have ongoing reconciliation processes — our operations team catches mismatches daily", score: 4 },
+      { key: 'B', text: "We did a data cleanup when we switched core platforms, but that was years ago", score: 2 },
+      { key: 'C', text: "We know there are issues — duplicate accounts, inconsistent coding, fields that advisors skip — but nobody's audited it holistically", score: 1 },
+      { key: 'D', text: "I don't think anyone has ever looked at it from an AI-readiness perspective", score: 0 },
+    ],
+    A1: [
+      { key: 'A', text: "Our systems already connect — adding a new tool is a matter of weeks, not months", score: 4 },
+      { key: 'B', text: "We've connected systems before, but each one is a project that involves compliance review and takes a quarter", score: 3 },
+      { key: 'C', text: "Our systems don't really talk to each other — connecting anything new means manual exports and workarounds", score: 1 },
+      { key: 'D', text: "We've never connected an outside tool to our client systems — between security and compliance, I don't know where we'd start", score: 0 },
+      { key: 'E', text: "Online banking and client-facing tools are modern, but the back office runs on systems nobody wants to touch", score: 2 },
+    ],
+    A2: [
+      { key: 'A', text: "Modern systems, regularly updated — our technology team keeps things current", score: 4 },
+      { key: 'B', text: "Core systems work, but we're carrying older platforms that require daily workarounds", score: 2 },
+      { key: 'C', text: "We're mid-upgrade — half the firm is on the new platform, half is still on the old one", score: 1 },
+      { key: 'D', text: "Our systems haven't been rethought in over a decade — everything runs on habit and workarounds", score: 0 },
+    ],
+    A3: [
+      { key: 'A', text: "We have a technology team that could start scoping and prototyping within weeks", score: 4 },
+      { key: 'B', text: "We'd need to hire or partner — we have people who understand the business but nobody with AI experience", score: 2 },
+      { key: 'C', text: "We'd look for a vendor — building anything custom isn't realistic for us", score: 1 },
+      { key: 'D', text: "We'd talk about it for a quarter and then probably table it", score: 0 },
+    ],
+    AC1: [
+      { key: 'A', text: "A specific business line leader with P&L responsibility and metrics tied to outcomes", score: 4 },
+      { key: 'B', text: "Probably the COO or head of operations, but it hasn't been formally decided", score: 2 },
+      { key: 'C', text: "It would be shared between the business line and technology — which means nobody really owns it", score: 1 },
+      { key: 'D', text: "Whoever the vendor assigns as our account manager, realistically", score: 0 },
+      { key: 'E', text: "Depends on the business line — some have strong analytics leads, others have nobody thinking about this", score: 2 },
+    ],
+    AC2: [
+      { key: 'A', text: "Our operational risk framework has a defined process — AI errors would follow the same escalation path", score: 4 },
+      { key: 'B', text: "Someone would escalate it, but there's no formal protocol for AI-specific errors versus normal operational errors", score: 2 },
+      { key: 'C', text: "It would get handled case by case — whoever notices fixes it and moves on", score: 1 },
+      { key: 'D', text: "I'm not sure anyone has thought about that scenario", score: 0 },
+    ],
+    AC3: [
+      { key: 'A', text: "Defined KPIs — revenue impact, processing time reduction, error rate — with baselines already measured", score: 4 },
+      { key: 'B', text: "We'd track adoption and usage, but tying it to revenue or risk reduction would be harder to isolate", score: 2 },
+      { key: 'C', text: "Someone would put together a quarterly deck showing 'progress' without clear attribution", score: 1 },
+      { key: 'D', text: "We'd probably know it's working if the regulators don't flag it", score: 0 },
+    ],
+    CU1: [
+      { key: 'A', text: "We've already piloted tools with willing teams — adoption varied but the process exists", score: 4 },
+      { key: 'B', text: "Traders and analysts are excited, compliance is nervous, operations just wants fewer manual processes", score: 2 },
+      { key: 'C', text: "The last time we changed a core workflow, it took 18 months of change management — this would be worse", score: 1 },
+      { key: 'D', text: "AI is something leadership mentions in earnings calls — the people doing the work haven't seen a real plan", score: 0 },
+      { key: 'E', text: "Client-facing teams would embrace it, back-office teams would resist — two different cultures in one firm", score: 2 },
+    ],
+    CU3: [
+      { key: 'A', text: "Their concerns would be heard and acted on — client trust isn't something we gamble with", score: 4 },
+      { key: 'B', text: "Depends on who said it — a managing director would be heard, a junior analyst might not be", score: 2 },
+      { key: 'C', text: "It probably wouldn't be welcome — leadership has committed to the initiative publicly", score: 1 },
+      { key: 'D', text: "Nobody would push back — 'digital transformation' is treated as inevitable here", score: 0 },
+    ],
+  },
+  // P3 key 'C' = Technology/SaaS
+  C: {
+    F1: [
+      { key: 'A', text: "Centralized data warehouse or lakehouse, fully instrumented — our data eng team queries it daily", score: 4 },
+      { key: 'B', text: "Product analytics in one tool, customer data in CRM, engineering metrics in Jira — three teams, three truths", score: 3 },
+      { key: 'C', text: "Half our data is in logs nobody parses, the other half is in dashboards nobody trusts", score: 1 },
+      { key: 'D', text: "Every team has their own data stack and nobody's mapped how they connect", score: 0 },
+      { key: 'E', text: "Product data is pristine, but sales and customer success data is a mess — engineering built for themselves, not the company", score: 2 },
+    ],
+    F2: [
+      { key: 'A', text: "Yes — we have data owners per domain with SLAs on freshness and accuracy", score: 4 },
+      { key: 'B', text: "We have a data team, but governance is 'whoever built the pipeline owns it' — and some of those people left", score: 1 },
+      { key: 'C', text: "Our new head of data is building governance — it's in progress", score: 2 },
+      { key: 'D', text: "Move fast and break things is still the operating philosophy — governance feels like overhead", score: 0 },
+    ],
+    F3: [
+      { key: 'A', text: "We have automated data quality checks in our pipelines — alerts fire when something drifts", score: 4 },
+      { key: 'B', text: "We did a big cleanup when we migrated to the new stack, but drift has crept back in", score: 2 },
+      { key: 'C', text: "We know there are quality issues — stale records, inconsistent naming, orphaned tables — but nobody owns the fix", score: 1 },
+      { key: 'D', text: "I don't think anyone has looked at our data from an AI-readiness lens", score: 0 },
+    ],
+    A1: [
+      { key: 'A', text: "REST APIs everywhere, event-driven architecture — connecting a new tool is a sprint task", score: 4 },
+      { key: 'B', text: "We have APIs for our product, but internal systems are patchwork — connecting them takes real engineering time", score: 3 },
+      { key: 'C', text: "We'd need to build custom integrations — our internal tools weren't designed with extensibility in mind", score: 1 },
+      { key: 'D', text: "Our stack has grown organically — integrating anything new means untangling years of tech debt first", score: 0 },
+      { key: 'E', text: "Customer-facing APIs are solid, internal tooling is held together with scripts and cron jobs", score: 2 },
+    ],
+    A2: [
+      { key: 'A', text: "Modern cloud-native stack, CI/CD, infrastructure as code — we'd welcome AI tooling", score: 4 },
+      { key: 'B', text: "Core product is solid, but internal tools and dev infrastructure have accumulated debt", score: 2 },
+      { key: 'C', text: "We're mid-replatforming — some services are on the new architecture, some are legacy monolith", score: 1 },
+      { key: 'D', text: "Our architecture hasn't been rethought since the Series A — everything is duct tape and heroics", score: 0 },
+    ],
+    A3: [
+      { key: 'A', text: "Our engineering team has ML experience and could prototype within a sprint", score: 4 },
+      { key: 'B', text: "We'd need to hire ML engineers — our team is strong on product but hasn't done AI/ML work", score: 2 },
+      { key: 'C', text: "We'd evaluate vendor APIs — building from scratch isn't realistic at our stage", score: 1 },
+      { key: 'D', text: "We'd debate build vs. buy for a quarter and then probably do nothing", score: 0 },
+    ],
+    AC1: [
+      { key: 'A', text: "A specific product or engineering leader with clear ownership and success metrics", score: 4 },
+      { key: 'B', text: "Probably the CTO or VP of Engineering, but nobody's been formally assigned", score: 2 },
+      { key: 'C', text: "It would be a cross-functional initiative — which means it lives in everyone's backlog and nobody's roadmap", score: 1 },
+      { key: 'D', text: "Whoever's most excited about AI would probably volunteer and run with it", score: 0 },
+      { key: 'E', text: "Some teams have strong technical leads who'd own it, others would need direction from above", score: 2 },
+    ],
+    AC2: [
+      { key: 'A', text: "We have incident response processes — an AI failure would go through the same on-call and postmortem pipeline", score: 4 },
+      { key: 'B', text: "Someone would file a bug, but there's no formal process for AI-specific failures vs. regular product bugs", score: 2 },
+      { key: 'C', text: "The engineer who built it would debug it — it's all tribal knowledge", score: 1 },
+      { key: 'D', text: "I'm not sure anyone has thought about what happens when an AI feature breaks in production", score: 0 },
+    ],
+    AC3: [
+      { key: 'A', text: "Defined product metrics — engagement lift, churn reduction, efficiency gain — with A/B testing infrastructure", score: 4 },
+      { key: 'B', text: "We'd track feature adoption, but isolating AI's impact from other changes would be hard", score: 2 },
+      { key: 'C', text: "We'd launch it, watch Slack for complaints, and call it a success if nothing blows up", score: 1 },
+      { key: 'D', text: "We'd know it's working if the CEO stops asking about AI in all-hands", score: 0 },
+    ],
+    CU1: [
+      { key: 'A', text: "We've already shipped AI features — the team is comfortable iterating on them", score: 4 },
+      { key: 'B', text: "Engineers are excited, PMs are cautious about scope, leadership wants it in everything", score: 2 },
+      { key: 'C', text: "Last time we introduced a major new technology, half the team resisted and the other half over-engineered it", score: 1 },
+      { key: 'D', text: "AI is a roadmap bullet point — nobody on the team has actually built with it", score: 0 },
+      { key: 'E', text: "Backend and data teams are ready, front-end and design teams haven't been included in the conversation", score: 2 },
+    ],
+    CU3: [
+      { key: 'A', text: "Their concerns would block the release — we don't ship what the team isn't confident in", score: 4 },
+      { key: 'B', text: "Depends on the deadline and who's pushing for the feature", score: 2 },
+      { key: 'C', text: "It probably wouldn't stop the launch — leadership has promised customers this feature", score: 1 },
+      { key: 'D', text: "Nobody would push back — AI features are seen as competitive table stakes", score: 0 },
+    ],
+  },
+  // P3 key 'F' = Professional Services
+  F: {
+    F1: [
+      { key: 'A', text: "Centralized CRM and project management system — we can pull client and engagement data same day", score: 4 },
+      { key: 'B', text: "Client data in CRM, project hours in a different system, actual deliverables in email threads and shared drives", score: 3 },
+      { key: 'C', text: "Partner relationships live in people's heads, engagement data lives in custom spreadsheets per team, billing is its own world", score: 1 },
+      { key: 'D', text: "Every practice area has their own way of tracking everything — there's no single source of truth for anything", score: 0 },
+      { key: 'E', text: "Some practice areas are disciplined about CRM, others haven't logged a client interaction in months", score: 2 },
+    ],
+    F2: [
+      { key: 'A', text: "Yes — our COO owns it, and there are firm-wide standards for how client data is handled", score: 4 },
+      { key: 'B', text: "We have client confidentiality policies, but governance on internal data? Nobody owns that", score: 1 },
+      { key: 'C', text: "A new operations leader is building data standards — it's in progress", score: 2 },
+      { key: 'D', text: "Each partner runs their practice their way — firm-wide data governance would be seen as overhead", score: 0 },
+    ],
+    F3: [
+      { key: 'A', text: "We have regular reviews of client data quality — our operations team flags issues proactively", score: 4 },
+      { key: 'B', text: "We cleaned up the CRM during our last platform migration, but it's degraded since", score: 2 },
+      { key: 'C', text: "We know CRM data is unreliable — stale contacts, duplicates, missing fields — but nobody's assigned to fix it", score: 1 },
+      { key: 'D', text: "I don't think anyone has ever looked at our data quality beyond whether invoices go out correctly", score: 0 },
+    ],
+    A1: [
+      { key: 'A', text: "Our systems connect through standard integrations — adding a new tool fits into our existing workflow", score: 4 },
+      { key: 'B', text: "We've connected tools before, but it's always a custom project that takes longer than expected", score: 3 },
+      { key: 'C', text: "We'd need to manually export data — our systems were purchased independently and don't connect", score: 1 },
+      { key: 'D', text: "We're running on email, spreadsheets, and willpower — 'integration' isn't in our vocabulary", score: 0 },
+      { key: 'E', text: "Client-facing tools are integrated, but internal operations run on disconnected systems bought by different partners", score: 2 },
+    ],
+    A2: [
+      { key: 'A', text: "Modern cloud platforms, our technology team keeps things current", score: 4 },
+      { key: 'B', text: "Our core systems work, but we're carrying legacy platforms from a merger that never got fully integrated", score: 2 },
+      { key: 'C', text: "We're mid-transition — half the firm is on new tools, half is still on old ones", score: 1 },
+      { key: 'D', text: "We're running on platforms that were set up when the firm was a third of its current size", score: 0 },
+    ],
+    A3: [
+      { key: 'A', text: "Our technology and innovation team could prototype within weeks", score: 4 },
+      { key: 'B', text: "We'd need to hire or partner — we have domain expertise but no internal AI capability", score: 2 },
+      { key: 'C', text: "We'd look for a vendor solution — building isn't realistic for a firm our size", score: 1 },
+      { key: 'D', text: "We'd talk about it at the next partners' meeting and table it for Q3", score: 0 },
+    ],
+    AC1: [
+      { key: 'A', text: "A specific practice leader or managing director with clear ownership and success metrics", score: 4 },
+      { key: 'B', text: "Probably the managing partner or COO, but nobody's been formally assigned", score: 2 },
+      { key: 'C', text: "It would need buy-in from multiple partners — which means nobody moves until everyone agrees", score: 1 },
+      { key: 'D', text: "Whoever's most interested in AI would probably volunteer and do it on the side", score: 0 },
+      { key: 'E', text: "Some practice areas have innovation-minded leaders, others would need to be convinced", score: 2 },
+    ],
+    AC2: [
+      { key: 'A', text: "We have a defined process for engagement issues — technology failures would follow the same escalation", score: 4 },
+      { key: 'B', text: "Someone would raise it with the practice leader, but there's no formal process for AI-specific issues", score: 2 },
+      { key: 'C', text: "The consultant who set it up would troubleshoot — it's all individual knowledge", score: 1 },
+      { key: 'D', text: "I'm not sure anyone has considered what happens when an AI tool gives a client bad output", score: 0 },
+    ],
+    AC3: [
+      { key: 'A', text: "Defined metrics — utilization lift, time-to-deliverable, client satisfaction — with baselines already measured", score: 4 },
+      { key: 'B', text: "We'd track whether consultants use it, but measuring impact on client outcomes would be hard", score: 2 },
+      { key: 'C', text: "A partner would present results at the quarterly meeting based on anecdotes", score: 1 },
+      { key: 'D', text: "We'd probably know it's working if the team complains less", score: 0 },
+    ],
+    CU1: [
+      { key: 'A', text: "We've already piloted AI tools with willing teams — some adopted, some didn't, but the process exists", score: 4 },
+      { key: 'B', text: "Junior staff would embrace it, senior partners are skeptical, middle management is waiting to see what leadership does", score: 2 },
+      { key: 'C', text: "The last time we introduced new methodology or tools, it took years of convincing and half the firm still doesn't use it", score: 1 },
+      { key: 'D', text: "AI is something we advise clients on — we haven't seriously considered it for ourselves", score: 0 },
+      { key: 'E', text: "Innovation-focused practice areas would adopt quickly, traditional practices wouldn't touch it", score: 2 },
+    ],
+    CU3: [
+      { key: 'A', text: "Their concerns would be taken seriously — client quality is non-negotiable", score: 4 },
+      { key: 'B', text: "Depends on the partner running the engagement and how close to deadline they are", score: 2 },
+      { key: 'C', text: "It probably wouldn't be welcome — the firm has marketed AI capability to this client", score: 1 },
+      { key: 'D', text: "Nobody would push back — 'leveraging AI' is expected now", score: 0 },
+    ],
+  },
+  // P3 key 'D' = Manufacturing/Industrial
+  D: {
+    F1: [
+      { key: 'A', text: "Centralized ERP with production, quality, and supply chain data — our operations team queries it regularly", score: 4 },
+      { key: 'B', text: "Production data on the floor, quality records in a separate system, supply chain in an ERP that's been customized into unrecognizability", score: 3 },
+      { key: 'C', text: "Paper logs, whiteboards, tribal knowledge from operators who've been here 20 years — you'd spend weeks finding anything", score: 1 },
+      { key: 'D', text: "Every plant and shift has their own way of tracking things — there's no single version of what happened yesterday", score: 0 },
+      { key: 'E', text: "Newer facilities are instrumented and digital, legacy plants are still running on clipboards and shift reports", score: 2 },
+    ],
+    F2: [
+      { key: 'A', text: "Yes — our quality management system drives it, and ISO audits keep it enforced", score: 4 },
+      { key: 'B', text: "We have quality and safety policies, but data governance beyond compliance? Nobody owns that", score: 1 },
+      { key: 'C', text: "Our operations director is building standards — it's in progress", score: 2 },
+      { key: 'D', text: "Each plant runs independently — corporate data standards would be seen as interference", score: 0 },
+    ],
+    F3: [
+      { key: 'A', text: "We have automated quality monitoring dashboards — our operations team reviews them every shift", score: 4 },
+      { key: 'B', text: "We did a data cleanup during our last ERP upgrade, but manual entry errors have crept back in", score: 2 },
+      { key: 'C', text: "We know there are issues — missing readings, inconsistent units, operators skipping fields — but nobody's audited it", score: 1 },
+      { key: 'D', text: "I don't think anyone has ever looked at our production data from an AI-readiness perspective", score: 0 },
+    ],
+    A1: [
+      { key: 'A', text: "Our ERP and production systems connect through standard interfaces — adding a new tool is straightforward", score: 4 },
+      { key: 'B', text: "We've integrated systems before, but it always involves custom work and more time than planned", score: 3 },
+      { key: 'C', text: "We'd need to pull manual exports — our floor systems don't talk to anything above them", score: 1 },
+      { key: 'D', text: "Our production equipment, ERP, and quality systems are three separate worlds — 'integration' means a person re-keying data", score: 0 },
+      { key: 'E', text: "Corporate systems are modern, but plant-floor equipment runs on protocols from the 90s", score: 2 },
+    ],
+    A2: [
+      { key: 'A', text: "Modern ERP, instrumented production lines, our technology team keeps infrastructure current", score: 4 },
+      { key: 'B', text: "Core ERP works, but we're carrying legacy control systems that require daily workarounds", score: 2 },
+      { key: 'C', text: "We're mid-migration — some lines are on the new system, others are running the old one until the next shutdown window", score: 1 },
+      { key: 'D', text: "Our systems were implemented when the plant opened — some are older than most of our workforce", score: 0 },
+    ],
+    A3: [
+      { key: 'A', text: "Our engineering and automation team has data science capability and could prototype quickly", score: 4 },
+      { key: 'B', text: "We'd need to hire or partner — we have process engineers but no AI/ML experience", score: 2 },
+      { key: 'C', text: "We'd ask our automation vendor what they offer — building custom isn't realistic", score: 1 },
+      { key: 'D', text: "We'd bring it up at the next operations review and see if anyone wants to own it", score: 0 },
+    ],
+    AC1: [
+      { key: 'A', text: "A specific plant manager or VP of Operations with clear ownership and metrics tied to outcomes", score: 4 },
+      { key: 'B', text: "Probably the VP of Operations or plant manager, but nobody's been formally assigned to AI specifically", score: 2 },
+      { key: 'C', text: "It would sit between operations, engineering, and IT — which means it sits nowhere", score: 1 },
+      { key: 'D', text: "Whoever the vendor assigns as our account manager, realistically", score: 0 },
+      { key: 'E', text: "Some plants have forward-thinking managers who'd own it, others would need corporate to mandate it", score: 2 },
+    ],
+    AC2: [
+      { key: 'A', text: "Our quality management system handles non-conformances — an AI error would go through the same CAPA process", score: 4 },
+      { key: 'B', text: "The shift lead would catch it and correct manually, but there's no formal process for AI-specific failures", score: 2 },
+      { key: 'C', text: "Operators would override it and keep running — production doesn't stop for software glitches", score: 1 },
+      { key: 'D', text: "I'm not sure anyone has considered what happens when an AI system makes a wrong production decision", score: 0 },
+    ],
+    AC3: [
+      { key: 'A', text: "Defined OEE targets, scrap reduction, downtime metrics — with baselines already measured", score: 4 },
+      { key: 'B', text: "We'd track whether the tool gets used, but isolating AI's impact from other process changes would be hard", score: 2 },
+      { key: 'C', text: "The plant manager would report results at the quarterly review based on gut feel", score: 1 },
+      { key: 'D', text: "We'd know it's working if the operators don't shut it off", score: 0 },
+    ],
+    CU1: [
+      { key: 'A', text: "We've piloted automation and analytics tools before — some adopted, some didn't, but the process exists", score: 4 },
+      { key: 'B', text: "Engineers are curious, floor operators are skeptical, management wants efficiency gains yesterday", score: 2 },
+      { key: 'C', text: "The last time we changed a production workflow, it took a year of resistance and retraining — AI would be harder", score: 1 },
+      { key: 'D', text: "AI is something we've seen at trade shows — nobody here has used it for real", score: 0 },
+      { key: 'E', text: "Newer plants with younger teams would adopt it, legacy facilities would resist anything that changes their process", score: 2 },
+    ],
+    CU3: [
+      { key: 'A', text: "Their concerns would halt the process — quality and safety always win", score: 4 },
+      { key: 'B', text: "Depends on who said it — a senior operator would be heard, a newer hire might not", score: 2 },
+      { key: 'C', text: "It probably wouldn't stop production — management has committed to the AI initiative", score: 1 },
+      { key: 'D', text: "Nobody would push back — 'smart manufacturing' is treated as the direction here", score: 0 },
+    ],
+  },
+};
+
+// Returns industry-specific options if available, otherwise falls back to generic
+function getQuestionOptions(question, industryKey) {
+  if (industryKey && INDUSTRY_OPTIONS[industryKey] && INDUSTRY_OPTIONS[industryKey][question.id]) {
+    return INDUSTRY_OPTIONS[industryKey][question.id];
+  }
+  // Use lowDepthVariant if applicable, otherwise default options
+  return question.options;
+}
+
 const TASTE_QUESTIONS = [
   {
     id: 'T1',
@@ -1199,9 +1581,15 @@ function getNextQuestion(session) {
         const baseQ = questions[session.currentQuestionIndex];
         // Apply low-depth variant if applicable
         const useLowDepth = session.knowledgeDepth === 'low' && baseQ.lowDepthVariant;
-        const q = useLowDepth
-          ? { ...baseQ, text: baseQ.lowDepthVariant.text, options: baseQ.lowDepthVariant.options }
-          : baseQ;
+        const industryKey = session.pulseAnswers.P3 || null;
+        let q;
+        if (useLowDepth) {
+          q = { ...baseQ, text: baseQ.lowDepthVariant.text, options: baseQ.lowDepthVariant.options };
+        } else {
+          // Apply industry-specific options if available
+          const opts = getQuestionOptions(baseQ, industryKey);
+          q = opts !== baseQ.options ? { ...baseQ, options: opts } : baseQ;
+        }
         return {
           tier: 2,
           tierLabel: 'The Diagnostic',
@@ -1252,9 +1640,14 @@ function getNextQuestion(session) {
         if (session.adaptiveFollowUp.currentQuestionIndex < maxAdaptive) {
           const baseQ = unanswered[session.adaptiveFollowUp.currentQuestionIndex];
           const useLowDepth = session.knowledgeDepth === 'low' && baseQ.lowDepthVariant;
-          const q = useLowDepth
-            ? { ...baseQ, text: baseQ.lowDepthVariant.text, options: baseQ.lowDepthVariant.options }
-            : baseQ;
+          const adaptiveIndustryKey = session.pulseAnswers.P3 || null;
+          let q;
+          if (useLowDepth) {
+            q = { ...baseQ, text: baseQ.lowDepthVariant.text, options: baseQ.lowDepthVariant.options };
+          } else {
+            const opts = getQuestionOptions(baseQ, adaptiveIndustryKey);
+            q = opts !== baseQ.options ? { ...baseQ, options: opts } : baseQ;
+          }
           session._currentAdaptiveLayer = layerName;
           return {
             tier: 2,
@@ -1552,14 +1945,15 @@ function buildBriefContext(session, results) {
     lines.push('  → ' + (selected?.text || answer));
   }
 
-  // Tier 2 layer responses
+  // Tier 2 layer responses (use industry-specific options if applicable)
+  const briefIndustryKey = session.pulseAnswers.P3 || null;
   for (const [layer, responses] of Object.entries(session.layerResponses)) {
     for (const r of responses) {
       const q = questionMap[r.questionId];
       if (!q) continue;
       const useLowDepth = session.knowledgeDepth === 'low' && q.lowDepthVariant;
       const qText = useLowDepth ? q.lowDepthVariant.text : q.text;
-      const opts = useLowDepth ? q.lowDepthVariant.options : q.options;
+      const opts = useLowDepth ? q.lowDepthVariant.options : getQuestionOptions(q, briefIndustryKey);
       const selected = opts.find(o => o.key === r.answer);
       lines.push(r.questionId + ' (' + layer + '): ' + qText);
       lines.push('  → ' + (selected?.text || r.answer));
@@ -1674,6 +2068,7 @@ window.AssessmentEngine = {
   buildBriefContext,
   ADAPTIVE_MICRO_PROMPTS,
   getModuleQuestions,
+  getQuestionOptions,
   TIER1_LENGTH: TIER1_QUESTIONS.length,
   TASTE_LENGTH: 3, // Fixed — all maturity-routed sets have 3 scenarios
 };
