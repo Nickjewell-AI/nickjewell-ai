@@ -1,6 +1,6 @@
 {
   "sophistication": {
-    "description": "C-Suite leader at scaling tech company. High scores everywhere, reframe-oriented Taste.",
+    "description": "C-Suite leader at scaling tech company. High diagnostic scores. Taste: C/D/B across T1-T3 (all different = +1 FR). Calculated: FR=4, KD=2, EC=2.",
     "pulse": {
       "P1": "A",
       "P2": "C",
@@ -15,10 +15,9 @@
       "CU1": "A", "CU2": "A", "CU3": "A"
     },
     "taste": {
-      "T1": { "answer": "D", "reasoning": "R1" },
-      "T2": { "answer": "D", "reasoning": "R2" },
-      "T3": { "answer": "D", "reasoning": "R1" },
-      "T4": { "answer": "D", "reasoning": "R2" }
+      "T1": { "answer": "C" },
+      "T2": { "answer": "D" },
+      "T3": { "answer": "B" }
     },
     "expected": {
       "verdict": "Green",
@@ -27,7 +26,7 @@
     }
   },
   "momentum": {
-    "description": "Explorer at small company. Low scores, action-oriented Taste choices.",
+    "description": "Explorer at small manufacturing company. All-D diagnostic (score 0). Taste: all-A on T5-T7 (Exploring set). Calculated: FR=0, KD=0, EC=1. Momentum via FR=0.",
     "pulse": {
       "P1": "D",
       "P2": "A",
@@ -42,19 +41,18 @@
       "CU1": "D", "CU2": "B", "CU3": "D"
     },
     "taste": {
-      "T1": { "answer": "A", "reasoning": "R1" },
-      "T2": { "answer": "A", "reasoning": "R1" },
-      "T3": { "answer": "A", "reasoning": "R1" },
-      "T4": { "answer": "A", "reasoning": "R1" }
+      "T5": { "answer": "A" },
+      "T6": { "answer": "A" },
+      "T7": { "answer": "A" }
     },
     "expected": {
       "verdict": "Red",
       "signature": "Momentum",
-      "bindingConstraint": "foundation"
+      "bindingConstraint": null
     }
   },
   "pragmatism": {
-    "description": "Implementer at mid-size financial services company. Mixed scores, balanced Taste.",
+    "description": "Implementer at mid-size financial services company. Mixed B/C diagnostic. Taste: B/D/B on T1-T3. Calculated: FR=3, KD=2, EC=1.",
     "pulse": {
       "P1": "C",
       "P2": "B",
@@ -66,13 +64,12 @@
       "F1": "B", "F2": "B", "F3": "B",
       "A1": "B", "A2": "C", "A3": "B",
       "AC1": "C", "AC2": "B", "AC3": "C",
-      "CU1": "B", "CU2": "A", "CU3": "B"
+      "CU1": "B", "CU2": "C", "CU3": "B"
     },
     "taste": {
-      "T1": { "answer": "B", "reasoning": "R2" },
-      "T2": { "answer": "C", "reasoning": "R3" },
-      "T3": { "answer": "B", "reasoning": "R2" },
-      "T4": { "answer": "C", "reasoning": "R1" }
+      "T1": { "answer": "B" },
+      "T2": { "answer": "D" },
+      "T3": { "answer": "B" }
     },
     "expected": {
       "verdict": "Amber",
