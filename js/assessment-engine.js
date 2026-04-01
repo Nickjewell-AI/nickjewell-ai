@@ -1060,6 +1060,15 @@ function getNextQuestion(session) {
         }
       }
       session.adaptiveFollowUp.pending = pending;
+      // Cap: only probe the single lowest-scoring eligible layer
+      if (pending.length > 1) {
+        pending.sort((a, b) => {
+          const sA = scoreLayer(session.layerResponses[a]);
+          const sB = scoreLayer(session.layerResponses[b]);
+          return (sA === null ? 999 : sA) - (sB === null ? 999 : sB);
+        });
+        session.adaptiveFollowUp.pending = [pending[0]];
+      }
       session.adaptiveFollowUp.currentLayerIndex = 0;
       session.adaptiveFollowUp.currentQuestionIndex = 0;
     }
@@ -1477,5 +1486,7 @@ window.AssessmentEngine = {
   buildBriefContext,
   ADAPTIVE_MICRO_PROMPTS,
   getModuleQuestions,
+  TIER1_LENGTH: TIER1_QUESTIONS.length,
+  TASTE_LENGTH: TASTE_QUESTIONS.length,
 };
 })();

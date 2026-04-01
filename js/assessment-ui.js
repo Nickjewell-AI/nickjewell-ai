@@ -15,6 +15,8 @@ const {
   buildBriefContext,
   ADAPTIVE_MICRO_PROMPTS,
   getModuleQuestions,
+  TIER1_LENGTH,
+  TASTE_LENGTH,
 } = window.AssessmentEngine;
 
 const LAYER_NAMES = {
@@ -60,12 +62,38 @@ function startAssessment() {
 }
 
 function updateProgress() {
-  const answered = getAnsweredCount(session);
-  const total = getTotalQuestions(session);
-  const pct = Math.round((answered / total) * 100);
+  let pct = 0;
+
+  if (session.tier === 1) {
+    const answered = Object.keys(session.pulseAnswers).length;
+    const total = TIER1_LENGTH || 5;
+    pct = Math.round((answered / total) * 25);
+  } else if (session.tier === 2) {
+    let answered = 0;
+    let total = 0;
+    for (const mod of session.modules) {
+      answered += session.layerResponses[mod].length;
+      const depthFilter = session.moduleDepths[mod] === 'shallow' ? 'shallow' : null;
+      total += getModuleQuestions(mod, depthFilter).length;
+    }
+    if (session.adaptiveFollowUp && session.adaptiveFollowUp.pending && session.adaptiveFollowUp.pending.length) {
+      for (const layer of session.adaptiveFollowUp.pending) {
+        const allQs = getModuleQuestions(layer, null);
+        const answeredIds = new Set(session.layerResponses[layer].map(r => r.questionId));
+        const unanswered = allQs.filter(q => !answeredIds.has(q.id));
+        total += Math.min(2, unanswered.length);
+      }
+    }
+    total = Math.max(total, 1);
+    pct = 25 + Math.round((answered / total) * 50);
+  } else if (session.tier === 3) {
+    const answered = session.tasteResponses.length;
+    const total = TASTE_LENGTH || 4;
+    pct = 75 + Math.round((answered / total) * 25);
+  }
+
   progressBar.style.width = pct + '%';
   progressBar.setAttribute('aria-valuenow', pct);
-  progressText.textContent = `${answered} of ${total}`;
 }
 
 function showNextQuestion() {
@@ -73,15 +101,6 @@ function showNextQuestion() {
 
   if (!question) {
     showResults();
-    return;
-  }
-
-  // Show adaptive transition screen for first question in each adaptive layer
-  if (question.isAdaptive && question.isFirstAdaptiveForLayer) {
-    showAdaptiveTransition(question.adaptiveLayer, () => {
-      // Re-render this same question after transition
-      renderAdaptiveQuestion(question);
-    });
     return;
   }
 
