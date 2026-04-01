@@ -55,28 +55,6 @@ const TIER1_QUESTIONS = [
     ],
   },
   {
-    id: 'P5',
-    label: 'Knowledge Depth',
-    text: "If I asked you to describe your organization's data infrastructure in detail, could you?",
-    options: [
-      { key: 'A', text: 'Yes — I know our systems, data flows, and gaps well' },
-      { key: 'B', text: "Mostly — I know the high level but not all the details" },
-      { key: 'C', text: "Not really — I'd need to ask other people" },
-      { key: 'D', text: "No — that's not my area" },
-    ],
-  },
-  {
-    id: 'P6',
-    label: 'AI Initiative Count',
-    text: 'How many active AI or automation initiatives does your organization have right now?',
-    options: [
-      { key: 'A', text: "None — we're still evaluating" },
-      { key: 'B', text: '1-3 pilots or experiments' },
-      { key: 'C', text: '4-10 across different teams' },
-      { key: 'D', text: '10+ embedded in operations' },
-    ],
-  },
-  {
     id: 'P7',
     label: 'Organization Size',
     text: 'Roughly how many people are in your organization?',
@@ -991,7 +969,7 @@ function createSession() {
     modules: [],           // all layer modules in assessment order (deep first, then shallow)
     moduleDepths: {},       // { foundation: 'deep'|'shallow', ... }
     currentModuleIndex: 0,
-    knowledgeDepth: 'high', // set after P5: A/B = 'high', C/D = 'low'
+    knowledgeDepth: 'high',
     layerResponses: {
       foundation: [],
       architecture: [],
@@ -1141,10 +1119,6 @@ function recordAnswer(session, questionId, optionKey, score) {
     session.pulseAnswers[questionId] = optionKey;
     if (questionId === 'P3') {
       session.industry = optionKey;
-    }
-    // Set knowledge depth from P5
-    if (questionId === 'P5') {
-      session.knowledgeDepth = (optionKey === 'A' || optionKey === 'B') ? 'high' : 'low';
     }
     session.currentQuestionIndex++;
   } else if (session.tier === 2) {
@@ -1355,13 +1329,11 @@ function buildBriefContext(session, results) {
   const p2 = session.pulseAnswers.P2;
   const p3 = session.pulseAnswers.P3;
   const p4 = session.pulseAnswers.P4;
-  const p6 = session.pulseAnswers.P6;
   const p7 = session.pulseAnswers.P7;
   const p1Q = questionMap.P1;
   const p2Q = questionMap.P2;
   const p3Q = questionMap.P3;
   const p4Q = questionMap.P4;
-  const p6Q = questionMap.P6;
   const p7Q = questionMap.P7;
 
   lines.push('=== CONTEXT ===');
@@ -1369,7 +1341,6 @@ function buildBriefContext(session, results) {
   lines.push('Role: ' + (p1Q.options.find(o => o.key === p1)?.text || p1));
   lines.push('Maturity Stage: ' + (p2Q.options.find(o => o.key === p2)?.text || p2));
   lines.push('Primary Concern: ' + (p4Q.options.find(o => o.key === p4)?.text || p4));
-  if (p6 && p6Q) lines.push('Active AI Initiatives: ' + (p6Q.options.find(o => o.key === p6)?.text || p6));
   if (p7 && p7Q) lines.push('Organization Size: ' + (p7Q.options.find(o => o.key === p7)?.text || p7));
   lines.push('');
 

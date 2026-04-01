@@ -152,7 +152,11 @@ function renderQuestionCard(question) {
   requestAnimationFrame(() => card.classList.add('visible'));
 
   // Scroll to the new question card so it's visible at the top of the viewport
-  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => {
+    const navHeight = document.querySelector('.nav')?.offsetHeight || 70;
+    const cardTop = card.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: cardTop - navHeight - 24, behavior: 'smooth' });
+  }, 50);
 }
 
 function handleAnswer(card, question, selectedOption, optionsContainer) {
