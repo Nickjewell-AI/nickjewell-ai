@@ -30,7 +30,7 @@ jobs:
           commitHash: ${{ github.sha }}
 
       - name: Run E2E tests
-        run: npx playwright test tests/e2e/specs/01-happy-path-sophistication.spec.js --retries=0 --workers=1 --project=chromium --timeout=60000
+        run: npx playwright test tests/e2e/specs/00-diagnostic.spec.js tests/e2e/specs/01-happy-path-sophistication.spec.js tests/e2e/specs/02-happy-path-momentum.spec.js tests/e2e/specs/03-happy-path-pragmatism.spec.js --retries=1 --workers=1 --project=chromium
         env:
           TEST_URL: ${{ steps.cf-deploy.outputs.url }}
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
