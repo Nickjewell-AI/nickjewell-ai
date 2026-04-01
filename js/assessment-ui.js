@@ -580,9 +580,9 @@ function showPostTastePrompt() {
 
   submitBtn.addEventListener('click', () => {
     const val = textarea.value.trim();
-    if (!val) return;
-    // Store for brief context — no API call
-    session.tasteFreeText = val;
+    if (val) {
+      session.tasteFreeText = val;
+    }
     submitBtn.disabled = true;
     submitBtn.textContent = 'Thanks!';
     textarea.disabled = true;

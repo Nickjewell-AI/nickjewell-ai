@@ -154,19 +154,19 @@ export async function runAssessment(page, profile, opts = {}) {
     await page.waitForTimeout(400);
   }
 
-  // Wait for results
-  await waitForResults(page);
+  // Wait for assessment to finish (capture screen or results)
+  await page.waitForSelector('#assessment-results:not(.hidden)', { timeout: 30000 });
+  await page.waitForTimeout(500);
 
-  // Optionally fill brief contact form
-  if (opts.fillBrief && opts.briefData) {
-    await page.fill(SEL.briefName, opts.briefData.name || 'Test User');
-    await page.fill(SEL.briefEmail, opts.briefData.email || 'test@playwright.dev');
-    await page.fill(SEL.briefCompany, opts.briefData.company || 'Test Corp');
-    await page.fill(SEL.briefRole, opts.briefData.role || 'Test Role');
-    if (opts.briefData.focus) {
-      await page.fill(SEL.briefFocus, opts.briefData.focus);
-    }
-    await page.click(SEL.briefSubmit);
+  // Handle email capture gate if present
+  const captureForm = await page.$('#capture-form');
+  if (captureForm) {
+    await page.fill('#capture-name', 'Test User');
+    await page.fill('#capture-email', 'test@playwright.dev');
+    await page.fill('#capture-company', 'Test Corp');
+    await page.fill('#capture-role', 'Tester');
+    await page.click('#capture-form button[type="submit"]');
+    await page.waitForTimeout(2000);
   }
 }
 
