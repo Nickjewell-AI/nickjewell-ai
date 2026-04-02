@@ -432,7 +432,7 @@ async function generateBriefAndEmail(env, payload) {
 
       const requestBody = JSON.stringify({
         model: 'claude-opus-4-20250514',
-        max_tokens: 100, // TEMPORARY: testing timeout hypothesis — revert to 4096 after confirming
+        max_tokens: 4096,
         system: systemPrompt,
         messages: [{ role: 'user', content: briefContext }],
       });
