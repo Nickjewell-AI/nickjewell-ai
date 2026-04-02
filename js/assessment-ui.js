@@ -991,30 +991,32 @@ function initCaptureForm() {
       }).catch(() => {});
     }
 
-    // Fire results email immediately (fire-and-forget)
-    if (lastResults) {
-      const plan = lastResults.actionPlan || {};
-      const actions = [
-        plan.rightNow,
-        ...(plan.thisWeek || []),
-        plan.thisMonth,
-      ].filter(Boolean);
+    // Server-side brief generation — fires regardless of browser state
+    if (savedRowId && lastResults) {
       fetch('/api-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'send-results-email',
+          type: 'generate-and-email-brief',
+          assessmentId: savedRowId,
           name,
           email,
+          company,
+          role,
+          briefContext: buildBriefContext(session, lastResults),
+          industryKey: session.pulseAnswers.P3 || null,
+          sizeKey: session.pulseAnswers.P7 || null,
           verdict: lastResults.verdict,
-          composite: lastResults.composite,
+          compositeScore: lastResults.composite,
           layerScores: lastResults.layerScores,
-          tasteSignature: lastResults.tasteSignature ? lastResults.tasteSignature.name : null,
+          tasteSignature: lastResults.tasteSignature,
+          tasteDimensions: lastResults.tasteDimensions || null,
           bindingConstraint: lastResults.bindingConstraint,
           constraintExplanation: lastResults.constraintExplanation,
-          actions,
+          actionPlan: lastResults.actionPlan,
+          benchmarkPercentile: lastResults.benchmarkPercentile || null,
         }),
-      }).catch(() => {});
+      }).catch(() => {}); // Fire-and-forget from client perspective
     }
 
     // Disable button
@@ -1247,6 +1249,10 @@ async function generateBrief(statusEl, briefContainer) {
   briefContainer.parentNode.insertBefore(loadingEl, briefContainer);
   briefContainer.classList.remove('hidden');
 
+  // PROMPT SOURCE OF TRUTH: functions/lib/brief-prompts.js
+  // These are duplicated here for client-side streaming. When client-side Opus call
+  // is removed in future, delete these and fetch from server.
+  // Last synced: 2026-04-02
   const baseSystemPrompt = 'You are a senior AI implementation strategist writing a personalized executive brief for the Jewell Assessment. Write in first-person plural (\u201cwe\u201d) as if you are the assessment delivering findings. Be direct, specific, and constructive \u2014 like a $500/hour consultant who respects the reader\u2019s time.\n\nUse this exact structure with markdown headers:\n\n## Verdict Context\n2-3 sentences on what the overall verdict means for THIS specific organization given their industry, role, and maturity stage.\n\n## The Real Story\nOne paragraph on what the pattern of their answers reveals \u2014 not just the scores, but what their specific combination of strengths and gaps means in practice. Reference specific answers where they are revealing.\n\n## Taste Read\n2-3 sentences on what their Taste signature and dimensional profile says about how they make decisions. Be specific to their FR/KD/EC scores.\n\n## The Binding Constraint\nOne paragraph on why their weakest layer is the bottleneck, what failure mode it creates, and why fixing other things first is wasted effort.\n\n## What To Do Monday\nThree bullet points with ultra-specific actions for the next 30 days. Not generic advice \u2014 actions that connect to their actual answers, industry, and gaps. Each bullet should be one concrete sentence.\n\nNever reference internal question IDs like CU2, T1, F1, AC1, etc. Reference answers by describing what the user said or the topic, not which question number they answered.\n\nFor What To Do Monday bullets, use this format: a short directive phrase (under 15 words) bolded, then a long dash (\u2014), then the supporting context and rationale. Example: **Rewrite your failure post-mortem** \u2014 take the initiative you described and...\n\nWrite ~500-700 words total. The reader should feel like someone actually read their answers, not like they got a template.';
 
   // Industry conditioning
@@ -1330,34 +1336,8 @@ async function generateBrief(statusEl, briefContainer) {
     briefContainer.innerHTML = '';
     renderBrief(briefContainer, result);
 
-    // Fire-and-forget: email the brief to the user
-    if (session._contactEmail && lastResults) {
-      fetch('/api-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'send-brief-email',
-          name: session._contactName || '',
-          email: session._contactEmail,
-          briefHtml: briefContainer.innerHTML,
-          verdict: lastResults.verdict,
-          bindingConstraint: lastResults.bindingConstraint,
-          compositeScore: lastResults.composite,
-          layerScores: lastResults.layerScores,
-          tasteSignature: lastResults.tasteSignature ? lastResults.tasteSignature.name : null,
-          assessmentId: savedRowId || null,
-        }),
-      }).then(() => {
-        const confirmEl = document.createElement('p');
-        confirmEl.textContent = `Brief sent to ${session._contactEmail}`;
-        confirmEl.className = 'brief-sent-confirm';
-        confirmEl.style.cssText = 'color:#c8965a;font-size:14px;margin-top:16px;opacity:0;transition:opacity 0.6s ease;';
-        briefContainer.parentNode.insertBefore(confirmEl, briefContainer.nextSibling);
-        setTimeout(() => { confirmEl.style.opacity = '1'; }, 1000);
-      }).catch((err) => {
-        console.error('Brief email send failed:', err);
-      });
-    }
+    // Brief email is now handled server-side via generate-and-email-brief
+    // (fired from initCaptureForm on gate submission)
   } else if (result && result.error === 'ip_limit') {
     statusEl.textContent = "You\u2019ve reached the maximum briefs for today. Come back tomorrow.";
     statusEl.classList.remove('hidden');

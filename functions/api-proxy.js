@@ -2,7 +2,7 @@
 // Thin router: parse body, read type, delegate to handler, wrap with CORS
 
 import { handleAiProxy } from './lib/handlers/ai-proxy.js';
-import { handleSendResults, handleSendResultsEmail, handleSendBriefEmail } from './lib/handlers/email.js';
+import { handleSendResults, handleSendBriefEmail, handleGenerateAndEmailBrief } from './lib/handlers/email.js';
 import { handleFeedback } from './lib/handlers/feedback.js';
 import { isAllowedOrigin, withCors, jsonResponse, corsHeaders } from './lib/middleware/responses.js';
 
@@ -10,8 +10,8 @@ const HANDLERS = {
   assessment: handleAiProxy,
   brief: handleAiProxy,
   'send-results': handleSendResults,
-  'send-results-email': handleSendResultsEmail,
   'send-brief-email': handleSendBriefEmail,
+  'generate-and-email-brief': handleGenerateAndEmailBrief,
   submit_feedback: handleFeedback,
 };
 
