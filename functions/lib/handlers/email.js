@@ -1,10 +1,7 @@
 // Handlers for email operations — send-results, send-brief-email, generate-and-email-brief
 
 import { buildBriefEmail } from '../email-templates.js';
-import { buildSystemPrompt } from '../brief-prompts.js';
 import { jsonResponse } from '../middleware/responses.js';
-
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 // Shared email sender — all handlers use this. TEST_MODE skips Resend entirely.
 // Returns { ok: true, id: string|null } on success, or { ok: false, error: string } on failure.
@@ -46,28 +43,6 @@ const LAYER_NAMES = {
   accountability: 'Accountability',
   culture: 'Culture',
 };
-
-const TEST_BRIEF_MARKDOWN = `## Verdict Context
-
-Your organization scored in the Amber range, which means the building blocks for AI adoption exist but critical gaps remain. Given your industry and maturity stage, this is a common — and fixable — position.
-
-## The Real Story
-
-The pattern across your answers reveals an organization that understands the potential of AI but hasn't yet built the operational infrastructure to capture that potential reliably. Your strongest layers show genuine strategic thinking, but the gap in your binding constraint is creating a bottleneck that limits everything downstream.
-
-## Taste Read
-
-Your Taste signature reveals a decision-making style that balances pragmatism with analytical rigor. Your frame recognition and kill discipline scores suggest you can identify the right problems to solve — but edge case handling indicates you may underweight implementation risks when momentum is high.
-
-## The Binding Constraint
-
-Your weakest layer is acting as a structural bottleneck. Until this is addressed, investments in other layers will deliver diminishing returns. The failure mode here is predictable: initiatives launch with enthusiasm, hit the constraint wall, and stall — creating organizational scar tissue that makes the next attempt harder.
-
-## What To Do Monday
-
-- **Audit your constraint layer this week** — map every process that touches your binding constraint and identify the three highest-friction points. You likely already know what they are.
-- **Assign a single owner for AI governance** — the gap between your strongest and weakest layers suggests distributed responsibility with no clear accountability. One person, one mandate, one quarterly review.
-- **Kill one active initiative that isn't working** — your scores suggest you're spreading effort across too many fronts. Pick the one with the worst ratio of investment to outcome and redirect those resources to your constraint.`;
 
 // Dark-mode results email template (legacy — used by send-results type)
 function buildResultsEmailHtml(results) {
@@ -155,51 +130,6 @@ function buildResultsEmailHtml(results) {
 </table>
 </td></tr></table>
 </body></html>`;
-}
-
-// Convert markdown brief text to basic HTML for email
-function markdownToHtml(text) {
-  const lines = text.split('\n');
-  let html = '';
-  let inList = false;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    if (!trimmed) {
-      if (inList) { html += '</ul>'; inList = false; }
-      continue;
-    }
-
-    // Headings
-    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
-    if (headingMatch) {
-      if (inList) { html += '</ul>'; inList = false; }
-      const level = headingMatch[1].length;
-      const tag = level === 1 ? 'h2' : level === 2 ? 'h3' : 'h4';
-      html += `<${tag}>${headingMatch[2]}</${tag}>`;
-      continue;
-    }
-
-    // Bullets
-    if (/^\s*[-*]\s+/.test(trimmed)) {
-      if (!inList) { html += '<ul>'; inList = true; }
-      const content = trimmed.replace(/^\s*[-*]\s+/, '');
-      html += `<li>${inlineBold(content)}</li>`;
-      continue;
-    }
-
-    // Paragraph
-    if (inList) { html += '</ul>'; inList = false; }
-    html += `<p>${inlineBold(trimmed)}</p>`;
-  }
-
-  if (inList) html += '</ul>';
-  return html;
-}
-
-function inlineBold(text) {
-  return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 }
 
 // send-results: dark-mode results email (legacy)
@@ -323,253 +253,53 @@ export async function handleSendBriefEmail(request, env, ctx, body) {
   }
 }
 
-// generate-and-email-brief: server-side brief generation via waitUntil()
-// Synchronous: validate, dedup, set pending, return 202
-// Async (waitUntil): generate brief via Opus, email via Resend, update D1
+// generate-and-email-brief: thin handler — validates, stores payload, sets pending.
+// Actual brief generation is handled by the scheduled-brief cron Worker.
 export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
   const {
-    assessmentId, name, email, briefContext,
-    industryKey, sizeKey, verdict, compositeScore,
-    layerScores, tasteSignature, bindingConstraint,
-    constraintExplanation, actionPlan, benchmarkPercentile,
+    assessmentId, email, briefContext,
+    industryKey, sizeKey, layerScores, tasteSignature,
+    tasteDimensions, bindingConstraint, constraintExplanation,
+    actionPlan, benchmarkPercentile,
   } = body;
 
-  // Validate required fields
   if (!assessmentId || !email || !briefContext) {
     return jsonResponse({ error: 'Missing assessmentId, email, or briefContext' }, 400);
   }
 
+  if (!env.DB) {
+    return jsonResponse({ error: 'Database not configured' }, 500);
+  }
+
   // Deduplication check
-  if (env.DB) {
-    try {
-      const row = await env.DB.prepare(
-        'SELECT brief_email_status FROM assessment_results WHERE id = ?'
-      ).bind(assessmentId).first();
+  try {
+    const row = await env.DB.prepare(
+      'SELECT brief_email_status FROM assessment_results WHERE id = ?'
+    ).bind(assessmentId).first();
 
-      if (row && (row.brief_email_status === 'sent' || row.brief_email_status === 'pending')) {
-        return jsonResponse({ data: { status: 'already-processing' } }, 200);
-      }
-    } catch (err) {
-      console.error('Dedup check failed:', err.message);
+    if (row && (row.brief_email_status === 'sent' || row.brief_email_status === 'pending' || row.brief_email_status === 'test_mock')) {
+      return jsonResponse({ data: { status: 'already-processing' } }, 200);
     }
-
-    // Set pending status
-    try {
-      await env.DB.prepare(
-        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-      ).bind('pending', assessmentId).run();
-    } catch (err) {
-      console.error('Set pending status failed:', err.message);
-    }
-
+  } catch (err) {
+    console.error('Dedup check failed:', err.message);
   }
 
-  // Step tracking: write pre-waitUntil marker
-  if (env.DB) {
-    try {
-      await env.DB.prepare(
-        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-      ).bind('step:pre-waitUntil', assessmentId).run();
-    } catch (err) {}
-  }
-
-  // Guard: if waitUntil is not available, fail immediately
-  if (typeof ctx?.waitUntil !== 'function') {
-    if (env.DB) {
-      try {
-        await env.DB.prepare(
-          'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-        ).bind('failed:waitUntil not available', assessmentId).run();
-      } catch (dbErr) {}
-    }
-    return jsonResponse({ error: 'Server context error' }, 500);
-  }
-
-  const asyncPayload = {
-    assessmentId, name, email, briefContext,
-    industryKey, sizeKey, verdict, compositeScore,
-    layerScores, tasteSignature, bindingConstraint,
+  // Store payload and set pending — cron Worker picks this up
+  const requestPayload = JSON.stringify({
+    briefContext, industryKey, sizeKey, layerScores,
+    tasteSignature, tasteDimensions, bindingConstraint,
     constraintExplanation, actionPlan, benchmarkPercentile,
-  };
+  });
 
-  ctx.waitUntil(generateBriefAndEmail(env, asyncPayload));
+  try {
+    await env.DB.prepare(
+      'UPDATE assessment_results SET brief_email_status = ?, brief_request_payload = ? WHERE id = ?'
+    ).bind('pending', requestPayload, assessmentId).run();
+  } catch (err) {
+    console.error('Set pending + payload failed:', err.message);
+    return jsonResponse({ error: 'Failed to queue brief generation' }, 500);
+  }
 
   return jsonResponse({ data: { status: 'accepted' } }, 202);
 }
 
-// Async background work — runs inside waitUntil()
-async function generateBriefAndEmail(env, payload) {
-  const {
-    assessmentId, name, email, briefContext,
-    industryKey, sizeKey, verdict, compositeScore,
-    layerScores, tasteSignature, bindingConstraint,
-    constraintExplanation, actionPlan, benchmarkPercentile,
-  } = payload;
-
-  // D1 step writer — each call overwrites the previous status
-  async function writeStep(step) {
-    if (!env.DB) return;
-    try {
-      await env.DB.prepare(
-        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-      ).bind(step, assessmentId).run();
-    } catch (e) {}
-  }
-
-  try {
-    await writeStep('step:waitUntil-entered');
-
-    let briefMarkdown;
-
-    if (env.TEST_MODE === 'true' || env.TEST_MODE === true) {
-      briefMarkdown = TEST_BRIEF_MARKDOWN;
-      await writeStep('step:opus-complete');
-    } else {
-      const apiKey = env.ANTHROPIC_API_KEY;
-      if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
-
-      const systemPrompt = buildSystemPrompt(industryKey, sizeKey);
-
-      const requestBody = JSON.stringify({
-        model: 'claude-opus-4-20250514',
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: briefContext }],
-      });
-
-      await writeStep('step:pre-opus,bodyLen=' + requestBody.length + ',ctxLen=' + (briefContext || '').length);
-
-      let anthropicRes;
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 120000);
-        anthropicRes = await fetch(ANTHROPIC_API_URL, {
-          method: 'POST',
-          headers: {
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'content-type': 'application/json',
-          },
-          body: requestBody,
-          signal: controller.signal,
-        });
-        clearTimeout(timeout);
-      } catch (fetchErr) {
-        throw new Error('opus:fetch-failed:' + fetchErr.message);
-      }
-
-      if (!anthropicRes.ok) {
-        const errText = await anthropicRes.text();
-        await writeStep('step:opus-status:' + anthropicRes.status);
-        throw new Error(`opus:${anthropicRes.status}:${errText.slice(0, 150)}`);
-      }
-
-      const anthropicData = await anthropicRes.json();
-      briefMarkdown = anthropicData.content?.[0]?.text;
-      if (!briefMarkdown) throw new Error('opus:empty-response');
-      await writeStep('step:opus-complete');
-    }
-
-    const briefHtml = markdownToHtml(briefMarkdown);
-
-    // Compute benchmark percentile from D1 (best-effort)
-    let computedPercentile = benchmarkPercentile;
-    if (computedPercentile == null && env.DB && layerScores) {
-      try {
-        let strongestKey = null;
-        let maxScore = -1;
-        for (const [key, score] of Object.entries(layerScores)) {
-          if (score != null && score > maxScore) {
-            maxScore = score;
-            strongestKey = key;
-          }
-        }
-        if (strongestKey && maxScore >= 0) {
-          const col = strongestKey + '_score';
-          const belowRow = await env.DB.prepare(
-            `SELECT COUNT(*) as below FROM assessment_results WHERE ${col} < ?`
-          ).bind(maxScore).first();
-          const totalRow = await env.DB.prepare(
-            'SELECT COUNT(*) as total FROM assessment_results'
-          ).first();
-          if (belowRow && totalRow && totalRow.total > 0) {
-            computedPercentile = Math.round((belowRow.below / totalRow.total) * 100);
-          }
-        }
-      } catch (err) {}
-    }
-
-    const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
-    const tasteSignatureName = tasteSignature && typeof tasteSignature === 'object'
-      ? tasteSignature.name
-      : tasteSignature;
-    const subject = `Your AI Readiness: ${verdict || 'Assessment'} — ${constraintName} is your binding constraint`;
-
-    const emailHtml = buildBriefEmail({
-      firstName: name ? name.split(' ')[0] : '',
-      email,
-      briefHtml,
-      verdict,
-      bindingConstraint,
-      compositeScore,
-      layerScores: layerScores || {},
-      tasteSignature: tasteSignatureName,
-      benchmarkPercentile: computedPercentile,
-    });
-
-    const emailResult = await sendEmail(env, {
-      from: 'Jewell Assessment <nick@nickjewell.ai>',
-      reply_to: 'nick@nickjewell.ai',
-      to: [email],
-      subject,
-      html: emailHtml,
-      tags: [{ name: 'type', value: 'executive-brief' }],
-    });
-
-    if (!emailResult.ok) {
-      throw new Error(emailResult.error);
-    }
-
-    await writeStep('step:resend-complete');
-
-    const emailStatus = emailResult.testMock ? 'test_mock' : 'sent';
-
-    if (env.DB) {
-      await env.DB.prepare(
-        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-      ).bind(emailStatus, assessmentId).run();
-
-      try {
-        await env.DB.prepare(
-          'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).bind(
-          assessmentId,
-          email,
-          name || null,
-          'brief',
-          subject,
-          emailResult.id || null,
-          JSON.stringify({ verdict, bindingConstraint, compositeScore, tasteSignature: tasteSignatureName, testMock: emailResult.testMock || false })
-        ).run();
-      } catch (err) {}
-    }
-  } catch (err) {
-    const failMsg = ('failed:' + (err.message || String(err))).slice(0, 200);
-    if (env.DB) {
-      try {
-        await env.DB.prepare(
-          'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-        ).bind(failMsg, assessmentId).run();
-      } catch (dbErr) {}
-
-      try {
-        await env.DB.prepare(
-          'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).bind(
-          assessmentId, email, name || null, 'brief', 'FAILED', null,
-          JSON.stringify({ error: err.message, stack: err.stack })
-        ).run();
-      } catch (logErr) {}
-    }
-  }
-}
