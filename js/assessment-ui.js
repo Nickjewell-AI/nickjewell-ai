@@ -988,6 +988,7 @@ function initCaptureForm() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: savedRowId, name, email, company, role }),
+        keepalive: true,
       }).catch(() => {});
     }
 
@@ -1016,6 +1017,7 @@ function initCaptureForm() {
           actionPlan: lastResults.actionPlan,
           benchmarkPercentile: lastResults.benchmarkPercentile || null,
         }),
+        keepalive: true,
       }).catch(() => {}); // Fire-and-forget from client perspective
     }
 
