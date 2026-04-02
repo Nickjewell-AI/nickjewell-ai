@@ -2,7 +2,7 @@
 // Proxies requests to the Anthropic Messages API
 // Handles call types: assessment, brief, send-results, send-brief-email, submit_feedback
 
-import { buildBriefEmail } from './lib/email-templates.js';
+import { buildBriefEmail, buildResultsOnlyEmail } from './lib/email-templates.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const DAILY_BRIEF_CAP = 100;
@@ -197,7 +197,7 @@ export async function onRequestPost(context) {
 
   const { type, ...requestPayload } = body;
 
-  if (!type || (type !== 'assessment' && type !== 'brief' && type !== 'send-results' && type !== 'send-brief-email' && type !== 'submit_feedback')) {
+  if (!type || (type !== 'assessment' && type !== 'brief' && type !== 'send-results' && type !== 'send-results-email' && type !== 'send-brief-email' && type !== 'submit_feedback')) {
     return jsonResponse({ error: 'Missing or invalid type field' }, 400, origin);
   }
 
@@ -285,6 +285,60 @@ export async function onRequestPost(context) {
     } catch (err) {
       console.error('Resend fetch error:', err.message);
       return jsonResponse({ error: 'Failed to send email' }, 502, origin);
+    }
+  }
+
+  // Handle send-results-email: immediate results email on capture gate submission
+  if (type === 'send-results-email') {
+    const { name, email, verdict, composite, layerScores, tasteSignature, bindingConstraint, constraintExplanation, actions } = body;
+    if (!email) {
+      return jsonResponse({ error: 'Missing email' }, 400, origin);
+    }
+
+    const resendKey = context.env.RESEND_API_KEY;
+    if (!resendKey) {
+      return jsonResponse({ error: 'Email service not configured' }, 500, origin);
+    }
+
+    const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
+    const htmlBody = buildResultsOnlyEmail({
+      firstName: name ? name.split(' ')[0] : '',
+      verdict,
+      composite,
+      layerScores: layerScores || {},
+      tasteSignature,
+      bindingConstraint,
+      constraintExplanation,
+      actions: actions || [],
+    });
+
+    try {
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Jewell Assessment <nick@nickjewell.ai>',
+          reply_to: 'nick@nickjewell.ai',
+          to: [email],
+          subject: `Your Jewell Assessment Results — ${verdict || 'Assessment'}`,
+          html: htmlBody,
+          tags: [{ name: 'type', value: 'results-immediate' }],
+        }),
+      });
+
+      if (!resendRes.ok) {
+        const errText = await resendRes.text();
+        console.error('Resend API error (results-email):', errText);
+        return jsonResponse({ success: false }, 502, origin);
+      }
+
+      return jsonResponse({ success: true }, 200, origin);
+    } catch (err) {
+      console.error('Resend fetch error (results-email):', err.message);
+      return jsonResponse({ success: false }, 502, origin);
     }
   }
 

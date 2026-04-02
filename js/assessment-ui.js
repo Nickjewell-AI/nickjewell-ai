@@ -982,12 +982,38 @@ function initCaptureForm() {
     session._contactCompany = company;
     session._contactRole = role;
 
-    // Update D1 record with contact info
+    // Update D1 record with contact info (fire-and-forget)
     if (savedRowId) {
       fetch('/api/submit-assessment', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: savedRowId, name, email, company, role }),
+      }).catch(() => {});
+    }
+
+    // Fire results email immediately (fire-and-forget)
+    if (lastResults) {
+      const plan = lastResults.actionPlan || {};
+      const actions = [
+        plan.rightNow,
+        ...(plan.thisWeek || []),
+        plan.thisMonth,
+      ].filter(Boolean);
+      fetch('/api-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'send-results-email',
+          name,
+          email,
+          verdict: lastResults.verdict,
+          composite: lastResults.composite,
+          layerScores: lastResults.layerScores,
+          tasteSignature: lastResults.tasteSignature ? lastResults.tasteSignature.name : null,
+          bindingConstraint: lastResults.bindingConstraint,
+          constraintExplanation: lastResults.constraintExplanation,
+          actions,
+        }),
       }).catch(() => {});
     }
 
