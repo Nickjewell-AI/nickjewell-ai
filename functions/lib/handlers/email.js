@@ -387,6 +387,19 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
     } catch (err) {
       console.error('Set pending status failed:', err.message);
     }
+
+    // TEMPORARY DIAGNOSTIC — write ctx shape directly to D1 so we can read it
+    try {
+      const ctxType = typeof ctx;
+      const waitUntilType = typeof ctx?.waitUntil;
+      const ctxKeys = ctx && typeof ctx === 'object' ? Object.getOwnPropertyNames(ctx).slice(0, 20).join(',') : 'N/A';
+      const diag = `debug:ctx_type=${ctxType},waitUntil_type=${waitUntilType},keys=${ctxKeys}`;
+      await env.DB.prepare(
+        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
+      ).bind(diag, assessmentId).run();
+    } catch (err) {
+      // If even the diagnostic write fails, that's informative too
+    }
   }
 
   // Debug: trace the context chain
