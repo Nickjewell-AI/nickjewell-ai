@@ -7,6 +7,40 @@ import { jsonResponse } from '../middleware/responses.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
+// Shared email sender — all handlers use this. TEST_MODE skips Resend entirely.
+// Returns { ok: true, id: string|null } on success, or { ok: false, error: string } on failure.
+async function sendEmail(env, payload) {
+  const isTestMode = env.TEST_MODE === 'true' || env.TEST_MODE === true;
+
+  if (isTestMode) {
+    console.log('TEST_MODE: skipping Resend, mock email to', payload.to);
+    return { ok: true, id: 'test_mock_' + Date.now(), testMock: true };
+  }
+
+  const resendKey = env.RESEND_API_KEY;
+  if (!resendKey) {
+    return { ok: false, error: 'RESEND_API_KEY not set' };
+  }
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${resendKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    return { ok: false, error: `Resend API ${res.status}: ${errText}` };
+  }
+
+  let resendId = null;
+  try { resendId = (await res.json()).id || null; } catch {}
+  return { ok: true, id: resendId };
+}
+
 const LAYER_NAMES = {
   foundation: 'Foundation',
   architecture: 'Architecture',
@@ -176,31 +210,18 @@ export async function handleSendResults(request, env, ctx, body) {
     return jsonResponse({ error: 'Missing email or results' }, 400);
   }
 
-  const resendKey = env.RESEND_API_KEY;
-  if (!resendKey) {
-    return jsonResponse({ error: 'Email service not configured' }, 500);
-  }
-
   const htmlBody = buildResultsEmailHtml(results);
 
   try {
-    const resendRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Nick Jewell <nick@nickjewell.ai>',
-        to: email,
-        subject: `Your Jewell Assessment Results — ${results.verdict}`,
-        html: htmlBody,
-      }),
+    const result = await sendEmail(env, {
+      from: 'Nick Jewell <nick@nickjewell.ai>',
+      to: email,
+      subject: `Your Jewell Assessment Results — ${results.verdict}`,
+      html: htmlBody,
     });
 
-    if (!resendRes.ok) {
-      const errText = await resendRes.text();
-      console.error('Resend API error:', errText);
+    if (!result.ok) {
+      console.error('Resend API error:', result.error);
       return jsonResponse({ error: 'Failed to send email' }, 502);
     }
 
@@ -216,11 +237,6 @@ export async function handleSendBriefEmail(request, env, ctx, body) {
   const { name, email, briefHtml, verdict, bindingConstraint, compositeScore, layerScores, tasteSignature, assessmentId } = body;
   if (!email || !briefHtml) {
     return jsonResponse({ error: 'Missing email or briefHtml' }, 400);
-  }
-
-  const resendKey = env.RESEND_API_KEY;
-  if (!resendKey) {
-    return jsonResponse({ error: 'Email service not configured' }, 500);
   }
 
   // Compute benchmark percentile from D1 (best-effort)
@@ -268,33 +284,23 @@ export async function handleSendBriefEmail(request, env, ctx, body) {
   });
 
   try {
-    const resendRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Jewell Assessment <nick@nickjewell.ai>',
-        reply_to: 'nick@nickjewell.ai',
-        to: [email],
-        subject,
-        html: htmlBody,
-        tags: [{ name: 'type', value: 'executive-brief' }],
-      }),
+    const result = await sendEmail(env, {
+      from: 'Jewell Assessment <nick@nickjewell.ai>',
+      reply_to: 'nick@nickjewell.ai',
+      to: [email],
+      subject,
+      html: htmlBody,
+      tags: [{ name: 'type', value: 'executive-brief' }],
     });
 
-    if (!resendRes.ok) {
-      const errText = await resendRes.text();
-      console.error('Resend API error (brief):', errText);
+    if (!result.ok) {
+      console.error('Resend API error (brief):', result.error);
       return jsonResponse({ success: false }, 502);
     }
 
     // Log to email_log (best-effort)
     if (env.DB) {
       try {
-        const resendData = await resendRes.json();
-        const resendId = resendData.id || null;
         await env.DB.prepare(
           'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
         ).bind(
@@ -303,8 +309,8 @@ export async function handleSendBriefEmail(request, env, ctx, body) {
           name || null,
           'brief',
           subject,
-          resendId,
-          JSON.stringify({ verdict, bindingConstraint, compositeScore, tasteSignature })
+          result.id || null,
+          JSON.stringify({ verdict, bindingConstraint, compositeScore, tasteSignature, testMock: result.testMock || false })
         ).run();
       } catch (err) {
         console.error('Email log write failed:', err.message);
@@ -493,44 +499,33 @@ async function generateBriefAndEmail(env, payload) {
       benchmarkPercentile: computedPercentile,
     });
 
-    // Send via Resend
-    const resendKey = env.RESEND_API_KEY;
-    if (!resendKey) throw new Error('RESEND_API_KEY not set');
-
-    const resendRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Jewell Assessment <nick@nickjewell.ai>',
-        reply_to: 'nick@nickjewell.ai',
-        to: [email],
-        subject,
-        html: emailHtml,
-        tags: [{ name: 'type', value: 'executive-brief' }],
-      }),
+    // Send via Resend (or mock in TEST_MODE)
+    const emailResult = await sendEmail(env, {
+      from: 'Jewell Assessment <nick@nickjewell.ai>',
+      reply_to: 'nick@nickjewell.ai',
+      to: [email],
+      subject,
+      html: emailHtml,
+      tags: [{ name: 'type', value: 'executive-brief' }],
     });
 
-    if (!resendRes.ok) {
-      const errText = await resendRes.text();
-      throw new Error(`Resend API ${resendRes.status}: ${errText}`);
+    if (!emailResult.ok) {
+      throw new Error(emailResult.error);
     }
+
+    const emailStatus = emailResult.testMock ? 'test_mock' : 'sent';
 
     // Success — update D1
     if (env.DB) {
       try {
         await env.DB.prepare(
           'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-        ).bind('sent', assessmentId).run();
+        ).bind(emailStatus, assessmentId).run();
       } catch (err) {
         console.error('D1 status update failed:', err.message);
       }
 
       try {
-        let resendId = null;
-        try { resendId = (await resendRes.json()).id || null; } catch {}
         await env.DB.prepare(
           'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
         ).bind(
@@ -539,8 +534,8 @@ async function generateBriefAndEmail(env, payload) {
           name || null,
           'brief',
           subject,
-          resendId,
-          JSON.stringify({ verdict, bindingConstraint, compositeScore, tasteSignature: tasteSignatureName })
+          emailResult.id || null,
+          JSON.stringify({ verdict, bindingConstraint, compositeScore, tasteSignature: tasteSignatureName, testMock: emailResult.testMock || false })
         ).run();
       } catch (err) {
         console.error('Email log write failed:', err.message);
