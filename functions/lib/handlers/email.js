@@ -430,10 +430,19 @@ async function generateBriefAndEmail(env, payload) {
 
       const systemPrompt = buildSystemPrompt(industryKey, sizeKey);
 
-      await writeStep('step:pre-opus');
+      const requestBody = JSON.stringify({
+        model: 'claude-opus-4-20250514',
+        max_tokens: 100, // TEMPORARY: testing timeout hypothesis — revert to 4096 after confirming
+        system: systemPrompt,
+        messages: [{ role: 'user', content: briefContext }],
+      });
+
+      await writeStep('step:pre-opus,bodyLen=' + requestBody.length + ',ctxLen=' + (briefContext || '').length);
 
       let anthropicRes;
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 120000);
         anthropicRes = await fetch(ANTHROPIC_API_URL, {
           method: 'POST',
           headers: {
@@ -441,13 +450,10 @@ async function generateBriefAndEmail(env, payload) {
             'anthropic-version': '2023-06-01',
             'content-type': 'application/json',
           },
-          body: JSON.stringify({
-            model: 'claude-opus-4-20250514',
-            max_tokens: 4096,
-            system: systemPrompt,
-            messages: [{ role: 'user', content: briefContext }],
-          }),
+          body: requestBody,
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
       } catch (fetchErr) {
         throw new Error('opus:fetch-failed:' + fetchErr.message);
       }
