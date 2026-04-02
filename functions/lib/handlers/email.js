@@ -389,7 +389,31 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
     }
   }
 
-  // Return 202 immediately — brief generation happens in waitUntil()
+  // Debug: trace the context chain
+  console.log(`[brief:${assessmentId}] ctx type=${typeof ctx}, ctx.waitUntil type=${typeof ctx?.waitUntil}`);
+  if (ctx && typeof ctx === 'object') {
+    console.log(`[brief:${assessmentId}] ctx keys=${Object.keys(ctx).join(',')}`);
+  }
+
+  // Guard: if waitUntil is not available, fail immediately
+  if (typeof ctx?.waitUntil !== 'function') {
+    console.error(`[brief:${assessmentId}] waitUntil not available — typeof=${typeof ctx?.waitUntil}`);
+    if (env.DB) {
+      try {
+        await env.DB.prepare(
+          'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
+        ).bind('failed', assessmentId).run();
+        await env.DB.prepare(
+          'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).bind(assessmentId, email, name || null, 'brief', 'FAILED', null, JSON.stringify({ error: 'waitUntil not available on ctx' })).run();
+      } catch (dbErr) {
+        console.error(`[brief:${assessmentId}] D1 write also failed:`, dbErr.message);
+      }
+    }
+    return jsonResponse({ error: 'Server context error' }, 500);
+  }
+
+  // Build payload and register background work BEFORE returning response
   const asyncPayload = {
     assessmentId, name, email, briefContext,
     industryKey, sizeKey, verdict, compositeScore,
@@ -397,7 +421,9 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
     constraintExplanation, actionPlan, benchmarkPercentile,
   };
 
-  ctx.waitUntil(generateBriefAndEmail(env, asyncPayload));
+  const briefPromise = generateBriefAndEmail(env, asyncPayload);
+  ctx.waitUntil(briefPromise);
+  console.log(`[brief:${assessmentId}] waitUntil registered, returning 202`);
 
   return jsonResponse({ data: { status: 'accepted' } }, 202);
 }

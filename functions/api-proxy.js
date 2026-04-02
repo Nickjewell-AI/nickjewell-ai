@@ -35,6 +35,9 @@ export async function onRequestPost(context) {
   }
 
   try {
+    if (body.type === 'generate-and-email-brief') {
+      console.log(`[router] passing context to handler — typeof context=${typeof context}, typeof context.waitUntil=${typeof context.waitUntil}`);
+    }
     const response = await handler(context.request, context.env, context, body);
     return withCors(response, origin);
   } catch (err) {
