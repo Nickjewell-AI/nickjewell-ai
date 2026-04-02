@@ -430,29 +430,37 @@ async function generateBriefAndEmail(env, payload) {
 
       const systemPrompt = buildSystemPrompt(industryKey, sizeKey);
 
-      const anthropicRes = await fetch(ANTHROPIC_API_URL, {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-opus-4-20250514',
-          max_tokens: 4096,
-          system: systemPrompt,
-          messages: [{ role: 'user', content: briefContext }],
-        }),
-      });
+      await writeStep('step:pre-opus');
+
+      let anthropicRes;
+      try {
+        anthropicRes = await fetch(ANTHROPIC_API_URL, {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'claude-opus-4-20250514',
+            max_tokens: 4096,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: briefContext }],
+          }),
+        });
+      } catch (fetchErr) {
+        throw new Error('opus:fetch-failed:' + fetchErr.message);
+      }
 
       if (!anthropicRes.ok) {
         const errText = await anthropicRes.text();
-        throw new Error(`Anthropic API ${anthropicRes.status}: ${errText}`);
+        await writeStep('step:opus-status:' + anthropicRes.status);
+        throw new Error(`opus:${anthropicRes.status}:${errText.slice(0, 150)}`);
       }
 
       const anthropicData = await anthropicRes.json();
       briefMarkdown = anthropicData.content?.[0]?.text;
-      if (!briefMarkdown) throw new Error('Empty response from Anthropic');
+      if (!briefMarkdown) throw new Error('opus:empty-response');
       await writeStep('step:opus-complete');
     }
 
