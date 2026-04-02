@@ -2,7 +2,6 @@
 
 import { buildBriefEmail } from '../email-templates.js';
 import { buildSystemPrompt } from '../brief-prompts.js';
-import { checkIpLimit, checkBriefCap } from '../middleware/rate-limit.js';
 import { jsonResponse } from '../middleware/responses.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -338,31 +337,6 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
   // Validate required fields
   if (!assessmentId || !email || !briefContext) {
     return jsonResponse({ error: 'Missing assessmentId, email, or briefContext' }, 400);
-  }
-
-  // Rate limiting
-  if (env.DB) {
-    const url = new URL(request.url);
-    const adminKey = url.searchParams.get('admin_key');
-    const isAdmin = adminKey && env.ADMIN_KEY && adminKey === env.ADMIN_KEY;
-
-    if (!isAdmin) {
-      const clientIp = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
-
-      try {
-        const ipResponse = await checkIpLimit(env.DB, clientIp);
-        if (ipResponse) return ipResponse;
-      } catch (err) {
-        console.error('D1 per-IP rate limit check failed:', err.message);
-      }
-
-      try {
-        const capResponse = await checkBriefCap(env.DB);
-        if (capResponse) return capResponse;
-      } catch (err) {
-        console.error('D1 global daily cap check failed:', err.message);
-      }
-    }
   }
 
   // Deduplication check

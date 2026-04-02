@@ -1,6 +1,5 @@
 // Handler for Anthropic API proxy — assessment and brief types
 
-import { checkIpLimit, checkBriefCap } from '../middleware/rate-limit.js';
 import { jsonResponse } from '../middleware/responses.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -14,31 +13,6 @@ export async function handleAiProxy(request, env, ctx, body) {
   }
 
   const { type, ...requestPayload } = body;
-
-  // Admin bypass for rate limiting
-  const url = new URL(request.url);
-  const adminKey = url.searchParams.get('admin_key');
-  const isAdmin = adminKey && env.ADMIN_KEY && adminKey === env.ADMIN_KEY;
-
-  // For briefs, enforce per-IP limit first, then the global daily cap
-  // If D1 is unavailable or errors, skip rate limiting and proceed to Anthropic
-  if (type === 'brief' && env.DB && !isAdmin) {
-    const clientIp = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
-
-    try {
-      const ipResponse = await checkIpLimit(env.DB, clientIp);
-      if (ipResponse) return ipResponse;
-    } catch (err) {
-      console.error('D1 per-IP rate limit check failed:', err.message);
-    }
-
-    try {
-      const capResponse = await checkBriefCap(env.DB);
-      if (capResponse) return capResponse;
-    } catch (err) {
-      console.error('D1 global daily cap check failed:', err.message);
-    }
-  }
 
   // Forward to Anthropic Messages API
   let anthropicResponse;
