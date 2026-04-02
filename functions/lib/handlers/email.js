@@ -388,45 +388,29 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
       console.error('Set pending status failed:', err.message);
     }
 
-    // TEMPORARY DIAGNOSTIC — write ctx shape directly to D1 so we can read it
-    try {
-      const ctxType = typeof ctx;
-      const waitUntilType = typeof ctx?.waitUntil;
-      const ctxKeys = ctx && typeof ctx === 'object' ? Object.getOwnPropertyNames(ctx).slice(0, 20).join(',') : 'N/A';
-      const diag = `debug:ctx_type=${ctxType},waitUntil_type=${waitUntilType},keys=${ctxKeys}`;
-      await env.DB.prepare(
-        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-      ).bind(diag, assessmentId).run();
-    } catch (err) {
-      // If even the diagnostic write fails, that's informative too
-    }
   }
 
-  // Debug: trace the context chain
-  console.log(`[brief:${assessmentId}] ctx type=${typeof ctx}, ctx.waitUntil type=${typeof ctx?.waitUntil}`);
-  if (ctx && typeof ctx === 'object') {
-    console.log(`[brief:${assessmentId}] ctx keys=${Object.keys(ctx).join(',')}`);
+  // Step tracking: write pre-waitUntil marker
+  if (env.DB) {
+    try {
+      await env.DB.prepare(
+        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
+      ).bind('step:pre-waitUntil', assessmentId).run();
+    } catch (err) {}
   }
 
   // Guard: if waitUntil is not available, fail immediately
   if (typeof ctx?.waitUntil !== 'function') {
-    console.error(`[brief:${assessmentId}] waitUntil not available — typeof=${typeof ctx?.waitUntil}`);
     if (env.DB) {
       try {
         await env.DB.prepare(
           'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-        ).bind('failed', assessmentId).run();
-        await env.DB.prepare(
-          'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).bind(assessmentId, email, name || null, 'brief', 'FAILED', null, JSON.stringify({ error: 'waitUntil not available on ctx' })).run();
-      } catch (dbErr) {
-        console.error(`[brief:${assessmentId}] D1 write also failed:`, dbErr.message);
-      }
+        ).bind('failed:waitUntil not available', assessmentId).run();
+      } catch (dbErr) {}
     }
     return jsonResponse({ error: 'Server context error' }, 500);
   }
 
-  // Build payload and register background work BEFORE returning response
   const asyncPayload = {
     assessmentId, name, email, briefContext,
     industryKey, sizeKey, verdict, compositeScore,
@@ -434,9 +418,7 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
     constraintExplanation, actionPlan, benchmarkPercentile,
   };
 
-  const briefPromise = generateBriefAndEmail(env, asyncPayload);
-  ctx.waitUntil(briefPromise);
-  console.log(`[brief:${assessmentId}] waitUntil registered, returning 202`);
+  ctx.waitUntil(generateBriefAndEmail(env, asyncPayload));
 
   return jsonResponse({ data: { status: 'accepted' } }, 202);
 }
@@ -450,22 +432,30 @@ async function generateBriefAndEmail(env, payload) {
     constraintExplanation, actionPlan, benchmarkPercentile,
   } = payload;
 
+  // D1 step writer — each call overwrites the previous status
+  async function writeStep(step) {
+    if (!env.DB) return;
+    try {
+      await env.DB.prepare(
+        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
+      ).bind(step, assessmentId).run();
+    } catch (e) {}
+  }
+
   try {
-    console.log(`[brief:${assessmentId}] waitUntil started — email=${email}, testMode=${env.TEST_MODE === 'true'}`);
+    await writeStep('step:waitUntil-entered');
 
     let briefMarkdown;
 
-    // TEST_MODE: return canned brief instead of calling Anthropic
     if (env.TEST_MODE === 'true' || env.TEST_MODE === true) {
-      console.log(`[brief:${assessmentId}] TEST_MODE — using canned brief`);
       briefMarkdown = TEST_BRIEF_MARKDOWN;
+      await writeStep('step:opus-complete');
     } else {
       const apiKey = env.ANTHROPIC_API_KEY;
       if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
 
       const systemPrompt = buildSystemPrompt(industryKey, sizeKey);
 
-      console.log(`[brief:${assessmentId}] calling Anthropic API...`);
       const anthropicRes = await fetch(ANTHROPIC_API_URL, {
         method: 'POST',
         headers: {
@@ -480,7 +470,6 @@ async function generateBriefAndEmail(env, payload) {
           messages: [{ role: 'user', content: briefContext }],
         }),
       });
-      console.log(`[brief:${assessmentId}] Anthropic responded — status=${anthropicRes.status}`);
 
       if (!anthropicRes.ok) {
         const errText = await anthropicRes.text();
@@ -490,12 +479,10 @@ async function generateBriefAndEmail(env, payload) {
       const anthropicData = await anthropicRes.json();
       briefMarkdown = anthropicData.content?.[0]?.text;
       if (!briefMarkdown) throw new Error('Empty response from Anthropic');
-      console.log(`[brief:${assessmentId}] Anthropic brief received — ${briefMarkdown.length} chars`);
+      await writeStep('step:opus-complete');
     }
 
-    // Convert markdown to HTML for the email
     const briefHtml = markdownToHtml(briefMarkdown);
-    console.log(`[brief:${assessmentId}] markdown converted to HTML — ${briefHtml.length} chars`);
 
     // Compute benchmark percentile from D1 (best-effort)
     let computedPercentile = benchmarkPercentile;
@@ -521,9 +508,7 @@ async function generateBriefAndEmail(env, payload) {
             computedPercentile = Math.round((belowRow.below / totalRow.total) * 100);
           }
         }
-      } catch (err) {
-        console.error(`[brief:${assessmentId}] benchmark percentile query failed:`, err.message);
-      }
+      } catch (err) {}
     }
 
     const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
@@ -544,8 +529,6 @@ async function generateBriefAndEmail(env, payload) {
       benchmarkPercentile: computedPercentile,
     });
 
-    // Send via Resend (or mock in TEST_MODE)
-    console.log(`[brief:${assessmentId}] sending email via Resend...`);
     const emailResult = await sendEmail(env, {
       from: 'Jewell Assessment <nick@nickjewell.ai>',
       reply_to: 'nick@nickjewell.ai',
@@ -554,27 +537,20 @@ async function generateBriefAndEmail(env, payload) {
       html: emailHtml,
       tags: [{ name: 'type', value: 'executive-brief' }],
     });
-    console.log(`[brief:${assessmentId}] sendEmail result — ok=${emailResult.ok}, id=${emailResult.id}, testMock=${emailResult.testMock || false}`);
 
     if (!emailResult.ok) {
       throw new Error(emailResult.error);
     }
 
+    await writeStep('step:resend-complete');
+
     const emailStatus = emailResult.testMock ? 'test_mock' : 'sent';
 
-    // Success — update D1
     if (env.DB) {
-      console.log(`[brief:${assessmentId}] updating D1 — brief_email_status=${emailStatus}`);
-      try {
-        await env.DB.prepare(
-          'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-        ).bind(emailStatus, assessmentId).run();
-        console.log(`[brief:${assessmentId}] D1 status update succeeded`);
-      } catch (err) {
-        console.error(`[brief:${assessmentId}] D1 status update failed:`, err.message);
-      }
+      await env.DB.prepare(
+        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
+      ).bind(emailStatus, assessmentId).run();
 
-      console.log(`[brief:${assessmentId}] writing email_log...`);
       try {
         await env.DB.prepare(
           'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -587,42 +563,25 @@ async function generateBriefAndEmail(env, payload) {
           emailResult.id || null,
           JSON.stringify({ verdict, bindingConstraint, compositeScore, tasteSignature: tasteSignatureName, testMock: emailResult.testMock || false })
         ).run();
-        console.log(`[brief:${assessmentId}] email_log write succeeded`);
-      } catch (err) {
-        console.error(`[brief:${assessmentId}] email_log write failed:`, err.message);
-      }
+      } catch (err) {}
     }
-
-    console.log(`[brief:${assessmentId}] waitUntil completed successfully`);
   } catch (err) {
-    console.error(`[brief:${assessmentId}] FATAL — waitUntil failed:`, err.message, err.stack);
-
-    // First priority: mark as failed in D1
+    const failMsg = ('failed:' + (err.message || String(err))).slice(0, 200);
     if (env.DB) {
       try {
         await env.DB.prepare(
           'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-        ).bind('failed', assessmentId).run();
-        console.log(`[brief:${assessmentId}] marked as failed in D1`);
-      } catch (dbErr) {
-        console.error(`[brief:${assessmentId}] COULD NOT mark as failed in D1:`, dbErr.message);
-      }
+        ).bind(failMsg, assessmentId).run();
+      } catch (dbErr) {}
 
       try {
         await env.DB.prepare(
           'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
         ).bind(
-          assessmentId,
-          email,
-          name || null,
-          'brief',
-          'FAILED',
-          null,
+          assessmentId, email, name || null, 'brief', 'FAILED', null,
           JSON.stringify({ error: err.message, stack: err.stack })
         ).run();
-      } catch (logErr) {
-        console.error(`[brief:${assessmentId}] email_log error write also failed:`, logErr.message);
-      }
+      } catch (logErr) {}
     }
   }
 }
