@@ -522,7 +522,7 @@ async function generateBriefAndEmail(env, payload) {
     if (env.DB) {
       try {
         await env.DB.prepare(
-          'UPDATE assessment_results SET brief_generated = 1, brief_email_status = ? WHERE id = ?'
+          'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
         ).bind('sent', assessmentId).run();
       } catch (err) {
         console.error('D1 status update failed:', err.message);
