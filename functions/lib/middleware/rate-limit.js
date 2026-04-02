@@ -1,4 +1,4 @@
-// Brief-specific rate limiting using brief_ip_counter and brief_counter tables
+// Brief-specific rate limiting using brief_ip_counter table
 
 const DAILY_BRIEF_CAP = 100;
 
@@ -31,18 +31,18 @@ export async function checkIpLimit(db, ip) {
   return null;
 }
 
-// Check and increment the global daily brief counter (100/day).
+// Check global daily brief cap (100/day) by summing all IP counts for today.
 // Returns null if under cap, or a Response if at capacity.
 export async function checkBriefCap(db) {
   const today = new Date().toISOString().slice(0, 10);
 
   const row = await db.prepare(
-    'SELECT count FROM brief_counter WHERE date = ?'
+    "SELECT SUM(count) as total FROM brief_ip_counter WHERE ip_date LIKE '%:' || ?"
   ).bind(today).first();
 
-  const currentCount = row ? row.count : 0;
+  const currentTotal = row ? (row.total || 0) : 0;
 
-  if (currentCount >= DAILY_BRIEF_CAP) {
+  if (currentTotal >= DAILY_BRIEF_CAP) {
     return new Response(JSON.stringify({
       error: 'briefs_at_capacity',
       message: 'Executive briefs are at capacity today. Try again tomorrow.',
@@ -51,10 +51,6 @@ export async function checkBriefCap(db) {
       headers: { 'Content-Type': 'application/json' },
     });
   }
-
-  await db.prepare(
-    'INSERT OR REPLACE INTO brief_counter (date, count) VALUES (?, ?)'
-  ).bind(today, currentCount + 1).run();
 
   return null;
 }
