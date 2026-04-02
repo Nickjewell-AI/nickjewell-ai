@@ -412,18 +412,21 @@ async function generateBriefAndEmail(env, payload) {
   } = payload;
 
   try {
+    console.log(`[brief:${assessmentId}] waitUntil started — email=${email}, testMode=${env.TEST_MODE === 'true'}`);
+
     let briefMarkdown;
 
     // TEST_MODE: return canned brief instead of calling Anthropic
     if (env.TEST_MODE === 'true' || env.TEST_MODE === true) {
+      console.log(`[brief:${assessmentId}] TEST_MODE — using canned brief`);
       briefMarkdown = TEST_BRIEF_MARKDOWN;
     } else {
-      // Call Anthropic API (non-streaming)
       const apiKey = env.ANTHROPIC_API_KEY;
       if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
 
       const systemPrompt = buildSystemPrompt(industryKey, sizeKey);
 
+      console.log(`[brief:${assessmentId}] calling Anthropic API...`);
       const anthropicRes = await fetch(ANTHROPIC_API_URL, {
         method: 'POST',
         headers: {
@@ -438,6 +441,7 @@ async function generateBriefAndEmail(env, payload) {
           messages: [{ role: 'user', content: briefContext }],
         }),
       });
+      console.log(`[brief:${assessmentId}] Anthropic responded — status=${anthropicRes.status}`);
 
       if (!anthropicRes.ok) {
         const errText = await anthropicRes.text();
@@ -447,10 +451,12 @@ async function generateBriefAndEmail(env, payload) {
       const anthropicData = await anthropicRes.json();
       briefMarkdown = anthropicData.content?.[0]?.text;
       if (!briefMarkdown) throw new Error('Empty response from Anthropic');
+      console.log(`[brief:${assessmentId}] Anthropic brief received — ${briefMarkdown.length} chars`);
     }
 
     // Convert markdown to HTML for the email
     const briefHtml = markdownToHtml(briefMarkdown);
+    console.log(`[brief:${assessmentId}] markdown converted to HTML — ${briefHtml.length} chars`);
 
     // Compute benchmark percentile from D1 (best-effort)
     let computedPercentile = benchmarkPercentile;
@@ -477,7 +483,7 @@ async function generateBriefAndEmail(env, payload) {
           }
         }
       } catch (err) {
-        console.error('Benchmark percentile query failed:', err.message);
+        console.error(`[brief:${assessmentId}] benchmark percentile query failed:`, err.message);
       }
     }
 
@@ -500,6 +506,7 @@ async function generateBriefAndEmail(env, payload) {
     });
 
     // Send via Resend (or mock in TEST_MODE)
+    console.log(`[brief:${assessmentId}] sending email via Resend...`);
     const emailResult = await sendEmail(env, {
       from: 'Jewell Assessment <nick@nickjewell.ai>',
       reply_to: 'nick@nickjewell.ai',
@@ -508,6 +515,7 @@ async function generateBriefAndEmail(env, payload) {
       html: emailHtml,
       tags: [{ name: 'type', value: 'executive-brief' }],
     });
+    console.log(`[brief:${assessmentId}] sendEmail result — ok=${emailResult.ok}, id=${emailResult.id}, testMock=${emailResult.testMock || false}`);
 
     if (!emailResult.ok) {
       throw new Error(emailResult.error);
@@ -517,14 +525,17 @@ async function generateBriefAndEmail(env, payload) {
 
     // Success — update D1
     if (env.DB) {
+      console.log(`[brief:${assessmentId}] updating D1 — brief_email_status=${emailStatus}`);
       try {
         await env.DB.prepare(
           'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
         ).bind(emailStatus, assessmentId).run();
+        console.log(`[brief:${assessmentId}] D1 status update succeeded`);
       } catch (err) {
-        console.error('D1 status update failed:', err.message);
+        console.error(`[brief:${assessmentId}] D1 status update failed:`, err.message);
       }
 
+      console.log(`[brief:${assessmentId}] writing email_log...`);
       try {
         await env.DB.prepare(
           'INSERT INTO email_log (assessment_id, recipient_email, recipient_name, email_type, subject, resend_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -537,21 +548,25 @@ async function generateBriefAndEmail(env, payload) {
           emailResult.id || null,
           JSON.stringify({ verdict, bindingConstraint, compositeScore, tasteSignature: tasteSignatureName, testMock: emailResult.testMock || false })
         ).run();
+        console.log(`[brief:${assessmentId}] email_log write succeeded`);
       } catch (err) {
-        console.error('Email log write failed:', err.message);
+        console.error(`[brief:${assessmentId}] email_log write failed:`, err.message);
       }
     }
-  } catch (err) {
-    // Any failure — mark as failed in D1
-    console.error('Brief generation failed:', { assessmentId, error: err.message });
 
+    console.log(`[brief:${assessmentId}] waitUntil completed successfully`);
+  } catch (err) {
+    console.error(`[brief:${assessmentId}] FATAL — waitUntil failed:`, err.message, err.stack);
+
+    // First priority: mark as failed in D1
     if (env.DB) {
       try {
         await env.DB.prepare(
           'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
         ).bind('failed', assessmentId).run();
+        console.log(`[brief:${assessmentId}] marked as failed in D1`);
       } catch (dbErr) {
-        console.error('D1 failure status update failed:', dbErr.message);
+        console.error(`[brief:${assessmentId}] COULD NOT mark as failed in D1:`, dbErr.message);
       }
 
       try {
@@ -564,10 +579,10 @@ async function generateBriefAndEmail(env, payload) {
           'brief',
           'FAILED',
           null,
-          JSON.stringify({ error: err.message })
+          JSON.stringify({ error: err.message, stack: err.stack })
         ).run();
       } catch (logErr) {
-        console.error('Email log error write failed:', logErr.message);
+        console.error(`[brief:${assessmentId}] email_log error write also failed:`, logErr.message);
       }
     }
   }
