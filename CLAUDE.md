@@ -90,6 +90,9 @@ Key directories:
 ## Design System
 Dark editorial. Fraunces (display) + DM Sans (body). Amber accent `#c8965a` on near-black `#080808`. Film grain overlay. Fade-in animations.
 
+## Voice & Copy
+All external-facing copy (LinkedIn, Substack, DMs, comments, assessment text) must follow Voice_Copy_Intelligence_v2.docx in project knowledge. Before generating copy, also check docs/voice-calibration.md for recent corrections or new samples not yet folded into the main doc. Three-tier evidence standard: Cited Data, First-Party D1, or Explicitly Framed as Thesis. No ungrounded claims. Quality test: "Would Nick say this out loud to a smart friend?"
+
 ## Build Workflow (ENFORCED)
 1. Claude specs in chat → Nick pastes into Claude Code
 2. Claude Code commits to `dev` branch
