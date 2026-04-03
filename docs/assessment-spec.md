@@ -381,11 +381,8 @@ Every API-powered feature has a deterministic fallback. If Sonnet fails, reasoni
 
 ## D1 Schema
 
-See D1_Schema_Reference.md for complete table definitions with all column names and types.
-
-Key tables: assessment_results (26 columns), brief_ip_counter, email_log, assessment_feedback, webhook_registrations, signal_log, agent_drafts, agent_runs, rate_limits, intent_signals.
-
-CRITICAL: Table is brief_ip_counter NOT brief_counter. Column is ip_date NOT date. Column is timestamp NOT created_at. There is NO brief_generated column. There is NO contact_info JSON column — name, email, company, role are top-level columns. All D1 queries must use exact names from D1_Schema_Reference.md.
+Database: `jewell-assessment-db`. Introspect live schema via wrangler CLI — see CLAUDE.md for commands.
+Core tables: `assessment_results`, `assessment_feedback`, `email_log`, `brief_ip_counter`.
 
 ---
 
