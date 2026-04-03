@@ -284,6 +284,18 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
     console.error('Dedup check failed:', err.message);
   }
 
+  // Production guard: test emails never enter the cron queue
+  if (email.endsWith('@playwright.dev') || email === 'test@example.com') {
+    try {
+      await env.DB.prepare(
+        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
+      ).bind('test_mock', assessmentId).run();
+    } catch (err) {
+      console.error('Test mock status update failed:', err.message);
+    }
+    return jsonResponse({ data: { status: 'accepted' } }, 202);
+  }
+
   // Store payload and set pending — cron Worker picks this up
   const requestPayload = JSON.stringify({
     briefContext, industryKey, sizeKey, layerScores,

@@ -286,6 +286,15 @@ async function processPendingBrief(env) {
 
   const assessmentId = row.id;
 
+  // Production guard: never call Anthropic or Resend for test/Playwright emails
+  if (row.email.endsWith('@playwright.dev') || row.email === 'test@example.com') {
+    await db.prepare(
+      'UPDATE assessment_results SET brief_email_status = ?, brief_request_payload = NULL WHERE id = ?'
+    ).bind('test_mock', assessmentId).run();
+    console.log('Skipped test email:', row.email, 'assessment:', assessmentId);
+    return { processed: true, assessmentId, status: 'test_skipped' };
+  }
+
   try {
     // 2. Parse payload
     const payload = JSON.parse(row.brief_request_payload);
