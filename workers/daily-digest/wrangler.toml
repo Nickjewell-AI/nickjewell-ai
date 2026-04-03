@@ -1,0 +1,15 @@
+name = "daily-digest-worker"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "jewell-assessment-db"
+database_id = "97e104f4-6135-4b8e-a3fb-78f569b3a7c5"
+
+[triggers]
+crons = ["0 12 * * *"]
+
+[vars]
+TEST_MODE = "false"
+DIGEST_RECIPIENT = "nick@nickjewell.ai"
