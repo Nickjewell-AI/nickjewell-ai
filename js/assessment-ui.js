@@ -1074,6 +1074,18 @@ function showAllResults() {
     setTimeout(() => triggerBriefGeneration(), 1000);
   }
 
+  // Reveal feedback widget after a delay
+  setTimeout(() => initFeedbackWidget(), 2000);
+
+  // Reveal contact CTA after feedback
+  setTimeout(() => {
+    const cta = document.getElementById('results-contact-cta');
+    if (cta) {
+      cta.classList.remove('hidden');
+      requestAnimationFrame(() => cta.classList.add('visible'));
+    }
+  }, 2400);
+
   // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1411,6 +1423,64 @@ async function autoSaveResults() {
     // Silent fail — anonymous save is best-effort
   }
 
+}
+
+// ─── Feedback Widget ──────────────────────────────────────
+
+function initFeedbackWidget() {
+  const card = document.getElementById('feedback-card');
+  if (!card) return;
+
+  card.classList.remove('hidden');
+  requestAnimationFrame(() => card.classList.add('visible'));
+
+  const buttons = card.querySelectorAll('.feedback-card-btn');
+  const expandArea = card.querySelector('.feedback-card-expand');
+  const textarea = card.querySelector('.feedback-card-textarea');
+  const submitBtn = card.querySelector('.feedback-card-submit');
+  let sentimentValue = null;
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      sentimentValue = btn.dataset.sentiment;
+      buttons.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+
+      // Send sentiment immediately
+      sendFeedback({ sentiment: sentimentValue });
+
+      // Reveal textarea
+      expandArea.style.display = '';
+      requestAnimationFrame(() => expandArea.classList.add('open'));
+    });
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const text = textarea.value.trim();
+    if (text) {
+      sendFeedback({ feedback_text: text, page_context: 'results_page' });
+    }
+    showFeedbackThanks(card);
+  });
+}
+
+function sendFeedback(fields) {
+  const body = Object.assign({ type: 'submit_feedback', assessment_id: savedRowId || null }, fields);
+  fetch('/api-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).catch(() => {});
+}
+
+function showFeedbackThanks(card) {
+  const content = card.querySelector('.feedback-card-content');
+  content.style.transition = 'opacity 0.3s ease';
+  content.style.opacity = '0';
+  setTimeout(() => {
+    content.innerHTML = '<p class="feedback-card-thankyou">Thanks for your feedback.</p>';
+    content.style.opacity = '1';
+  }, 300);
 }
 
 // ─── Boot ─────────────────────────────────────────────────

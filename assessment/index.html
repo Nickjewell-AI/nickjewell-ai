@@ -66,6 +66,176 @@
       margin-bottom: 2.5rem;
     }
 
+    .assessment-intro .promise-line {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin: 0 auto;
+      max-width: 540px;
+      padding: 0;
+    }
+
+    .assessment-intro .promise-line + .promise-line {
+      margin-top: 12px;
+    }
+
+    .assessment-intro .promise-meta {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 1rem auto 0;
+      max-width: 540px;
+    }
+
+    /* Feedback card */
+    .feedback-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      margin-top: 2rem;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .feedback-card.visible {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+
+    .feedback-card-heading {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: var(--text-primary);
+      margin: 0 0 1rem;
+    }
+
+    .feedback-card-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .feedback-card-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.5rem 1.2rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .feedback-card-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .feedback-card-btn.selected {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(200, 150, 90, 0.08);
+    }
+
+    .feedback-card-expand {
+      margin-top: 1rem;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.4s ease;
+    }
+
+    .feedback-card-expand.open {
+      max-height: 300px;
+    }
+
+    .feedback-card-textarea {
+      width: 100%;
+      min-height: 80px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      padding: 0.75rem 1rem;
+      resize: vertical;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    .feedback-card-textarea:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .feedback-card-textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .feedback-card-submit {
+      margin-top: 0.75rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.5rem 1.5rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .feedback-card-submit:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .feedback-card-thankyou {
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      opacity: 0;
+      animation: feedbackFadeIn 0.4s ease forwards;
+    }
+
+    @keyframes feedbackFadeIn {
+      to { opacity: 1; }
+    }
+
+    /* Results contact CTA */
+    .results-contact-cta {
+      margin-top: 2rem;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      transition: opacity 0.6s ease;
+    }
+
+    .results-contact-cta.visible {
+      opacity: 1 !important;
+    }
+
+    .results-contact-cta span {
+      color: var(--text-muted);
+    }
+
+    .results-contact-cta a {
+      color: var(--accent);
+      text-decoration: none;
+      margin-left: 0.4rem;
+      transition: text-decoration-color 0.2s;
+      text-underline-offset: 3px;
+    }
+
+    .results-contact-cta a:hover {
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+    }
+
     .start-btn {
       display: inline-block;
       font-family: var(--font-body);
@@ -1204,7 +1374,10 @@
         <p class="subtitle">
           Other assessments tell you whether your organization <em>can</em> implement AI. This one tells you whether it <em>should</em> — and whether the people making that decision have the judgment to get it right.
         </p>
-        <p class="time-note">Under 5 minutes</p>
+        <p class="promise-line">Your organizational readiness verdict — Green, Amber, or Red.</p>
+        <p class="promise-line">Your binding constraint — the specific layer undermining your next AI initiative.</p>
+        <p class="promise-line">Your Taste signature — how you make decisions when the data is ambiguous and the stakes are high.</p>
+        <p class="promise-meta">5 minutes. No login. Immediate results.</p>
         <button id="start-btn" class="start-btn">Begin Assessment</button>
       </div>
 
@@ -1316,6 +1489,27 @@
           <p id="assessed-note" class="assessed-note hidden"></p>
         </div>
 
+        <!-- Feedback Widget -->
+        <div id="feedback-card" class="feedback-card hidden" style="opacity: 0; transform: translateY(16px);">
+          <div class="feedback-card-content">
+            <h3 class="feedback-card-heading">How was this?</h3>
+            <div class="feedback-card-buttons">
+              <button class="feedback-card-btn" data-sentiment="positive">Helpful</button>
+              <button class="feedback-card-btn" data-sentiment="negative">Not helpful</button>
+            </div>
+            <div class="feedback-card-expand" style="display: none;">
+              <textarea class="feedback-card-textarea" placeholder="Tell us more (optional)"></textarea>
+              <button class="feedback-card-submit">Submit</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact CTA -->
+        <div id="results-contact-cta" class="results-contact-cta hidden" style="opacity: 0;">
+          <span>Questions about your results?</span>
+          <a href="mailto:nick@nickjewell.ai">Let's talk &rarr;</a>
+        </div>
+
         <div class="substack-cta" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
           <a href="https://nickjewellai.substack.com/subscribe" target="_blank" rel="noopener" class="btn-secondary" style="font-size: 0.88rem;">Your diagnosis is personal. The newsletter shows how others are solving the same constraints &rarr;</a>
         </div>
@@ -1342,8 +1536,8 @@
   </footer>
 
   <script src="../js/api.js"></script>
-  <script src="../js/assessment-engine.js?v=6"></script>
-  <script src="../js/assessment-ui.js?v=16"></script>
+  <script src="../js/assessment-engine.js?v=7"></script>
+  <script src="../js/assessment-ui.js?v=17"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const hamburger = document.querySelector('.nav-hamburger');
