@@ -2,7 +2,7 @@
 // Standalone Cloudflare Worker — runs on cron, picks up pending briefs from D1,
 // generates via Opus, emails via Resend.
 //
-// D1 TABLES AND COLUMNS USED (from D1_Schema_Reference.md):
+// D1 TABLES AND COLUMNS USED (introspect live schema via wrangler CLI):
 //   assessment_results: id, name, email, verdict, composite_score, binding_constraint,
 //     foundation_score, architecture_score, accountability_score, culture_score,
 //     taste_signature, industry, brief_email_status, brief_request_payload

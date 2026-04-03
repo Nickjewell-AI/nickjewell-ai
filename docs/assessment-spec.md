@@ -381,8 +381,9 @@ Every API-powered feature has a deterministic fallback. If Sonnet fails, reasoni
 
 ## D1 Schema
 
-Database: `jewell-assessment-db`. Introspect live schema via wrangler CLI — see CLAUDE.md for commands.
-Core tables: `assessment_results`, `assessment_feedback`, `email_log`, `brief_ip_counter`.
+Introspect live schema via wrangler CLI — see CLAUDE.md for commands. Do not maintain static column lists in this document.
+
+Key gotchas: Table is `brief_ip_counter` not `brief_counter`. Column is `timestamp` not `created_at`. name/email/company/role are top-level columns, not nested JSON.
 
 ---
 
