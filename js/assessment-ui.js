@@ -1368,6 +1368,10 @@ async function autoSaveResults() {
     layers: session.layerResponses,
     taste: session.tasteResponses,
     followUps: session.followUpResponses,
+    cu2FreeText: session.cu2FreeText || null,
+    cu2Analysis: session.cu2Analysis || null,
+    adaptiveFreeText: session.adaptiveFreeText || {},
+    tasteFreeText: session.tasteFreeText || null,
     timings: lastResults.responseTimings || {},
     timingSummary: lastResults.timingSummary || null,
   };
