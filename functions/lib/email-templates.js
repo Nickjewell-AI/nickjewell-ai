@@ -63,7 +63,15 @@ export function buildBriefEmail(data) {
     layerScores = {},
     tasteSignature,
     benchmarkPercentile,
+    assessmentId,
   } = data;
+
+  const shareUrl = assessmentId
+    ? `https://www.nickjewell.ai/assessment?ref=${assessmentId}`
+    : 'https://www.nickjewell.ai/assessment';
+  const shareUrlDisplay = assessmentId
+    ? `nickjewell.ai/assessment?ref=${assessmentId}`
+    : 'nickjewell.ai/assessment';
 
   const verdictColor = VERDICT_COLORS[verdict] || '#c8965a';
   const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
@@ -98,7 +106,7 @@ export function buildBriefEmail(data) {
     : '';
 
   // Share copy for team distribution CTA
-  const shareCopy = `I just took an AI readiness diagnostic that was surprisingly sharp. It identified ${constraintName} as our biggest gap. Worth 5 minutes: nickjewell.ai/assessment`;
+  const shareCopy = `I just took an AI readiness diagnostic that was surprisingly sharp. It identified ${constraintName} as our biggest gap. Worth 5 minutes: ${shareUrl}`;
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -170,7 +178,7 @@ export function buildBriefEmail(data) {
         &ldquo;${shareCopy}&rdquo;
       </td></tr>
     </table>
-    <p style="margin:10px 0 0;"><a href="https://www.nickjewell.ai/assessment" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Share the assessment &rarr; nickjewell.ai/assessment</a></p>
+    <p style="margin:10px 0 0;"><a href="${shareUrl}" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Share the assessment &rarr; ${shareUrlDisplay}</a></p>
   </td></tr>
 
   <!-- Tertiary CTA: Framework Deep Dive -->

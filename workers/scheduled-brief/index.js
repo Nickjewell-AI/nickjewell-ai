@@ -11,6 +11,12 @@
 //
 // CRITICAL: Table is brief_ip_counter NOT brief_counter.
 //   Column is timestamp NOT created_at. There is NO brief_generated column.
+//
+// COST GUARD: The pending-brief query explicitly excludes test records
+// (is_test = 1 or email = 'test@playwright.dev'). Playwright CI writes real
+// rows to shared D1; without this filter the cron would burn Opus + Resend
+// quota on test traffic. Defense-in-depth with the intake guard in
+// functions/lib/handlers/email.js (handleGenerateAndEmailBrief).
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -123,7 +129,15 @@ function buildBriefEmail(data) {
   const {
     firstName, briefHtml, verdict, bindingConstraint,
     compositeScore, layerScores = {}, tasteSignature, benchmarkPercentile,
+    assessmentId,
   } = data;
+
+  const shareUrl = assessmentId
+    ? `https://www.nickjewell.ai/assessment?ref=${assessmentId}`
+    : 'https://www.nickjewell.ai/assessment';
+  const shareUrlDisplay = assessmentId
+    ? `nickjewell.ai/assessment?ref=${assessmentId}`
+    : 'nickjewell.ai/assessment';
 
   const verdictColor = VERDICT_COLORS[verdict] || '#c8965a';
   const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
@@ -153,7 +167,7 @@ function buildBriefEmail(data) {
     ? `<p style="color:#6b6560;font-size:13px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:12px 0 0;font-style:italic;">You scored higher than ${benchmarkPercentile}% of respondents on ${strongestLayer}.</p>`
     : '';
 
-  const shareCopy = `I just took an AI readiness diagnostic that was surprisingly sharp. It identified ${constraintName} as our biggest gap. Worth 5 minutes: nickjewell.ai/assessment`;
+  const shareCopy = `I just took an AI readiness diagnostic that was surprisingly sharp. It identified ${constraintName} as our biggest gap. Worth 5 minutes: ${shareUrl}`;
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -192,7 +206,7 @@ function buildBriefEmail(data) {
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0eeeb;border-radius:4px;">
       <tr><td style="padding:16px;color:#1a1a1a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.5;font-style:italic;">&ldquo;${shareCopy}&rdquo;</td></tr>
     </table>
-    <p style="margin:10px 0 0;"><a href="https://www.nickjewell.ai/assessment" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Share the assessment &rarr; nickjewell.ai/assessment</a></p>
+    <p style="margin:10px 0 0;"><a href="${shareUrl}" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Share the assessment &rarr; ${shareUrlDisplay}</a></p>
   </td></tr>
   <tr><td style="padding-bottom:28px;"><a href="https://www.nickjewell.ai/framework/#${bindingConstraint || ''}" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Deep dive: Why ${constraintName} breaks AI initiatives &rarr;</a></td></tr>
   <tr><td style="border-top:1px solid #e0ddd8;padding-top:20px;">
@@ -279,6 +293,7 @@ async function processPendingBrief(env) {
       taste_signature, industry, brief_email_status, brief_request_payload
     FROM assessment_results
     WHERE brief_email_status = 'pending' AND brief_request_payload IS NOT NULL
+      AND (is_test != 1 OR is_test IS NULL) AND email != 'test@playwright.dev'
     ORDER BY id ASC LIMIT 1
   `).first();
 
@@ -386,6 +401,7 @@ async function processPendingBrief(env) {
       verdict,
       bindingConstraint,
       compositeScore,
+      assessmentId: row.id,
       layerScores: layerScores || {
         foundation: row.foundation_score,
         architecture: row.architecture_score,

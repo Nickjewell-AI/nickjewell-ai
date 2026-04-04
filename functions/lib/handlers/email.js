@@ -207,6 +207,7 @@ export async function handleSendBriefEmail(request, env, ctx, body) {
     verdict,
     bindingConstraint,
     compositeScore,
+    assessmentId,
     layerScores: layerScores || {},
     tasteSignature,
     benchmarkPercentile,
@@ -271,6 +272,20 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
     return jsonResponse({ error: 'Database not configured' }, 500);
   }
 
+  // COST GUARD: test emails never enter the cron queue. Runs BEFORE dedup so
+  // test records can never be set to 'pending' in the first place — defense-in-
+  // depth with the cron query filter in workers/scheduled-brief/index.js.
+  if (email === 'test@playwright.dev' || email.endsWith('@playwright.dev') || email === 'test@example.com') {
+    try {
+      await env.DB.prepare(
+        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
+      ).bind('test_mock', assessmentId).run();
+    } catch (err) {
+      console.error('Test mock status update failed:', err.message);
+    }
+    return jsonResponse({ data: { status: 'test-skipped' } }, 200);
+  }
+
   // Deduplication check
   try {
     const row = await env.DB.prepare(
@@ -282,18 +297,6 @@ export async function handleGenerateAndEmailBrief(request, env, ctx, body) {
     }
   } catch (err) {
     console.error('Dedup check failed:', err.message);
-  }
-
-  // Production guard: test emails never enter the cron queue
-  if (email.endsWith('@playwright.dev') || email === 'test@example.com') {
-    try {
-      await env.DB.prepare(
-        'UPDATE assessment_results SET brief_email_status = ? WHERE id = ?'
-      ).bind('test_mock', assessmentId).run();
-    } catch (err) {
-      console.error('Test mock status update failed:', err.message);
-    }
-    return jsonResponse({ data: { status: 'accepted' } }, 202);
   }
 
   // Store payload and set pending — cron Worker picks this up

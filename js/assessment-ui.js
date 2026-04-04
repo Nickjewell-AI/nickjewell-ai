@@ -42,6 +42,7 @@ let assessmentStartTime;
 let lastResults;
 let savedRowId = null;
 let briefStreamActive = false;
+let refSource = null;
 let freeTextConfirmationShown = false;
 let postTastePromptShown = false;
 let currentModuleCard = null;
@@ -69,6 +70,14 @@ function init() {
 
   // Industry URL parameter pre-population
   const urlParams = new URLSearchParams(window.location.search);
+
+  // Referral tracking: ?ref={assessmentId} from shared links
+  const refParam = urlParams.get('ref');
+  if (refParam) {
+    const cleaned = String(refParam).trim().slice(0, 64);
+    if (cleaned) refSource = cleaned;
+  }
+
   const industryParam = urlParams.get('industry');
   if (industryParam) {
     const mappedKey = INDUSTRY_URL_MAP[industryParam.toLowerCase()];
@@ -987,7 +996,7 @@ function initCaptureForm() {
       fetch('/api/submit-assessment', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: savedRowId, name, email, company, role }),
+        body: JSON.stringify({ id: savedRowId, name, email, company, role, ref_source: refSource }),
         keepalive: true,
       }).catch(() => {});
     }
@@ -1073,6 +1082,9 @@ function showAllResults() {
   if (session._contactEmail && lastResults) {
     setTimeout(() => triggerBriefGeneration(), 1000);
   }
+
+  // Reveal share card after brief section (above feedback)
+  setTimeout(() => initShareCard(), 1600);
 
   // Reveal feedback widget after a delay
   setTimeout(() => initFeedbackWidget(), 2000);
@@ -1407,6 +1419,7 @@ async function autoSaveResults() {
     time_to_complete_seconds: timeToComplete,
     taste_normalized: lastResults.tasteNormalized || null,
     scenario_set: lastResults.scenarioSet ? lastResults.scenarioSet.join(',') : null,
+    ref_source: refSource,
   };
 
   try {
@@ -1423,6 +1436,58 @@ async function autoSaveResults() {
     // Silent fail — anonymous save is best-effort
   }
 
+}
+
+// ─── Share Card ───────────────────────────────────────────
+
+function initShareCard() {
+  const card = document.getElementById('share-card');
+  if (!card || !savedRowId || !lastResults) return;
+
+  const constraintName = LAYER_NAMES[lastResults.bindingConstraint] || lastResults.bindingConstraint || 'a gap';
+  const shareUrl = `https://www.nickjewell.ai/assessment?ref=${savedRowId}`;
+  const shareText = `I just took an AI readiness diagnostic that was surprisingly sharp. It identified ${constraintName} as our biggest gap. Worth 5 minutes: ${shareUrl}`;
+  const emailSubject = 'Worth 5 minutes — AI readiness diagnostic';
+
+  const copyBtn = card.querySelector('.share-card-btn-copy');
+  const emailBtn = card.querySelector('.share-card-btn-email');
+  const smsBtn = card.querySelector('.share-card-btn-sms');
+
+  if (copyBtn) {
+    const originalLabel = copyBtn.textContent;
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(shareText);
+      } catch {
+        // Fallback: select a temp textarea
+        const ta = document.createElement('textarea');
+        ta.value = shareText;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch {}
+        document.body.removeChild(ta);
+      }
+      copyBtn.textContent = 'Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = originalLabel;
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  if (emailBtn) {
+    emailBtn.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(shareText)}`;
+  }
+
+  if (smsBtn) {
+    smsBtn.href = `sms:?body=${encodeURIComponent(shareText)}`;
+  }
+
+  card.classList.remove('hidden');
+  requestAnimationFrame(() => card.classList.add('visible'));
 }
 
 // ─── Feedback Widget ──────────────────────────────────────

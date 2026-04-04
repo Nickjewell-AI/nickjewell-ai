@@ -43,6 +43,8 @@ export async function handleAssessmentPost(request, env, ctx) {
       ? Math.round(Number(body.time_to_complete_seconds))
       : null;
 
+    const refSource = sanitize(body.ref_source, 64);
+
     const foundationScore = body.foundation_score != null ? Number(body.foundation_score) : null;
     const architectureScore = body.architecture_score != null ? Number(body.architecture_score) : null;
     const accountabilityScore = body.accountability_score != null ? Number(body.accountability_score) : null;
@@ -65,14 +67,14 @@ export async function handleAssessmentPost(request, env, ctx) {
         foundation_score, architecture_score, accountability_score, culture_score,
         taste_signature, taste_frame_recognition, taste_kill_discipline, taste_edge_case_instinct,
         verdict, composite_score, binding_constraint,
-        all_responses, time_to_complete_seconds
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        all_responses, time_to_complete_seconds, ref_source
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       roleContext, industry, maturityStage,
       foundationScore, architectureScore, accountabilityScore, cultureScore,
       tasteSignature, tasteFrame, tasteKill, tasteEdge,
       verdict, compositeScore, bindingConstraint,
-      allResponses, timeToComplete
+      allResponses, timeToComplete, refSource
     ).run();
 
     const rowId = result.meta?.last_row_id ?? null;
@@ -112,8 +114,9 @@ export async function handleAssessmentPatch(request, env, ctx) {
     const email = sanitize(body.email, 320);
     const company = sanitize(body.company, 200);
     const role = sanitize(body.role, 200);
+    const refSource = sanitize(body.ref_source, 64);
 
-    if (!name && !email && !company && !role) {
+    if (!name && !email && !company && !role && !refSource) {
       return respond({ success: true }, 200);
     }
 
@@ -122,9 +125,10 @@ export async function handleAssessmentPatch(request, env, ctx) {
       SET name = COALESCE(?, name),
           email = COALESCE(?, email),
           company = COALESCE(?, company),
-          role = COALESCE(?, role)
+          role = COALESCE(?, role),
+          ref_source = COALESCE(?, ref_source)
       WHERE id = ?
-    `).bind(name, email, company, role, body.id).run();
+    `).bind(name, email, company, role, refSource, body.id).run();
 
     // Dispatch webhook for email capture
     if (email) {
