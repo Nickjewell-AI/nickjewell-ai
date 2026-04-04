@@ -813,12 +813,12 @@ const TASTE_QUESTIONS = [
     id: 'T5',
     layer: 'taste',
     label: 'The Free Trial Trap',
-    text: "Your marketing lead signed up for an AI tool on a free trial. Three weeks in, the team 'can\\'t go back.' $18K annual license. No AI budget. IT hasn\\'t reviewed it. Trial expires Friday.",
+    text: "Your marketing lead signed up for an AI tool on a free trial. Three weeks in, the team 'can't go back.' $18K annual license. No AI budget. IT hasn't reviewed it. Trial expires Friday.",
     options: [
       { key: 'A', text: "Approve it — $18K is small and she's proven the value with three weeks of daily use.", score: 1 },
       { key: 'B', text: 'Tell her you need IT to review it first, even if it means losing the trial.', score: 2 },
       { key: 'C', text: "Ask what happens to company data already in the tool if you don't renew.", score: 3 },
-      { key: 'D', text: "Ask why the team 'can\\'t go back' — is the old way broken, or does the AI just feel faster?", score: 4 },
+      { key: 'D', text: "Ask why the team 'can't go back' — is the old way broken, or does the AI just feel faster?", score: 4 },
     ],
   },
   {
@@ -1519,6 +1519,7 @@ const ADAPTIVE_MICRO_PROMPTS = {
 
 function createSession() {
   return {
+    _stateHistory: [],
     tier: 1,
     currentQuestionIndex: 0,
     pulseAnswers: {},
@@ -1696,8 +1697,35 @@ function getNextQuestion(session) {
   return null;
 }
 
+// Back navigation — snapshot session state before mutating it
+function snapshotSession(session) {
+  const { _stateHistory, ...rest } = session;
+  return JSON.parse(JSON.stringify(rest));
+}
+
+// Restore the previous question state. Returns true if it moved back, false if at start.
+function goBack(session) {
+  if (!session._stateHistory || session._stateHistory.length === 0) return false;
+  const prev = session._stateHistory.pop();
+  const history = session._stateHistory;
+  for (const k of Object.keys(session)) {
+    if (k !== '_stateHistory') delete session[k];
+  }
+  Object.assign(session, prev);
+  session._stateHistory = history;
+  return true;
+}
+
+function canGoBack(session) {
+  return !!(session._stateHistory && session._stateHistory.length > 0);
+}
+
 // Records an answer and advances state
 function recordAnswer(session, questionId, optionKey, score) {
+  // Snapshot pre-answer state for back navigation
+  if (!session._stateHistory) session._stateHistory = [];
+  session._stateHistory.push(snapshotSession(session));
+
   // Capture response timing
   const now = Date.now();
   if (!session._lastQuestionShown) session._lastQuestionShown = now;
@@ -2090,6 +2118,8 @@ window.AssessmentEngine = {
   createSession,
   getNextQuestion,
   recordAnswer,
+  goBack,
+  canGoBack,
   recordFollowUp,
   recordTasteReasoning,
   analyzeCU2Response,

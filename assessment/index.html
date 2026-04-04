@@ -398,6 +398,34 @@
       margin-bottom: 0.75rem;
     }
 
+    .question-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      padding: 0 0 0.9rem;
+      margin: 0;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .question-back-btn:hover,
+    .question-back-btn:focus-visible {
+      color: var(--accent);
+      outline: none;
+    }
+
+    .question-back-btn span {
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+
     .question-text {
       font-size: 1.05rem;
       color: var(--text-primary);
@@ -1625,8 +1653,8 @@
   </footer>
 
   <script src="../js/api.js"></script>
-  <script src="../js/assessment-engine.js?v=7"></script>
-  <script src="../js/assessment-ui.js?v=18"></script>
+  <script src="../js/assessment-engine.js?v=8"></script>
+  <script src="../js/assessment-ui.js?v=19"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const hamburger = document.querySelector('.nav-hamburger');

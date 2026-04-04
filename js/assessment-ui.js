@@ -4,6 +4,8 @@ const {
   createSession,
   getNextQuestion,
   recordAnswer,
+  goBack,
+  canGoBack,
   recordFollowUp,
   recordTasteReasoning,
   analyzeCU2Response,
@@ -206,6 +208,33 @@ function showNextQuestion() {
   renderQuestion(question);
 }
 
+function createBackButton() {
+  if (!canGoBack(session)) return null;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'question-back-btn';
+  btn.setAttribute('aria-label', 'Go back to previous question');
+  btn.innerHTML = '<span aria-hidden="true">&larr;</span> Back';
+  btn.addEventListener('click', handleBackClick);
+  return btn;
+}
+
+function handleBackClick() {
+  if (!goBack(session)) return;
+
+  // Reset UI state tied to forward progression
+  currentModuleCard = null;
+  currentModuleName = null;
+  postTastePromptShown = false;
+  freeTextConfirmationShown = false;
+
+  // Clear the rendered question cards — showNextQuestion will re-render
+  container.innerHTML = '';
+
+  updateProgress();
+  showNextQuestion();
+}
+
 function addQuestionToModuleCard(card, question) {
   // Update tier label and progress
   let label = question.tierLabel;
@@ -215,6 +244,9 @@ function addQuestionToModuleCard(card, question) {
 
   const questionBlock = document.createElement('div');
   questionBlock.className = 'module-question fade-in';
+
+  const backBtn = createBackButton();
+  if (backBtn) questionBlock.appendChild(backBtn);
 
   const qLabel = document.createElement('div');
   qLabel.className = 'question-label';
@@ -285,6 +317,9 @@ function renderQuestionCard(question) {
   // Build question card
   const card = document.createElement('div');
   card.className = 'question-card fade-in';
+
+  const backBtn = createBackButton();
+  if (backBtn) card.appendChild(backBtn);
 
   const qLabel = document.createElement('div');
   qLabel.className = 'question-label';
