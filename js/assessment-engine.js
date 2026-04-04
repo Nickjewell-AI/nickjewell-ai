@@ -90,7 +90,10 @@ const FOUNDATION_QUESTIONS = [
         { key: 'C', text: 'Data is scattered and messy', score: 1 },
         { key: 'D', text: "I don't have visibility into our data", score: 0 },
       ],
+      naText: "We're too early to really have a data situation",
     },
+    naText: "We haven't needed to pull data at that scale yet",
+    relevance: { role: { A: 1.0, B: 0.8, C: 0.9, D: 0.4 }, size: { A: 0.8, B: 0.9, C: 1.0, D: 1.0, E: 1.0 } },
     insightOnD: "That uncertainty is itself a finding. Organizations that can't answer this question typically discover significant data gaps once they try.",
   },
   {
@@ -114,6 +117,8 @@ const FOUNDATION_QUESTIONS = [
         { key: 'D', text: "Not that I know of", score: 0 },
       ],
     },
+    naText: "We're too early for governance to be on anyone's plate",
+    relevance: { role: { A: 0.9, B: 0.9, C: 0.5, D: 0.3 }, size: { A: 0.2, B: 0.4, C: 0.7, D: 0.9, E: 1.0 } },
     insightOnD: "The fact that you don't know whether your organization has a governance policy tells us more than the policy itself. Governance you can't see isn't governance.",
     followUp: {
       triggerKeys: ['A', 'B'],
@@ -146,7 +151,10 @@ const FOUNDATION_QUESTIONS = [
         { key: 'C', text: "I'm not sure — we haven't done much data-heavy work", score: 1 },
         { key: 'D', text: "No, our data is in good shape", score: 3 },
       ],
+      naText: "We haven't done data-heavy work yet, so it hasn't come up",
     },
+    naText: "We haven't run the kind of projects where this would surface",
+    relevance: { role: { A: 0.8, B: 0.7, C: 1.0, D: 0.5 }, size: { A: 0.5, B: 0.7, C: 0.9, D: 1.0, E: 1.0 } },
   },
 ];
 
@@ -172,7 +180,10 @@ const ARCHITECTURE_QUESTIONS = [
         { key: 'C', text: "A lot of it is informal — people just know what to do", score: 1 },
         { key: 'D', text: "I don't think anyone has the full picture", score: 0 },
       ],
+      naText: "We're still figuring out what our key processes even are",
     },
+    naText: "We're small enough that workflows haven't been formalized",
+    relevance: { role: { A: 0.9, B: 0.8, C: 0.9, D: 0.5 }, size: { A: 0.9, B: 1.0, C: 1.0, D: 1.0, E: 0.9 } },
     insightOnD: "Not being able to map your own workflows is a red flag for AI integration. AI needs to plug into processes — if those processes are invisible, there's nothing to integrate with.",
   },
   {
@@ -196,6 +207,8 @@ const ARCHITECTURE_QUESTIONS = [
         { key: 'D', text: "I wouldn't know", score: 0 },
       ],
     },
+    naText: "We haven't gone through a redesign like that",
+    relevance: { role: { A: 0.9, B: 0.8, C: 0.5, D: 0.3 }, size: { A: 0.3, B: 0.6, C: 0.8, D: 0.9, E: 1.0 } },
     insightOnD: "Not knowing when processes were last redesigned usually means they haven't been. Legacy processes and AI are a costly combination.",
   },
   {
@@ -219,6 +232,8 @@ const ARCHITECTURE_QUESTIONS = [
         { key: 'D', text: "I'm not sure", score: 0 },
       ],
     },
+    naText: "We're too small for that to be a distinction yet",
+    relevance: { role: { A: 0.9, B: 0.7, C: 1.0, D: 0.4 }, size: { A: 0.6, B: 0.8, C: 1.0, D: 0.9, E: 0.8 } },
     insightOnD: "Not being sure whether your critical flows depend on specific people is itself the finding. The dependencies you can't see are the ones that break you.",
     followUp: {
       triggerKeys: ['A', 'C'],
@@ -257,7 +272,10 @@ const ACCOUNTABILITY_QUESTIONS = [
         { key: 'C', text: "We'd figure it out when it happened", score: 1 },
         { key: 'D', text: 'A committee would review it at their next meeting', score: 0 },
       ],
+      naText: "We don't have AI systems running yet, so this hasn't come up",
     },
+    naText: "We haven't deployed anything that could fail at 2am",
+    relevance: { role: { A: 1.0, B: 0.7, C: 0.3, D: 0.1 }, size: { A: 0.2, B: 0.4, C: 0.8, D: 1.0, E: 1.0 } },
     insightOnD: "The committee answer is one of the strongest negative signals in this assessment. Governance by committee means governance by nobody.",
   },
   {
@@ -281,6 +299,8 @@ const ACCOUNTABILITY_QUESTIONS = [
         { key: 'D', text: "I honestly don't know", score: 0 },
       ],
     },
+    naText: "We haven't run enough projects to have a kill history",
+    relevance: { role: { A: 0.9, B: 0.8, C: 0.5, D: 0.3 }, size: { A: 0.4, B: 0.6, C: 0.9, D: 1.0, E: 1.0 } },
     insightOnD: "Not knowing whether your organization has ever killed a failing project is a signal. Organizations with healthy accountability know their kill stories.",
   },
   {
@@ -304,6 +324,8 @@ const ACCOUNTABILITY_QUESTIONS = [
         { key: 'D', text: "I don't think that happens", score: 0 },
       ],
     },
+    naText: "We haven't launched the kind of initiative this would apply to",
+    relevance: { role: { A: 1.0, B: 0.9, C: 0.4, D: 0.2 }, size: { A: 0.3, B: 0.5, C: 0.8, D: 1.0, E: 1.0 } },
     insightOnD: "Not knowing whether failure criteria exist means they effectively don't. Undefined stopping conditions mean projects run until budget or patience runs out.",
   },
 ];
@@ -331,6 +353,8 @@ const CULTURE_QUESTIONS = [
         { key: 'D', text: "No real change", score: 0 },
       ],
     },
+    naText: "We haven't brought AI into anyone's day-to-day yet",
+    relevance: { role: { A: 0.9, B: 0.8, C: 0.9, D: 0.8 }, size: { A: 0.8, B: 0.9, C: 1.0, D: 1.0, E: 1.0 } },
   },
   {
     id: 'CU2',
@@ -352,6 +376,8 @@ const CULTURE_QUESTIONS = [
         { key: 'C', text: "We haven't done enough to have failures yet", score: 2 },
       ],
     },
+    naText: "We're pre-AI — there's nothing to tell a story about yet",
+    relevance: { role: { A: 0.9, B: 0.8, C: 0.9, D: 0.7 }, size: { A: 0.5, B: 0.8, C: 0.9, D: 1.0, E: 1.0 } },
     insightOnB: "In our experience, 'everything works' is either the result of not measuring or not being honest. Both are strong culture signals.",
   },
   {
@@ -375,6 +401,8 @@ const CULTURE_QUESTIONS = [
         { key: 'D', text: "Nobody would push back — AI is seen as inevitable", score: 0 },
       ],
     },
+    naText: "We haven't had the conversation where that would come up",
+    relevance: { role: { A: 0.9, B: 0.9, C: 0.9, D: 0.9 }, size: { A: 0.8, B: 0.9, C: 0.9, D: 0.9, E: 0.9 } },
   },
 ];
 
@@ -1124,8 +1152,11 @@ function getModuleQuestions(moduleName, depthFilter) {
 
 function scoreLayer(layerResponses) {
   if (!layerResponses.length) return null;
-  const maxPossible = layerResponses.length * 4;
-  const raw = layerResponses.reduce((sum, r) => sum + r.score, 0);
+  // Exclude N/A responses (score === null) from scoring denominator
+  const scored = layerResponses.filter(r => r.score !== null);
+  if (!scored.length) return null;
+  const maxPossible = scored.length * 4;
+  const raw = scored.reduce((sum, r) => sum + r.score, 0);
   return Math.round((raw / maxPossible) * 100);
 }
 
@@ -1222,7 +1253,8 @@ function getTasteSignature(dims) {
 function calculateVerdict(layerScores, tasteSignature) {
   // Weighted average of assessed layers (equal weight per spec)
   const assessed = Object.entries(layerScores).filter(([, v]) => v !== null);
-  if (!assessed.length) return { verdict: 'Red', composite: 0 };
+  // Early Explorer fallback: no scoreable layers at all (all-N/A'd)
+  if (!assessed.length) return { verdict: 'Explorer', composite: null };
 
   const avg = assessed.reduce((sum, [, v]) => sum + v, 0) / assessed.length;
 
@@ -1412,6 +1444,17 @@ function findWeakestAnswer(session, layerName) {
 }
 
 function generateActions(bindingConstraint, layerScores, verdict, session) {
+  // Early Explorer: all-N/A'd diagnostic layers — getting-started actions, not corrections
+  if (verdict === 'Explorer') {
+    return {
+      rightNow: "Pick one specific task you do every week that feels repetitive or slow — write it down in one sentence. That's your first AI candidate.",
+      thisWeek: [
+        "Spend 30 minutes with ChatGPT or Claude on that one task. Don't try to automate it — just see what it can do when you describe the work in plain language.",
+        "Find one person in your network who has already deployed AI in their workflow. Ask them what they tried that didn't work.",
+      ],
+      thisMonth: "Identify one process where the cost of a mistake is low and the frequency is high. That's where you learn AI cheaply. Don't start with customer-facing or regulated work.",
+    };
+  }
   if (!bindingConstraint) {
     // Balanced scores — find the lowest-scoring assessed layer for general guidance
     const assessed = Object.entries(layerScores).filter(([, v]) => v !== null);
@@ -1460,6 +1503,9 @@ const CONSTRAINT_EXPLANATIONS = {
 // ─── Verdict Summaries ────────────────────────────────────
 
 function getVerdictSummary(verdict, bindingConstraint) {
+  if (verdict === 'Explorer') {
+    return "You're at the very beginning of the AI journey — before AI initiatives have started generating signals to measure. Your Taste profile still tells us how you'll make decisions when they do. Focus on what to learn and build first, not what to fix.";
+  }
   if (!bindingConstraint) {
     if (verdict === 'Green') return 'Your organization shows strong, balanced AI implementation readiness across all layers. No single layer is holding you back.';
     if (verdict === 'Amber') return 'Conditionally ready, with balanced but moderate scores across all layers. Raise all layers together rather than targeting one bottleneck.';
@@ -1523,6 +1569,7 @@ function createSession() {
     tier: 1,
     currentQuestionIndex: 0,
     pulseAnswers: {},
+    naCounts: { foundation: 0, architecture: 0, accountability: 0, culture: 0 },
     modules: [],           // all layer modules in assessment order (deep first, then shallow)
     moduleDepths: {},       // { foundation: 'deep'|'shallow', ... }
     currentModuleIndex: 0,
@@ -1593,7 +1640,12 @@ function getNextQuestion(session) {
         const industryKey = session.pulseAnswers.P3 || null;
         let q;
         if (useLowDepth) {
-          q = { ...baseQ, text: baseQ.lowDepthVariant.text, options: baseQ.lowDepthVariant.options };
+          q = {
+            ...baseQ,
+            text: baseQ.lowDepthVariant.text,
+            options: baseQ.lowDepthVariant.options,
+            naText: baseQ.lowDepthVariant.naText || baseQ.naText,
+          };
         } else {
           // Apply industry-specific options if available
           const opts = getQuestionOptions(baseQ, industryKey);
@@ -1616,7 +1668,9 @@ function getNextQuestion(session) {
       const pending = [];
       for (const layer of ['foundation', 'architecture', 'accountability', 'culture']) {
         const responses = session.layerResponses[layer];
-        if (responses.length > 0 && responses.length < 3) {
+        // Count only non-N/A responses toward the "need more data" signal
+        const realResponses = responses.filter(r => r.score !== null);
+        if (realResponses.length > 0 && realResponses.length < 3) {
           const score = scoreLayer(responses);
           if (score !== null && score <= 33) {
             pending.push(layer);
@@ -1652,7 +1706,12 @@ function getNextQuestion(session) {
           const adaptiveIndustryKey = session.pulseAnswers.P3 || null;
           let q;
           if (useLowDepth) {
-            q = { ...baseQ, text: baseQ.lowDepthVariant.text, options: baseQ.lowDepthVariant.options };
+            q = {
+              ...baseQ,
+              text: baseQ.lowDepthVariant.text,
+              options: baseQ.lowDepthVariant.options,
+              naText: baseQ.lowDepthVariant.naText || baseQ.naText,
+            };
           } else {
             const opts = getQuestionOptions(baseQ, adaptiveIndustryKey);
             q = opts !== baseQ.options ? { ...baseQ, options: opts } : baseQ;
@@ -1720,6 +1779,24 @@ function canGoBack(session) {
   return !!(session._stateHistory && session._stateHistory.length > 0);
 }
 
+// Compute per-response relevance weights for the current user.
+// Reads question.relevance against session.pulseAnswers.P1 (role) and .P7 (size).
+function computeRelevanceWeights(session, questionId) {
+  const all = [
+    ...FOUNDATION_QUESTIONS,
+    ...ARCHITECTURE_QUESTIONS,
+    ...ACCOUNTABILITY_QUESTIONS,
+    ...CULTURE_QUESTIONS,
+  ];
+  const q = all.find(x => x.id === questionId);
+  if (!q || !q.relevance) return { roleWeight: null, sizeWeight: null };
+  const roleKey = session.pulseAnswers.P1;
+  const sizeKey = session.pulseAnswers.P7;
+  const roleWeight = (roleKey && q.relevance.role[roleKey] != null) ? q.relevance.role[roleKey] : null;
+  const sizeWeight = (sizeKey && q.relevance.size[sizeKey] != null) ? q.relevance.size[sizeKey] : null;
+  return { roleWeight, sizeWeight };
+}
+
 // Records an answer and advances state
 function recordAnswer(session, questionId, optionKey, score) {
   // Snapshot pre-answer state for back navigation
@@ -1740,13 +1817,20 @@ function recordAnswer(session, questionId, optionKey, score) {
     }
     session.currentQuestionIndex++;
   } else if (session.tier === 2) {
+    // N/A responses carry optionKey='NA' and score=null — preserve null in storage
+    const resolvedScore = optionKey === 'NA' ? null : (score ?? 0);
+    const { roleWeight, sizeWeight } = computeRelevanceWeights(session, questionId);
     if (session._currentAdaptiveLayer) {
       const layerName = session._currentAdaptiveLayer;
       session.layerResponses[layerName].push({
         questionId,
         answer: optionKey,
-        score: score ?? 0,
+        score: resolvedScore,
+        timing_ms: timingMs,
+        roleWeight,
+        sizeWeight,
       });
+      if (optionKey === 'NA') session.naCounts[layerName]++;
       session.adaptiveFollowUp.currentQuestionIndex++;
       session._currentAdaptiveLayer = null;
       // Check if this layer's adaptive questions are exhausted
@@ -1764,8 +1848,12 @@ function recordAnswer(session, questionId, optionKey, score) {
       session.layerResponses[moduleName].push({
         questionId,
         answer: optionKey,
-        score: score ?? 0,
+        score: resolvedScore,
+        timing_ms: timingMs,
+        roleWeight,
+        sizeWeight,
       });
+      if (optionKey === 'NA') session.naCounts[moduleName]++;
       session.currentQuestionIndex++;
     }
   } else if (session.tier === 3) {
@@ -1835,7 +1923,9 @@ function computeResults(session) {
   const { verdict, composite } = calculateVerdict(layerScores, tasteSignature);
   const bindingConstraint = findBindingConstraint(layerScores);
   const actionPlan = generateActions(bindingConstraint, layerScores, verdict, session);
-  const constraintExplanation = bindingConstraint
+  const constraintExplanation = verdict === 'Explorer'
+    ? "Your organization hasn't encountered enough AI scenarios yet for a specific constraint diagnosis."
+    : bindingConstraint
     ? CONSTRAINT_EXPLANATIONS[bindingConstraint]
     : 'No binding constraint identified — your readiness is balanced across all layers. Focus on raising all layers together rather than fixing one bottleneck.';
   const verdictSummary = getVerdictSummary(verdict, bindingConstraint);
@@ -1879,6 +1969,7 @@ function computeResults(session) {
     actionPlan,
     modulesAssessed: session.modules,
     moduleDepths: session.moduleDepths,
+    naCounts: { ...session.naCounts },
   };
 }
 
@@ -2014,10 +2105,22 @@ function buildBriefContext(session, results) {
       if (!q) continue;
       const useLowDepth = session.knowledgeDepth === 'low' && q.lowDepthVariant;
       const qText = useLowDepth ? q.lowDepthVariant.text : q.text;
-      const opts = useLowDepth ? q.lowDepthVariant.options : getQuestionOptions(q, briefIndustryKey);
-      const selected = opts.find(o => o.key === r.answer);
       lines.push(r.questionId + ' (' + layer + '): ' + qText);
-      lines.push('  → ' + (selected?.text || r.answer));
+      if (r.answer === 'NA') {
+        const naT = (useLowDepth && q.lowDepthVariant?.naText) ? q.lowDepthVariant.naText : q.naText;
+        lines.push('  → [N/A] ' + (naT || "Haven't encountered this"));
+      } else {
+        const opts = useLowDepth ? q.lowDepthVariant.options : getQuestionOptions(q, briefIndustryKey);
+        const selected = opts.find(o => o.key === r.answer);
+        lines.push('  → ' + (selected?.text || r.answer));
+      }
+      // Flag limited-visibility responses so the brief can weight them interpretively
+      if (r.roleWeight != null && r.sizeWeight != null) {
+        const effective = Math.min(r.roleWeight, r.sizeWeight);
+        if (effective < 0.5) {
+          lines.push('  [Note: limited direct visibility — role confidence: ' + r.roleWeight + ', size confidence: ' + r.sizeWeight + '. This answer may reflect perception rather than operational knowledge.]');
+        }
+      }
     }
   }
 
@@ -2046,10 +2149,20 @@ function buildBriefContext(session, results) {
   lines.push('');
   lines.push('=== SCORES ===');
   const allLayers = ['foundation', 'architecture', 'accountability', 'culture'];
+  const naCounts = session.naCounts || {};
   for (const layer of allLayers) {
     const score = results.layerScores[layer];
     const depthNote = depths[layer] === 'shallow' ? ' (quick assessment)' : '';
-    lines.push(layer.charAt(0).toUpperCase() + layer.slice(1) + ': ' + (score !== null ? score + '/100' + depthNote : 'Not assessed'));
+    const naCount = naCounts[layer] || 0;
+    const naNote = naCount > 0 ? ` (${naCount} N/A)` : '';
+    const label = layer.charAt(0).toUpperCase() + layer.slice(1);
+    if (score !== null) {
+      lines.push(label + ': ' + score + '/100' + depthNote + naNote);
+    } else if (naCount > 0) {
+      lines.push(label + ': Insufficient data — all questions marked N/A');
+    } else {
+      lines.push(label + ': Not assessed');
+    }
   }
   lines.push('Composite: ' + results.composite + '/100');
   lines.push('Verdict: ' + results.verdict);

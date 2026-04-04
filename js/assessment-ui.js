@@ -208,6 +208,54 @@ function showNextQuestion() {
   renderQuestion(question);
 }
 
+// ─── Role/Size Relevance Hints ──────────────────────────
+const ROLE_DESCRIPTIONS = {
+  A: 'strategy owners',
+  B: 'decision influencers',
+  C: 'technical teams',
+  D: 'day-to-day practitioners',
+};
+
+// Build a relevance hint DOM element for a question, or return null for Tier 1 (no hint).
+function createRelevanceHint(question) {
+  if (!question.relevance || !session.pulseAnswers) return null;
+  const roleKey = session.pulseAnswers.P1;
+  const sizeKey = session.pulseAnswers.P7;
+  if (!roleKey || !sizeKey) return null;
+  const roleWeight = question.relevance.role[roleKey];
+  const sizeWeight = question.relevance.size[sizeKey];
+  if (roleWeight == null || sizeWeight == null) return null;
+  const effective = Math.min(roleWeight, sizeWeight);
+
+  // Tier 1: no hint
+  if (effective >= 0.7) return null;
+
+  let text;
+  if (effective >= 0.4) {
+    // Tier 2: light hint
+    text = 'You may have limited visibility here';
+  } else {
+    // Tier 3: contextual hint
+    const roleIsLower = roleWeight < sizeWeight;
+    const sizeIsLower = sizeWeight < roleWeight;
+    if (roleIsLower) {
+      // Find the role where this question is MOST relevant — lead the user toward that framing
+      const entries = Object.entries(question.relevance.role);
+      entries.sort((a, b) => b[1] - a[1]);
+      const topRoleKey = entries[0][0];
+      text = `This typically falls to ${ROLE_DESCRIPTIONS[topRoleKey]} — answer from what you've seen`;
+    } else if (sizeIsLower) {
+      text = "This is more common in larger organizations — answer from what you've seen";
+    } else {
+      text = "This may not apply to your organization yet — answer from what you've seen";
+    }
+  }
+  const hint = document.createElement('div');
+  hint.className = 'question-role-hint';
+  hint.textContent = text;
+  return hint;
+}
+
 function createBackButton() {
   if (!canGoBack(session)) return null;
   const btn = document.createElement('button');
@@ -279,8 +327,28 @@ function addQuestionToModuleCard(card, question) {
     options.appendChild(btn);
   });
 
+  // N/A escape valve — present only on diagnostic questions (those with naText)
+  if (question.naText) {
+    const naBtn = document.createElement('button');
+    naBtn.className = 'option-button na-option';
+    naBtn.setAttribute('role', 'radio');
+    naBtn.setAttribute('aria-checked', 'false');
+    naBtn.innerHTML = `<span class="option-text">${question.naText}</span>`;
+    naBtn.addEventListener('click', () => {
+      if (locked) return;
+      locked = true;
+      options.querySelectorAll('.option-button').forEach((b) => { b.classList.remove('selected'); b.setAttribute('aria-checked', 'false'); });
+      naBtn.classList.add('selected');
+      naBtn.setAttribute('aria-checked', 'true');
+      setTimeout(() => handleAnswer(card, question, { key: 'NA', score: null }, options), 250);
+    });
+    options.appendChild(naBtn);
+  }
+
   questionBlock.appendChild(qLabel);
   questionBlock.appendChild(qText);
+  const hint = createRelevanceHint(question);
+  if (hint) questionBlock.appendChild(hint);
   questionBlock.appendChild(options);
   card.appendChild(questionBlock);
 
@@ -353,8 +421,28 @@ function renderQuestionCard(question) {
     options.appendChild(btn);
   });
 
+  // N/A escape valve — present only on diagnostic questions (those with naText)
+  if (question.naText) {
+    const naBtn = document.createElement('button');
+    naBtn.className = 'option-button na-option';
+    naBtn.setAttribute('role', 'radio');
+    naBtn.setAttribute('aria-checked', 'false');
+    naBtn.innerHTML = `<span class="option-text">${question.naText}</span>`;
+    naBtn.addEventListener('click', () => {
+      if (locked) return;
+      locked = true;
+      options.querySelectorAll('.option-button').forEach((b) => { b.classList.remove('selected'); b.setAttribute('aria-checked', 'false'); });
+      naBtn.classList.add('selected');
+      naBtn.setAttribute('aria-checked', 'true');
+      setTimeout(() => handleAnswer(card, question, { key: 'NA', score: null }, options), 250);
+    });
+    options.appendChild(naBtn);
+  }
+
   card.appendChild(qLabel);
   card.appendChild(qText);
+  const hint = createRelevanceHint(question);
+  if (hint) card.appendChild(hint);
   card.appendChild(options);
   container.appendChild(card);
 
@@ -787,8 +875,16 @@ function showResults() {
   // Verdict badge
   const verdictClass = 'verdict-' + results.verdict.toLowerCase();
   document.getElementById('verdict-badge').className = 'verdict-badge ' + verdictClass;
-  document.getElementById('verdict-label').textContent = results.verdict.toUpperCase();
-  document.getElementById('verdict-score').textContent = results.composite + '/100';
+  const verdictLabelEl = document.getElementById('verdict-label');
+  const verdictBadgeEl = document.getElementById('verdict-badge');
+  verdictLabelEl.textContent = results.verdict.toUpperCase();
+  // Strip any prior verdict-variant class, apply the current one
+  if (verdictBadgeEl) {
+    verdictBadgeEl.classList.remove('verdict-green', 'verdict-amber', 'verdict-red', 'verdict-explorer');
+    verdictBadgeEl.classList.add('verdict-' + results.verdict.toLowerCase());
+  }
+  document.getElementById('verdict-score').textContent =
+    results.composite == null ? '—' : results.composite + '/100';
   document.getElementById('verdict-summary').textContent = results.verdictSummary;
 
   // Layer bars
@@ -809,6 +905,7 @@ function showResults() {
     const scoreLabel = document.createElement('span');
     scoreLabel.className = 'layer-score-label';
 
+    const naCount = (results.naCounts && results.naCounts[layer]) || 0;
     if (score !== null) {
       scoreLabel.textContent = score + '/100';
       if (isConstraint) {
@@ -824,6 +921,22 @@ function showResults() {
         quickNote.textContent = '(quick assessment)';
         label.appendChild(quickNote);
       }
+      // Partial-data note when the layer had any N/A responses
+      if (naCount > 0) {
+        const limitedNote = document.createElement('span');
+        limitedNote.className = 'limited-data-note';
+        limitedNote.textContent = '(limited data)';
+        label.appendChild(limitedNote);
+      }
+    } else if (naCount > 0) {
+      // User N/A'd every question in this layer
+      scoreLabel.textContent = '—';
+      scoreLabel.classList.add('insufficient-data');
+      const insufficientNote = document.createElement('span');
+      insufficientNote.className = 'limited-data-note';
+      insufficientNote.textContent = 'Insufficient data';
+      label.appendChild(insufficientNote);
+      row.classList.add('layer-row-insufficient');
     } else {
       scoreLabel.textContent = 'Not assessed';
       scoreLabel.classList.add('not-assessed');
@@ -1060,6 +1173,7 @@ function initCaptureForm() {
           constraintExplanation: lastResults.constraintExplanation,
           actionPlan: lastResults.actionPlan,
           benchmarkPercentile: lastResults.benchmarkPercentile || null,
+          naCounts: lastResults.naCounts || null,
         }),
         keepalive: true,
       }).catch(() => {}); // Fire-and-forget from client perspective
@@ -1433,6 +1547,7 @@ async function autoSaveResults() {
     tasteFreeText: session.tasteFreeText || null,
     timings: lastResults.responseTimings || {},
     timingSummary: lastResults.timingSummary || null,
+    na_summary: lastResults.naCounts || { foundation: 0, architecture: 0, accountability: 0, culture: 0 },
   };
 
   const payload = {

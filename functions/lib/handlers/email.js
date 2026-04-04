@@ -163,7 +163,7 @@ export async function handleSendResults(request, env, ctx, body) {
 
 // send-brief-email: executive brief email with score snapshot (client-side brief)
 export async function handleSendBriefEmail(request, env, ctx, body) {
-  const { name, email, briefHtml, verdict, bindingConstraint, compositeScore, layerScores, tasteSignature, assessmentId } = body;
+  const { name, email, briefHtml, verdict, bindingConstraint, compositeScore, layerScores, tasteSignature, assessmentId, naCounts } = body;
   if (!email || !briefHtml) {
     return jsonResponse({ error: 'Missing email or briefHtml' }, 400);
   }
@@ -175,6 +175,8 @@ export async function handleSendBriefEmail(request, env, ctx, body) {
       let strongestKey = null;
       let maxScore = -1;
       for (const [key, score] of Object.entries(layerScores)) {
+        // Suppress benchmark for layers with ANY N/A — partial-data benchmark is misleading
+        if (naCounts && naCounts[key] > 0) continue;
         if (score != null && score > maxScore) {
           maxScore = score;
           strongestKey = key;

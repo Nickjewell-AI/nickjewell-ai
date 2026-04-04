@@ -41,10 +41,37 @@ const SIZE_CONDITIONING = {
   E: "The user's organization has 10,000+ people. Actions should assume existing bureaucracy, procurement processes, and political dynamics. Address enterprise challenges: siloed data, competing AI initiatives, vendor management, regulatory compliance at scale. Frame actions as executive decisions.",
 };
 
-function buildSystemPrompt(industryKey, sizeKey) {
+const NA_LAYER_LABELS = { foundation: 'Foundation', architecture: 'Architecture', accountability: 'Accountability', culture: 'Culture' };
+
+function buildNaConditioning(naCounts, layerScores) {
+  if (!naCounts) return '';
+  const hasAnyNA = Object.values(naCounts).some(c => c > 0);
+  const nullLayers = Object.entries(layerScores || {}).filter(([, v]) => v === null).map(([k]) => k);
+  if (nullLayers.length === 4) {
+    return "\n\nAll diagnostic layers returned insufficient data — the respondent selected 'haven't encountered this' on every question. This is a pre-AI organization. Focus the brief entirely on foundational readiness: what to build first, what to learn, what to avoid. Do NOT diagnose weaknesses — there's no data to diagnose from. Frame everything as opportunity.";
+  }
+  if (!hasAnyNA) return '';
+  const lines = ["\n\nN/A responses in this assessment:"];
+  for (const key of ['foundation', 'architecture', 'accountability', 'culture']) {
+    const count = naCounts[key] || 0;
+    if (count === 0) continue;
+    if (layerScores && layerScores[key] === null) {
+      lines.push(`- ${NA_LAYER_LABELS[key]}: Insufficient data (all questions marked N/A). Do not attempt to diagnose this layer. Instead, briefly note that the organization hasn't encountered ${NA_LAYER_LABELS[key].toLowerCase()}-level AI decisions yet and suggest what foundational ${NA_LAYER_LABELS[key].toLowerCase()} steps look like.`);
+    } else {
+      lines.push(`- ${NA_LAYER_LABELS[key]}: ${count} of 3 questions marked "We haven't encountered this".`);
+    }
+  }
+  lines.push("\nN/A responses indicate the respondent's organization hasn't reached scenarios in this layer. Treat N/A patterns as early-stage signal — informative about where the organization IS, not a failure. For layers with N/A responses, frame recommendations as foundational steps and next milestones rather than corrections to current practice.");
+  return lines.join('\n');
+}
+
+function buildSystemPrompt(industryKey, sizeKey, naContext) {
   let conditioning = '';
   if (SIZE_CONDITIONING[sizeKey]) conditioning += '\n\n' + SIZE_CONDITIONING[sizeKey];
   if (INDUSTRY_CONDITIONING[industryKey]) conditioning += '\n\n' + INDUSTRY_CONDITIONING[industryKey];
+  if (naContext && typeof naContext === 'object') {
+    conditioning += buildNaConditioning(naContext.naCounts, naContext.layerScores);
+  }
   return BASE_SYSTEM_PROMPT + conditioning;
 }
 
@@ -316,6 +343,7 @@ async function processPendingBrief(env) {
     const {
       briefContext, industryKey, sizeKey, constraintExplanation,
       actionPlan, benchmarkPercentile, tasteSignature, tasteDimensions, layerScores,
+      naCounts,
     } = payload;
 
     // 3. Generate brief
@@ -326,7 +354,7 @@ async function processPendingBrief(env) {
       const apiKey = env.ANTHROPIC_API_KEY;
       if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
 
-      const systemPrompt = buildSystemPrompt(industryKey, sizeKey);
+      const systemPrompt = buildSystemPrompt(industryKey, sizeKey, { naCounts, layerScores });
 
       const anthropicRes = await fetch(ANTHROPIC_API_URL, {
         method: 'POST',
@@ -363,6 +391,8 @@ async function processPendingBrief(env) {
         let strongestKey = null;
         let maxScore = -1;
         for (const [key, score] of Object.entries(layerScores)) {
+          // Suppress benchmark for layers with ANY N/A responses — partial-data benchmark is misleading
+          if (naCounts && naCounts[key] > 0) continue;
           if (score != null && score > maxScore) {
             maxScore = score;
             strongestKey = key;

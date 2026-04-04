@@ -21,9 +21,43 @@ export const SIZE_CONDITIONING = {
   E: "The user's organization has 10,000+ people. Actions should assume existing bureaucracy, procurement processes, and political dynamics. Address enterprise challenges: siloed data, competing AI initiatives, vendor management, regulatory compliance at scale. Frame actions as executive decisions.",
 };
 
-export function buildSystemPrompt(industryKey, sizeKey) {
+const LAYER_LABELS = { foundation: 'Foundation', architecture: 'Architecture', accountability: 'Accountability', culture: 'Culture' };
+
+// Build per-layer N/A context for the prompt. naCounts: { foundation, architecture, accountability, culture }
+// layerScores: same shape, values null or number. Returns a string (possibly empty).
+export function buildNaConditioning(naCounts, layerScores) {
+  if (!naCounts) return '';
+
+  const hasAnyNA = Object.values(naCounts).some(c => c > 0);
+  const nullLayers = Object.entries(layerScores || {}).filter(([, v]) => v === null).map(([k]) => k);
+
+  // Early Explorer fallback: all four layers returned insufficient data
+  if (nullLayers.length === 4) {
+    return "\n\nAll diagnostic layers returned insufficient data — the respondent selected 'haven't encountered this' on every question. This is a pre-AI organization. Focus the brief entirely on foundational readiness: what to build first, what to learn, what to avoid. Do NOT diagnose weaknesses — there's no data to diagnose from. Frame everything as opportunity.";
+  }
+
+  if (!hasAnyNA) return '';
+
+  const lines = ["\n\nN/A responses in this assessment:"];
+  for (const key of ['foundation', 'architecture', 'accountability', 'culture']) {
+    const count = naCounts[key] || 0;
+    if (count === 0) continue;
+    if (layerScores && layerScores[key] === null) {
+      lines.push(`- ${LAYER_LABELS[key]}: Insufficient data (all questions marked N/A). Do not attempt to diagnose this layer. Instead, briefly note that the organization hasn't encountered ${LAYER_LABELS[key].toLowerCase()}-level AI decisions yet and suggest what foundational ${LAYER_LABELS[key].toLowerCase()} steps look like.`);
+    } else {
+      lines.push(`- ${LAYER_LABELS[key]}: ${count} of 3 questions marked "We haven't encountered this".`);
+    }
+  }
+  lines.push("\nN/A responses indicate the respondent's organization hasn't reached scenarios in this layer. Treat N/A patterns as early-stage signal — informative about where the organization IS, not a failure. For layers with N/A responses, frame recommendations as foundational steps and next milestones rather than corrections to current practice.");
+  return lines.join('\n');
+}
+
+export function buildSystemPrompt(industryKey, sizeKey, naContext) {
   let conditioning = '';
   if (SIZE_CONDITIONING[sizeKey]) conditioning += '\n\n' + SIZE_CONDITIONING[sizeKey];
   if (INDUSTRY_CONDITIONING[industryKey]) conditioning += '\n\n' + INDUSTRY_CONDITIONING[industryKey];
+  if (naContext && typeof naContext === 'object') {
+    conditioning += buildNaConditioning(naContext.naCounts, naContext.layerScores);
+  }
   return BASE_SYSTEM_PROMPT + conditioning;
 }

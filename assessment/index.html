@@ -486,6 +486,40 @@
       color: var(--text-primary);
     }
 
+    /* Relevance hint — subtle nudge when a question may not match the user's role/size */
+    .question-role-hint {
+      font-size: 0.8em;
+      color: #666;
+      font-style: italic;
+      margin: 0 0 8px;
+      line-height: 1.4;
+    }
+
+    /* N/A option — contextual escape valve, visually subordinate to real options */
+    .option-button.na-option {
+      margin-top: 12px;
+      padding: 0.65rem 1rem;
+      border-color: #333;
+      background: transparent;
+      font-size: 0.85em;
+      color: #777;
+    }
+
+    .option-button.na-option .option-text {
+      color: #777;
+    }
+
+    .option-button.na-option:hover:not(.disabled) {
+      border-color: #444;
+      background: transparent;
+      padding-left: 1.25rem;
+    }
+
+    .option-button.na-option.selected {
+      border-color: #555;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
     .question-insight {
       margin-top: 1rem;
       padding: 1rem 1.25rem;
@@ -557,9 +591,10 @@
       margin-bottom: 0.75rem;
     }
 
-    .verdict-green  { color: var(--verdict-green); border-color: var(--verdict-green); }
-    .verdict-amber  { color: var(--verdict-amber); border-color: var(--verdict-amber); }
-    .verdict-red    { color: var(--verdict-red);   border-color: var(--verdict-red); }
+    .verdict-green    { color: var(--verdict-green); border-color: var(--verdict-green); }
+    .verdict-amber    { color: var(--verdict-amber); border-color: var(--verdict-amber); }
+    .verdict-red      { color: var(--verdict-red);   border-color: var(--verdict-red); }
+    .verdict-explorer { color: #5b8fb9;              border-color: #5b8fb9; }
 
     .verdict-score {
       display: block;
@@ -650,6 +685,27 @@
       color: var(--text-muted);
       font-style: italic;
       margin-left: 0.5rem;
+    }
+
+    .limited-data-note {
+      font-size: 0.75em;
+      color: #777;
+      font-style: italic;
+      margin-left: 0.5rem;
+    }
+
+    .layer-score-label.insufficient-data {
+      color: #777;
+      font-style: italic;
+    }
+
+    .layer-row-insufficient .layer-bar {
+      background: transparent;
+      border: 1px dashed #333;
+    }
+
+    .layer-row-insufficient .layer-bar-fill {
+      display: none;
     }
 
     .layer-bar {
@@ -1653,8 +1709,8 @@
   </footer>
 
   <script src="../js/api.js"></script>
-  <script src="../js/assessment-engine.js?v=8"></script>
-  <script src="../js/assessment-ui.js?v=19"></script>
+  <script src="../js/assessment-engine.js?v=10"></script>
+  <script src="../js/assessment-ui.js?v=21"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const hamburger = document.querySelector('.nav-hamburger');

@@ -23,7 +23,7 @@ export async function handleAssessmentPost(request, env, ctx) {
       }
     }
 
-    if (!['Green', 'Amber', 'Red'].includes(body.verdict)) {
+    if (!['Green', 'Amber', 'Red', 'Explorer'].includes(body.verdict)) {
       return respond({ error: 'Invalid verdict value' }, 400);
     }
 
