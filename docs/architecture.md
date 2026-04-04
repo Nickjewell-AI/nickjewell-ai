@@ -1,6 +1,8 @@
 # Technical Architecture
 ## nickjewell.ai — The Jewell Assessment
 
+Current state: Worker status, D1 schema, and repo structure are maintained in CLAUDE.md via runtime introspection — not in this document. See Roadmap v5 (NickJewellAI_Roadmap_v5.docx) for current priorities and NickJewellAI_Agentic_Operations_Architecture.docx for the agent layer design. Voice rules in Voice_Copy_Intelligence_v2.docx.
+
 ---
 
 ## Infrastructure Overview

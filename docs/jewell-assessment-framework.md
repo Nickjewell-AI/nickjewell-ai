@@ -1,7 +1,7 @@
 # The Jewell Assessment
 ## An AI Implementation Readiness & Taste Framework
 
-**Thesis:** AI implementation doesn't fail because organizations lack capability. It fails because the people making decisions about AI lack the discernment to deploy it well. Readiness is the table stakes. Taste is the multiplier.
+**Thesis:** AI implementation doesn't fail because organizations lack capability. It fails because the people making decisions about AI lack the judgment to deploy it well. Readiness is the table stakes. Taste is the multiplier.
 
 **Tagline:** Other assessments tell you whether your organization *can* implement AI. This one tells you whether it *should* — and whether the people making that decision have the judgment to get it right.
 
@@ -13,7 +13,7 @@ Five layers. Each builds on the one beneath it. Scoring low on a lower layer mak
 
 ```
 ┌─────────────────────────────┐
-│     5. TASTE               │  ← Judgment & discernment (yours alone)
+│     5. TASTE               │  ← Judgment & judgment (yours alone)
 ├─────────────────────────────┤
 │     4. CULTURE             │  ← People, honesty, change capacity
 ├─────────────────────────────┤
@@ -186,7 +186,7 @@ Organizations where leaders are rewarded for identifying gaps (not punished for 
 ## Layer 5: TASTE
 
 ### What it measures
-This is the capstone. Taste is strategic judgment — the ability to distinguish between a good AI decision and a merely popular one. It's the discernment to know when NOT to deploy AI. It's pattern recognition for implementation quality. And it's the dimension no other assessment measures, because it can't be self-reported — it has to be revealed through choices.
+This is the capstone. Taste is strategic judgment — the ability to distinguish between a good AI decision and a merely popular one. It's the judgment to know when NOT to deploy AI. It's pattern recognition for implementation quality. And it's the dimension no other assessment measures, because it can't be self-reported — it has to be revealed through choices.
 
 ### The thesis behind Taste
 Every organization has leaders who can evaluate a spreadsheet. Far fewer have leaders who can evaluate a *decision.* Taste is the difference between "this AI initiative has good metrics" and "this AI initiative is solving the right problem in the right way at the right time." It's what separates the 4% of organizations that achieve scaled AI deployment from the 96% that don't.
@@ -287,7 +287,7 @@ The Jewell Assessment does NOT produce a single number. A single score creates f
 | Output | Score + checklist | Constraint diagnosis + taste signature |
 | Accountability | Measures governance docs | Measures governance behavior |
 | Taste dimension | Doesn't exist | Revealed through scenario choices |
-| Time to value | 6-10 week engagement | 10 minutes to first insight |
+| Time to value | 6-10 week engagement | 5 minutes to first insight |
 | Cost | $50K - $175K consulting | Free (lead gen + credibility engine) |
 | Bias | Built by vendors selling implementation | Built by an independent practitioner |
 

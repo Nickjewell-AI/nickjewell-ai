@@ -1,6 +1,8 @@
 # The Jewell Assessment — Uniqueness by the Numbers
 ## Why No Two Results Are the Same
 
+Note: Combinatorial math in this document reflects the current 5-industry, 240-variant architecture. Sub-industry personalization (Phase 1-4, documented in Roadmap v5) will expand to 960+ diagnostic variants and sub-industry-specific Taste scenarios. Recalculate when Phase 1 ships.
+
 ---
 
 ## The Problem with Every Other Assessment

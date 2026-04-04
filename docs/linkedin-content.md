@@ -1,3 +1,5 @@
+Note: All copy in this file must be audited against Voice_Copy_Intelligence_v2.docx before publishing. Three-tier evidence standard applies: Cited Data, First-Party D1, or Explicitly Framed as Thesis.
+
 # LinkedIn Content Calendar
 ## The Jewell Assessment — Thought Leadership Series
 
@@ -19,7 +21,7 @@ Posts alternate between framework insights (establishes IP) and build journey (e
 
 AI implementation doesn't fail because organizations lack capability.
 
-It fails because the people making decisions about AI lack the discernment to deploy it well.
+It fails because the people making decisions about AI lack the judgment to deploy it well.
 
 I've been sitting with this idea for months. After years of consulting on AI and automation implementations, I kept seeing the same pattern:
 
@@ -37,7 +39,7 @@ I built a framework around this. Five layers. Foundation at the bottom, Taste at
 
 I'm calling it the Jewell Assessment. The full framework is live — link in comments.
 
-The controversial part: I think the reason 85% of AI projects fail isn't because the technology isn't ready. It's because nobody is measuring the judgment of the people deploying it.
+The controversial part: I think the reason 95% of AI initiatives fail to deliver real value (BCG, 2025) isn't because the technology isn't ready. It's because nobody is measuring the judgment of the people deploying it.
 
 Agree? Disagree? I'd genuinely like to know.
 
