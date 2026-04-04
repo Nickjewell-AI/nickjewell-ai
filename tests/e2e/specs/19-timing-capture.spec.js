@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { runAssessment } from '../helpers/assessment-runner.js';
+import { runAssessment, installCostGuardRoutes } from '../helpers/assessment-runner.js';
 import profiles from '../fixtures/profiles.json';
 
 const profile = profiles.sophistication;
@@ -27,7 +27,10 @@ test.describe('Timing Capture', () => {
   });
 
   test('timing data is included in submit-assessment POST payload', async ({ page }) => {
+    // Default cost guard for /api-proxy + baseline /api/submit-assessment
+    await installCostGuardRoutes(page);
     let captured = null;
+    // Override the default /api/submit-assessment mock to capture the POST body
     await page.route('**/api/submit-assessment', async (route) => {
       const req = route.request();
       if (req.method() === 'POST') {
@@ -42,7 +45,7 @@ test.describe('Timing Capture', () => {
       }
     });
 
-    await runAssessment(page, profile);
+    await runAssessment(page, profile, { mockApi: false });
 
     expect(captured).toBeTruthy();
     // all_responses is serialized to JSON string on submit; parse if needed

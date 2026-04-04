@@ -66,14 +66,95 @@ function buildAnswerMap(profile) {
 }
 
 /**
+ * COST GUARD — default intercepts that prevent any real Anthropic / D1 traffic
+ * during tests. Catches /api-proxy (all types) and /api/submit-assessment (POST/PATCH).
+ * Specs that need real streaming (17-brief-streaming, 18-brief-rate-limiting)
+ * must opt out with { mockApi: false }.
+ */
+export async function installCostGuardRoutes(page) {
+  // /api-proxy — brief streaming, assessment calls, generate-and-email-brief, feedback
+  await page.route('**/api-proxy', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    let body = {};
+    try { body = route.request().postDataJSON() || {}; } catch {}
+    const type = body.type;
+    if (type === 'brief') {
+      // Canned SSE stream matching the Anthropic content_block_delta format
+      // that js/api.js generateExecutiveBrief expects to parse
+      const chunks = [
+        'event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"## Verdict Context\\n\\n"}}\n\n',
+        'event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"Mock brief for testing. This is a canned response returned by the Playwright cost guard. "}}\n\n',
+        'event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"No real Anthropic calls were made. "}}\n\n',
+        'event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"## What To Do Monday\\n\\n- **Mock action** — this is placeholder text.\\n- **Second mock** — still placeholder.\\n- **Third mock** — also placeholder."}}\n\n',
+      ];
+      await route.fulfill({
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+        body: chunks.join(''),
+      });
+      return;
+    }
+    if (type === 'assessment') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ content: [{ text: '{"specificity":1,"accountability":1,"learning":1,"summary":"Mock analysis."}' }] }),
+      });
+      return;
+    }
+    if (type === 'generate-and-email-brief') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { status: 'test-skipped' } }),
+      });
+      return;
+    }
+    // Default (submit_feedback, send-results, send-brief-email, anything else)
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { status: 'mocked' } }),
+    });
+  });
+  // /api/submit-assessment — D1 writes
+  await page.route('**/api/submit-assessment', async (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, id: 999 }),
+      });
+    } else if (method === 'PATCH') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+}
+
+/**
  * Run a complete assessment from start to results using a predefined answer profile.
  * Uses DOM observation (question labels) instead of question counting.
  * @param {Page} page - Playwright page object
  * @param {Object} profile - Answer profile from fixtures
- * @param {Object} opts - Options: { fillBrief: bool, briefData: {}, skipPostTaste: bool }
+ * @param {Object} opts - { query: string, mockApi: bool (default true) }
  */
 export async function runAssessment(page, profile, opts = {}) {
   const answerMap = buildAnswerMap(profile);
+
+  // COST GUARD: default-mock /api-proxy + /api/submit-assessment so no real Opus/D1 traffic.
+  // Specs that need real streaming pass { mockApi: false }. Specs that install their own
+  // route handlers (e.g., 29-share-mechanic, 19-timing) should also pass { mockApi: false }
+  // to avoid conflicting with their custom handlers.
+  if (opts.mockApi !== false) {
+    await installCostGuardRoutes(page);
+  }
 
   // Navigate to assessment (opts.query appends ?query-string e.g. 'ref=xyz')
   const query = opts.query ? '?' + opts.query : '';

@@ -1,10 +1,17 @@
 import { test, expect } from '@playwright/test';
-import { runAssessment } from '../helpers/assessment-runner.js';
+import { runAssessment, installCostGuardRoutes } from '../helpers/assessment-runner.js';
 import profiles from '../fixtures/profiles.json';
 
 const profile = profiles.sophistication;
 
 test.describe('Share Mechanic — Ref Tracking & Share Card', () => {
+  // Each test installs its own /api/submit-assessment override to control the id returned
+  // (needed to assert the ref URL contains specific ids). installCostGuardRoutes gives us
+  // the default /api-proxy intercept; the spec's route overrides it via LIFO matching.
+  test.beforeEach(async ({ page }) => {
+    await installCostGuardRoutes(page);
+  });
+
   test('?ref= URL param is sent as ref_source in submit-assessment POST body', async ({ page }) => {
     let captured = null;
     await page.route('**/api/submit-assessment', async (route) => {
@@ -21,7 +28,7 @@ test.describe('Share Mechanic — Ref Tracking & Share Card', () => {
       }
     });
 
-    await runAssessment(page, profile, { query: 'ref=test-ref-123' });
+    await runAssessment(page, profile, { query: 'ref=test-ref-123', mockApi: false });
 
     expect(captured).toBeTruthy();
     expect(captured.ref_source).toBe('test-ref-123');
@@ -43,7 +50,7 @@ test.describe('Share Mechanic — Ref Tracking & Share Card', () => {
       }
     });
 
-    await runAssessment(page, profile);
+    await runAssessment(page, profile, { mockApi: false });
 
     expect(captured).toBeTruthy();
     expect(captured.ref_source).toBeNull();
@@ -72,7 +79,7 @@ test.describe('Share Mechanic — Ref Tracking & Share Card', () => {
       });
     });
 
-    await runAssessment(page, profile);
+    await runAssessment(page, profile, { mockApi: false });
 
     const shareCard = page.locator('#share-card');
     await expect(shareCard).toBeVisible({ timeout: 5000 });
@@ -89,7 +96,7 @@ test.describe('Share Mechanic — Ref Tracking & Share Card', () => {
       await route.fulfill({ status: 202, contentType: 'application/json', body: JSON.stringify({ data: { status: 'accepted' } }) });
     });
 
-    await runAssessment(page, profile);
+    await runAssessment(page, profile, { mockApi: false });
     await expect(page.locator('#share-card')).toBeVisible({ timeout: 5000 });
 
     const emailHref = await page.locator('.share-card-btn-email').getAttribute('href');
@@ -109,7 +116,7 @@ test.describe('Share Mechanic — Ref Tracking & Share Card', () => {
       await route.fulfill({ status: 202, contentType: 'application/json', body: JSON.stringify({ data: { status: 'accepted' } }) });
     });
 
-    await runAssessment(page, profile);
+    await runAssessment(page, profile, { mockApi: false });
     await expect(page.locator('#share-card')).toBeVisible({ timeout: 5000 });
 
     const smsHref = await page.locator('.share-card-btn-sms').getAttribute('href');
@@ -131,7 +138,7 @@ test.describe('Share Mechanic — Ref Tracking & Share Card', () => {
     // Grant clipboard write permission
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 
-    await runAssessment(page, profile);
+    await runAssessment(page, profile, { mockApi: false });
     await expect(page.locator('#share-card')).toBeVisible({ timeout: 5000 });
 
     const copyBtn = page.locator('.share-card-btn-copy');

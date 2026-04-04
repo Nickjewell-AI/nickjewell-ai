@@ -6,7 +6,7 @@ import profiles from '../fixtures/profiles.json';
 test.describe('Brief — Streaming UX', () => {
   test('brief text appears progressively', async ({ page }) => {
     await runAssessment(page, profiles.sophistication, {
-      fillBrief: true,
+      fillBrief: true, mockApi: false,
       briefData: {
         name: 'Stream Test',
         email: 'stream@test.dev',
@@ -30,7 +30,7 @@ test.describe('Brief — Streaming UX', () => {
 
   test('brief reaches substantial length when complete', async ({ page }) => {
     await runAssessment(page, profiles.pragmatism, {
-      fillBrief: true,
+      fillBrief: true, mockApi: false,
       briefData: {
         name: 'Length Test',
         email: 'length@test.dev',
@@ -48,7 +48,7 @@ test.describe('Brief — Streaming UX', () => {
 
   test('brief status indicator shows during generation', async ({ page }) => {
     await runAssessment(page, profiles.sophistication, {
-      fillBrief: true,
+      fillBrief: true, mockApi: false,
       briefData: {
         name: 'Status Test',
         email: 'status@test.dev',

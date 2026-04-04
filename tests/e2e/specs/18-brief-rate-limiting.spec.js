@@ -7,7 +7,7 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Brief — Rate Limiting', () => {
   test('first brief request succeeds', async ({ page }) => {
     await runAssessment(page, profiles.sophistication, {
-      fillBrief: true,
+      fillBrief: true, mockApi: false,
       briefData: {
         name: 'Rate Test 1',
         email: `rate-${Date.now()}@test.dev`,
@@ -27,7 +27,7 @@ test.describe('Brief — Rate Limiting', () => {
     // Note: This may not trigger in all environments depending on rate limit config
     for (let i = 0; i < 5; i++) {
       await runAssessment(page, profiles.momentum, {
-        fillBrief: true,
+        fillBrief: true, mockApi: false,
         briefData: {
           name: `Rate Test ${i + 2}`,
           email: `rate-${Date.now()}-${i}@test.dev`,
