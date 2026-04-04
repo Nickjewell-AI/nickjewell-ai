@@ -11,7 +11,10 @@ test.describe('Compound Module Cards', () => {
     for (let i = 0; i < 5; i++) {
       await waitForQuestionCard(page);
       const btns = await page.$$('.option-button:not([disabled])');
-      if (btns.length > 0) await btns[0].click();
+      if (btns.length > 0) {
+        await btns[0].click();
+        await page.waitForTimeout(500); // wait for handleAnswer's 250ms setTimeout + render
+      }
     }
 
     await waitForQuestionCard(page);
@@ -27,7 +30,10 @@ test.describe('Compound Module Cards', () => {
 
     // Answer the first question
     const btns = await page.$$('.option-button:not([disabled])');
-    if (btns.length > 0) await btns[0].click();
+    if (btns.length > 0) {
+      await btns[0].click();
+      await page.waitForTimeout(500);
+    }
     await waitForQuestionCard(page);
 
     // Same card should now have 2 questions (first answered + second revealed)

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { selectOption } from '../helpers/assessment-runner.js';
 
 // Back button navigation — introduced in Session 13.
 // Users can reverse any answered question, including across layer boundaries.
@@ -15,68 +16,55 @@ test.describe('Back Button Navigation', () => {
   });
 
   test('Back button appears on second question (P2)', async ({ page }) => {
-    await page.locator('.option-button .option-key', { hasText: 'A' }).first().click();
-    await page.waitForTimeout(600);
+    await selectOption(page, 'A');
     await expect(page.locator('.question-back-btn').last()).toBeVisible();
   });
 
   test('clicking Back returns user to the previous question', async ({ page }) => {
-    // Answer P1
-    await page.locator('.option-button .option-key', { hasText: 'A' }).first().click();
-    await page.waitForTimeout(600);
-    // Confirm we're on a new question
-    let labels = await page.locator('.question-label').allTextContents();
-    const beforeBackCount = labels.length;
-    expect(beforeBackCount).toBeGreaterThan(0);
-
+    await selectOption(page, 'A');
     // Click Back
     await page.locator('.question-back-btn').last().click();
-    await page.waitForTimeout(600);
-
-    // Should see Role Context (P1) again
-    labels = await page.locator('.question-label').allTextContents();
+    await page.waitForTimeout(500);
+    const labels = await page.locator('.question-label').allTextContents();
     expect(labels).toContain('Role Context');
   });
 
   test('progress bar decrements after Back click', async ({ page }) => {
-    // Advance two questions
-    await page.locator('.option-button .option-key', { hasText: 'A' }).first().click();
-    await page.waitForTimeout(600);
-    await page.locator('.option-button:not([disabled]) .option-key', { hasText: 'A' }).first().click();
-    await page.waitForTimeout(600);
-
+    await selectOption(page, 'A'); // P1
+    await selectOption(page, 'A'); // P2
+    // Wait for the 3rd question card to render — guarantees both answers settled
+    await page.waitForFunction(() => document.querySelectorAll('.question-label').length >= 3, { timeout: 5000 });
     const progressBefore = await page.locator('#progress-fill').evaluate(el => parseInt(el.style.width, 10));
+    expect(progressBefore).toBeGreaterThan(0);
 
     await page.locator('.question-back-btn').last().click();
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(500);
 
     const progressAfter = await page.locator('#progress-fill').evaluate(el => parseInt(el.style.width, 10));
     expect(progressAfter).toBeLessThan(progressBefore);
   });
 
   test('Back works across layer boundaries (from first layer question to last Pulse question)', async ({ page }) => {
-    // Answer all 5 Pulse questions
+    // Answer all 5 Pulse questions with key 'A'
     for (let i = 0; i < 5; i++) {
-      await page.locator('.option-button:not([disabled]) .option-key', { hasText: 'A' }).first().click();
-      await page.waitForTimeout(500);
+      await selectOption(page, 'A');
     }
-    // Now on first diagnostic question (tier 2)
-    let labels = await page.locator('.question-label').allTextContents();
-    const atTier2 = labels.join(' ');
-    expect(atTier2).not.toContain('Role Context');
+    // Wait until the 6th question card (first tier-2) has rendered
+    await page.waitForFunction(() => document.querySelectorAll('.question-label').length >= 6, { timeout: 8000 });
+    const labelsText = (await page.locator('.question-label').allTextContents()).join(' ');
+    // Should include at least one tier-2 diagnostic label
+    expect(labelsText).toMatch(/Data Accessibility|Governance Reality|Process Mapping|Named Owner|Workflow Redesign|Safety to Dissent|Honest Failure|Data Quality Pain|The Redesign Question|The Kevin Test|Kill History|Pre-Defined Failure Criteria/);
 
-    // Click Back — should return to last Pulse question
+    // Click Back — should pop to P7 (last Pulse)
     await page.locator('.question-back-btn').last().click();
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(500);
 
-    labels = await page.locator('.question-label').allTextContents();
-    // Last Pulse question is P7 (Organization Size)
-    expect(labels.join(' ')).toContain('Organization Size');
+    const labelsAfter = await page.locator('.question-label').allTextContents();
+    expect(labelsAfter.join(' ')).toContain('Organization Size');
   });
 
   test('session._stateHistory stack grows with each answer and shrinks on back', async ({ page }) => {
     const depth0 = await page.evaluate(() => {
-      // Access the UI module's session is not trivial; use the engine to verify recordAnswer behavior
       const s = window.AssessmentEngine.createSession();
       return s._stateHistory.length;
     });

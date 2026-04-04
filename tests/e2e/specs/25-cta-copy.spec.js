@@ -7,7 +7,8 @@ test.describe('CTA Copy Validation', () => {
     await runAssessment(page, profiles.sophistication);
 
     const ctaText = await page.$eval('.substack-cta', el => el.textContent);
-    expect(ctaText).toContain('playbook');
+    // Current CTA: "Your diagnosis is personal. The newsletter shows how others are solving the same constraints →"
+    expect(ctaText).toContain('constraints');
   });
 
   test('footer nav shows correct Substack link text', async ({ page }) => {

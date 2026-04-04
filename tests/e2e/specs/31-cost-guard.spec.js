@@ -7,11 +7,14 @@ import { test, expect } from '@playwright/test';
 // (via real run inspection, not E2E-testable without live D1 introspection).
 test.describe('Cost Guard — generate-and-email-brief intake', () => {
   const endpoint = '/api-proxy';
+  // isAllowedOrigin() rejects requests without an Origin matching the allowlist.
+  // Browsers send this automatically; Playwright's request fixture does not.
+  const ORIGIN = 'https://www.nickjewell.ai';
 
   async function callIntake(request, body) {
     return request.post(endpoint, {
       data: body,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Origin': ORIGIN },
       failOnStatusCode: false,
     });
   }
@@ -64,7 +67,7 @@ test.describe('Cost Guard — generate-and-email-brief intake', () => {
   test('missing type field returns 400', async ({ request }) => {
     const res = await request.post(endpoint, {
       data: { assessmentId: 1, email: 'test@playwright.dev', briefContext: 'x' },
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Origin': ORIGIN },
       failOnStatusCode: false,
     });
     expect(res.status()).toBe(400);

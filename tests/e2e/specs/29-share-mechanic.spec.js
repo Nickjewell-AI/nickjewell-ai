@@ -21,9 +21,7 @@ test.describe('Share Mechanic — Ref Tracking & Share Card', () => {
       }
     });
 
-    await page.goto('/assessment/?ref=test-ref-123');
-    await page.waitForLoadState('networkidle');
-    await runAssessment(page, profile);
+    await runAssessment(page, profile, { query: 'ref=test-ref-123' });
 
     expect(captured).toBeTruthy();
     expect(captured.ref_source).toBe('test-ref-123');

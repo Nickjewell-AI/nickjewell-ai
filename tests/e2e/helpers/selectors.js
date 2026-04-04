@@ -64,10 +64,10 @@ export const SEL = {
   briefTextContainer: '.brief-text-container',
   briefStickyCta: '#brief-sticky-cta',
 
-  // Feedback
-  feedbackSentiment: '.feedback-sentiment-btn',
-  feedbackText: '.feedback-text',
-  feedbackSubmit: '.feedback-submit',
+  // Feedback widget (class names match #feedback-card in assessment/index.html)
+  feedbackSentiment: '.feedback-card-btn',
+  feedbackText: '.feedback-card-textarea',
+  feedbackSubmit: '.feedback-card-submit',
 
   // Substack CTA
   substackCta: '.substack-cta',

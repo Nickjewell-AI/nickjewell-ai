@@ -75,8 +75,9 @@ function buildAnswerMap(profile) {
 export async function runAssessment(page, profile, opts = {}) {
   const answerMap = buildAnswerMap(profile);
 
-  // Navigate to assessment
-  await page.goto('/assessment/');
+  // Navigate to assessment (opts.query appends ?query-string e.g. 'ref=xyz')
+  const query = opts.query ? '?' + opts.query : '';
+  await page.goto('/assessment/' + query);
   await page.waitForLoadState('networkidle');
 
   // Click start
@@ -287,7 +288,8 @@ async function selectOption(page, key) {
     throw new Error(`selectOption failed: ${clicked.reason}`);
   }
 
-  await page.waitForTimeout(400);
+  // Wait for handleAnswer's 250ms setTimeout + render + animation to settle
+  await page.waitForTimeout(600);
 }
 
 /**

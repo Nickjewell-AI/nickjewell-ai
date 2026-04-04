@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { selectOption } from '../helpers/assessment-runner.js';
 
 // ?industry=<slug> URL param should pre-select P3 and skip that card in the flow.
 test.describe('Industry Entry Points', () => {
@@ -8,18 +9,16 @@ test.describe('Industry Entry Points', () => {
     await page.click('#start-btn');
     await page.waitForSelector('.question-card.visible', { timeout: 10000 });
 
-    // Answer P1 (Role Context)
-    await page.locator('.option-button .option-key', { hasText: 'A' }).first().click();
-    await page.waitForTimeout(600);
+    await selectOption(page, 'A'); // P1
+    await selectOption(page, 'C'); // P2
+    // Wait for the 3rd question card to render (P4 if preset skipped P3)
+    await page.waitForFunction(() => document.querySelectorAll('.question-label').length >= 3, { timeout: 5000 });
 
-    // Answer P2 (AI Maturity Stage)
-    await page.locator('.option-button:not([disabled]) .option-key', { hasText: 'C' }).first().click();
-    await page.waitForTimeout(600);
-
-    // Next question should be P4 (Biggest Concern) — P3 was auto-answered
+    // Next card should be P4 (Biggest Concern) — P3 was auto-answered
     const labels = await page.locator('.question-label').allTextContents();
-    expect(labels.join(' ')).not.toContain('Industry Context');
-    expect(labels.join(' ')).toContain('Biggest Concern');
+    // P3 label is exactly "Industry" — its absence confirms the preset auto-answered it
+    expect(labels).not.toContain('Industry');
+    expect(labels).toContain('Biggest Concern');
   });
 
   test('?industry=invalidvalue falls back to normal flow (P3 still shown)', async ({ page }) => {
@@ -28,30 +27,28 @@ test.describe('Industry Entry Points', () => {
     await page.click('#start-btn');
     await page.waitForSelector('.question-card.visible', { timeout: 10000 });
 
-    // Answer P1, P2
-    await page.locator('.option-button .option-key', { hasText: 'A' }).first().click();
-    await page.waitForTimeout(600);
-    await page.locator('.option-button:not([disabled]) .option-key', { hasText: 'C' }).first().click();
-    await page.waitForTimeout(600);
+    await selectOption(page, 'A'); // P1
+    await selectOption(page, 'C'); // P2
+    // Wait for the 3rd question card to render (either P3 normally, or P4 if preset skipped P3)
+    await page.waitForFunction(() => document.querySelectorAll('.question-label').length >= 3, { timeout: 5000 });
 
-    // P3 should be visible because the mapping didn't match
     const labels = await page.locator('.question-label').allTextContents();
-    expect(labels.join(' ')).toContain('Industry Context');
+    expect(labels).toContain('Industry');
   });
 
   test('?industry=finserv maps to key A (Financial Services)', async ({ page }) => {
-    // Verify the URL mapping directly rather than walking the whole flow
     await page.goto('/assessment/?industry=finserv');
     await page.waitForLoadState('networkidle');
-    // The session module applies the preset; we can observe the industry value after P3 would fire
-    // Simplest check: the constant is exposed via the DOM flow; just confirm P3 is skipped like above
     await page.click('#start-btn');
     await page.waitForSelector('.question-card.visible', { timeout: 10000 });
-    await page.locator('.option-button .option-key', { hasText: 'A' }).first().click();
-    await page.waitForTimeout(600);
-    await page.locator('.option-button:not([disabled]) .option-key', { hasText: 'C' }).first().click();
-    await page.waitForTimeout(600);
+
+    await selectOption(page, 'A'); // P1
+    await selectOption(page, 'C'); // P2
+    // Wait for the 3rd question card to render (either P3 normally, or P4 if preset skipped P3)
+    await page.waitForFunction(() => document.querySelectorAll('.question-label').length >= 3, { timeout: 5000 });
+
     const labels = await page.locator('.question-label').allTextContents();
-    expect(labels.join(' ')).not.toContain('Industry Context');
+    expect(labels).not.toContain('Industry');
+    expect(labels).toContain('Biggest Concern');
   });
 });

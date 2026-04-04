@@ -21,6 +21,7 @@ test.describe('Progress Bar — Phase Accuracy', () => {
       const btns = await page.$$('.option-button:not([disabled])');
       if (btns.length > 0) {
         await btns[0].click();
+        await page.waitForTimeout(500);
         await waitForQuestionCard(page);
       }
     }
@@ -44,6 +45,7 @@ test.describe('Progress Bar — Phase Accuracy', () => {
       const btns = await page.$$('.option-button:not([disabled])');
       if (btns.length === 0) break;
       await btns[0].click();
+      await page.waitForTimeout(500);
       await waitForQuestionCard(page);
       diagnosticCount++;
     }
