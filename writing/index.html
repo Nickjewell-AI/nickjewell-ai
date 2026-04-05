@@ -38,6 +38,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&family=Newsreader:opsz,wght,ital@6..72,300,1;6..72,400,1;6..72,500,1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 </head>
 <body>
 
@@ -143,20 +145,10 @@
         hamburger.setAttribute('aria-expanded', isOpen);
       });
 
-      // Scroll reveal
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry, i) => {
-          if (entry.isIntersecting) {
-            entry.target.style.transitionDelay = `${i * 0.08}s`;
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.1 });
-
-      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
     });
   </script>
+  <script src="/js/scroll-animations.js?v=1" defer></script>
+  <script src="/js/custom-cursor.js?v=1" defer></script>
 
 </body>
 </html>

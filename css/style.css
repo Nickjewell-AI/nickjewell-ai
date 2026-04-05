@@ -652,14 +652,69 @@ a.layer-item-link {
   color: var(--text-muted);
 }
 
-/* --- Scroll Animations (opacity-only per design system) --- */
-.fade-in {
+/* --- Scroll Animations (GSAP orchestrated — R2) --- */
+/* GSAP-animated elements start invisible; JS reveals them on scroll.
+   Hero content is animated by JS and also starts at opacity:0 via GSAP fromTo
+   (no CSS rule needed, to avoid FOUC on non-animated sub-pages). */
+.section-header,
+.pattern-vignette,
+.card,
+.logo-card-link,
+.logo-card,
+.writing-item,
+.contact-link,
+.gsap-reveal {
   opacity: 0;
-  transition: opacity 0.6s ease;
 }
 
-.fade-in.visible {
-  opacity: 1;
+/* Fallback: if GSAP fails to load or reduced motion, show everything immediately. */
+.gsap-fallback .section-header,
+.gsap-fallback .pattern-vignette,
+.gsap-fallback .card,
+.gsap-fallback .logo-card-link,
+.gsap-fallback .logo-card,
+.gsap-fallback .writing-item,
+.gsap-fallback .contact-link,
+.gsap-fallback .gsap-reveal,
+.gsap-fallback .word-wrap {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.no-js .section-header,
+.no-js .pattern-vignette,
+.no-js .card,
+.no-js .logo-card-link,
+.no-js .logo-card,
+.no-js .writing-item,
+.no-js .contact-link,
+.no-js .gsap-reveal {
+  opacity: 1 !important;
+}
+
+/* Page loader — CSS failsafe removes it after 2.5s even if JS fails entirely. */
+#page-loader {
+  animation: loader-failsafe 0s 2.5s forwards;
+}
+@keyframes loader-failsafe {
+  to { opacity: 0; pointer-events: none; visibility: hidden; }
+}
+
+/* Custom cursor — hide system cursor on desktop when custom cursor is mounted. */
+html.has-custom-cursor,
+html.has-custom-cursor body,
+html.has-custom-cursor a,
+html.has-custom-cursor button,
+html.has-custom-cursor input,
+html.has-custom-cursor textarea,
+html.has-custom-cursor select,
+html.has-custom-cursor [role="button"] {
+  cursor: none;
+}
+@media (pointer: coarse) {
+  #cursor-dot { display: none !important; }
+  html.has-custom-cursor,
+  html.has-custom-cursor * { cursor: auto !important; }
 }
 
 /* --- Framework Page --- */
@@ -1548,9 +1603,17 @@ a.logo-card-link {
     transition-duration: 0.01ms !important;
   }
 
-  .fade-in {
-    opacity: 1;
-    transform: none;
+  .section-header,
+  .pattern-vignette,
+  .card,
+  .logo-card-link,
+  .logo-card,
+  .writing-item,
+  .contact-link,
+  .gsap-reveal,
+  .word-wrap {
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .question-card {
