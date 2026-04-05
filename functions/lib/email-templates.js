@@ -76,8 +76,8 @@ export function buildBriefEmail(data) {
   const verdictColor = VERDICT_COLORS[verdict] || '#722F37';
   const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
   const greeting = firstName
-    ? `Here's your executive brief, ${firstName}.`
-    : "Here's your executive brief.";
+    ? `Your assessment surfaced something worth paying attention to, ${firstName} — here's what it means and what to do about it.`
+    : "Your assessment surfaced something worth paying attention to — here's what it means and what to do about it.";
 
   // Preheader text
   const preheader = `Your binding constraint is ${constraintName}. Here's what to do about it.`;
@@ -172,7 +172,7 @@ export function buildBriefEmail(data) {
 
   <!-- Secondary CTA: Team Distribution -->
   <tr><td style="padding-bottom:24px;">
-    <p style="color:#1a1a1a;font-size:15px;font-weight:700;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0 0 12px;">Have your leadership team take the assessment</p>
+    <p style="color:#1a1a1a;font-size:15px;font-weight:700;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0 0 12px;">See how your team compares</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0eeeb;border-radius:4px;">
       <tr><td style="padding:16px;color:#1a1a1a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.5;font-style:italic;">
         &ldquo;${shareCopy}&rdquo;

@@ -145,7 +145,7 @@ export async function handleSendResults(request, env, ctx, body) {
     const result = await sendEmail(env, {
       from: 'Nick Jewell <nick@nickjewell.ai>',
       to: email,
-      subject: `Your Jewell Assessment Results — ${results.verdict}`,
+      subject: `Your assessment diagnosis is ready`,
       html: htmlBody,
     });
 
@@ -200,7 +200,7 @@ export async function handleSendBriefEmail(request, env, ctx, body) {
   }
 
   const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
-  const subject = `Your AI Readiness: ${verdict || 'Assessment'} — ${constraintName} is your binding constraint`;
+  const subject = `${name ? name.split(' ')[0] + ', your' : 'Your'} diagnosis is ready`;
 
   const htmlBody = buildBriefEmail({
     firstName: name ? name.split(' ')[0] : '',
