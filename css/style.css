@@ -660,12 +660,15 @@ a.layer-item-link {
 .pattern-vignette,
 .card,
 .logo-card-link,
-.logo-card,
 .writing-item,
 .contact-link,
 .gsap-reveal {
   opacity: 0;
 }
+
+/* .logo-card is always nested inside .logo-card-link (which handles its own
+   scroll reveal). Opacity does not inherit — a child at opacity:0 stays
+   invisible regardless of parent — so we must NOT default .logo-card to 0. */
 
 /* Fallback: if GSAP fails to load or reduced motion, show everything immediately. */
 .gsap-fallback .section-header,
