@@ -37,11 +37,11 @@
   --text-muted:     #8a8a9e;
   --text-on-dark:   #F0ECE6;  /* NEW — text on --bg-dark */
 
-  /* Accent — terracotta */
-  --accent:         #B85C38;
-  --accent-dim:     #B85C3812;
-  --accent-hover:   #D4714A;
-  --accent-bg:      #B85C380A;  /* NEW — very subtle tint */
+  /* Accent — claret */
+  --accent:         #722F37;
+  --accent-dim:     #722F3712;
+  --accent-hover:   #8B3A42;
+  --accent-bg:      #722F370A;  /* NEW — very subtle tint */
 
   /* Borders — warm neutral */
   --border:         #E0DCD6;
@@ -132,7 +132,7 @@ a:hover {
 }
 
 ::selection {
-  background: #B85C3825;
+  background: #722F3725;
   color: var(--text-primary);
 }
 
@@ -1688,7 +1688,7 @@ a.logo-card-link {
 .feedback-btn.selected {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(184, 92, 56, 0.08);
+  background: rgba(114, 47, 55, 0.08);
 }
 
 .feedback-thankyou {

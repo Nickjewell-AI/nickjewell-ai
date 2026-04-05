@@ -187,7 +187,7 @@ function buildDigestHtml(data, dateStr) {
   // ── Helpers
   const statCell = (label, value) => `
     <td style="padding:12px 16px;text-align:center;width:25%;">
-      <div style="font-size:24px;font-weight:700;color:#c8965a;">${value}</div>
+      <div style="font-size:24px;font-weight:700;color:#722F37;">${value}</div>
       <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">${label}</div>
     </td>`;
 
@@ -215,7 +215,7 @@ function buildDigestHtml(data, dateStr) {
       <tr><td>
         <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e5e5;border-radius:4px;">
           ${tableRow('<span style="color:#2d8a4e;">Green</span>', verdictMap.Green || 0)}
-          ${tableRow('<span style="color:#c8965a;">Amber</span>', verdictMap.Amber || 0)}
+          ${tableRow('<span style="color:#722F37;">Amber</span>', verdictMap.Amber || 0)}
           ${tableRow('<span style="color:#c44536;">Red</span>', verdictMap.Red || 0)}
         </table>
       </td></tr>
@@ -272,7 +272,7 @@ function buildDigestHtml(data, dateStr) {
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(r.company)}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(r.role)}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(INDUSTRY_LABELS[r.industry] || r.industry || '-')}</td>
-        <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:${r.verdict === 'Green' ? '#2d8a4e' : r.verdict === 'Red' ? '#c44536' : '#c8965a'};font-weight:600;">${esc(r.verdict)}</td>
+        <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:${r.verdict === 'Green' ? '#2d8a4e' : r.verdict === 'Red' ? '#c44536' : '#722F37'};font-weight:600;">${esc(r.verdict)}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(r.taste_signature)}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(r.brief_email_status || '-')}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#999;">${r.timestamp ? r.timestamp.slice(11, 16) : ''}</td>
@@ -355,7 +355,7 @@ function buildDigestHtml(data, dateStr) {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;">
   <tr><td style="padding:28px 28px 20px;">
-    <p style="color:#c8965a;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 4px;">Jewell Assessment</p>
+    <p style="color:#722F37;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 4px;">Jewell Assessment</p>
     <p style="color:#1a1a1a;font-size:20px;font-weight:700;margin:0 0 4px;">Daily Digest</p>
     <p style="color:#999;font-size:13px;margin:0;">${esc(dateStr)}</p>
   </td></tr>

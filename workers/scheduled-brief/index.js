@@ -109,13 +109,13 @@ const LAYER_NAMES = {
 
 const VERDICT_COLORS = {
   Green: '#2d8a4e',
-  Amber: '#c8965a',
+  Amber: '#722F37',
   Red: '#c44536',
 };
 
 function scoreBarColor(score) {
   if (score >= 70) return '#2d8a4e';
-  if (score >= 40) return '#c8965a';
+  if (score >= 40) return '#722F37';
   return '#c44536';
 }
 
@@ -123,7 +123,7 @@ function buildLayerBar(name, score, isConstraint) {
   const barColor = scoreBarColor(score != null ? score : 0);
   const filled = score != null ? score : 0;
   const constraintLabel = isConstraint
-    ? ` <span style="color:#c8965a;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">&mdash; BINDING CONSTRAINT</span>`
+    ? ` <span style="color:#722F37;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">&mdash; BINDING CONSTRAINT</span>`
     : '';
   return `<tr>
     <td style="padding:5px 0;color:#1a1a1a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;width:140px;">${name}${constraintLabel}</td>
@@ -142,9 +142,9 @@ function buildLayerBar(name, score, isConstraint) {
 function inlineStyleBriefHtml(html) {
   if (!html) return '';
   return html
-    .replace(/<h2([^>]*)>/gi, '<h2$1 style="color:#c8965a;font-family:Georgia,\'Times New Roman\',serif;font-size:20px;font-weight:600;margin:28px 0 10px;">')
-    .replace(/<h3([^>]*)>/gi, '<h3$1 style="color:#c8965a;font-family:Georgia,\'Times New Roman\',serif;font-size:17px;font-weight:600;margin:24px 0 8px;">')
-    .replace(/<h4([^>]*)>/gi, '<h4$1 style="color:#c8965a;font-family:Georgia,\'Times New Roman\',serif;font-size:15px;font-weight:600;margin:20px 0 8px;">')
+    .replace(/<h2([^>]*)>/gi, '<h2$1 style="color:#722F37;font-family:Georgia,\'Times New Roman\',serif;font-size:20px;font-weight:600;margin:28px 0 10px;">')
+    .replace(/<h3([^>]*)>/gi, '<h3$1 style="color:#722F37;font-family:Georgia,\'Times New Roman\',serif;font-size:17px;font-weight:600;margin:24px 0 8px;">')
+    .replace(/<h4([^>]*)>/gi, '<h4$1 style="color:#722F37;font-family:Georgia,\'Times New Roman\',serif;font-size:15px;font-weight:600;margin:20px 0 8px;">')
     .replace(/<p([^>]*)>/gi, '<p$1 style="color:#1a1a1a;font-size:15px;line-height:1.6;margin:0 0 12px;font-family:-apple-system,\'Segoe UI\',Helvetica,Arial,sans-serif;">')
     .replace(/<li([^>]*)>/gi, '<li$1 style="color:#1a1a1a;font-size:15px;line-height:1.6;margin-bottom:8px;font-family:-apple-system,\'Segoe UI\',Helvetica,Arial,sans-serif;">')
     .replace(/<strong([^>]*)>/gi, '<strong$1 style="color:#1a1a1a;font-weight:700;">')
@@ -166,7 +166,7 @@ function buildBriefEmail(data) {
     ? `nickjewell.ai/assessment?ref=${assessmentId}`
     : 'nickjewell.ai/assessment';
 
-  const verdictColor = VERDICT_COLORS[verdict] || '#c8965a';
+  const verdictColor = VERDICT_COLORS[verdict] || '#722F37';
   const constraintName = LAYER_NAMES[bindingConstraint] || bindingConstraint || 'Unknown';
   const greeting = firstName
     ? `Here's your executive brief, ${firstName}.`
@@ -203,7 +203,7 @@ function buildBriefEmail(data) {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafaf8;padding:0 20px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-  <tr><td style="padding:32px 0 24px;"><p style="color:#c8965a;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:600;margin:0;">Jewell Assessment</p></td></tr>
+  <tr><td style="padding:32px 0 24px;"><p style="color:#722F37;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:600;margin:0;">Jewell Assessment</p></td></tr>
   <tr><td style="padding-bottom:24px;"><p style="color:#1a1a1a;font-size:16px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0;line-height:1.5;">${greeting}</p></td></tr>
   <tr><td style="padding-bottom:28px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0eeeb;border:1px solid #e0ddd8;border-radius:4px;">
@@ -221,7 +221,7 @@ function buildBriefEmail(data) {
   </td></tr>
   <tr><td style="padding:24px 0;color:#1a1a1a;font-size:15px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.6;">${inlineStyleBriefHtml(briefHtml)}</td></tr>
   <tr><td style="padding-bottom:28px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #c8965a;border-radius:4px;background:#faf8f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #722F37;border-radius:4px;background:#faf8f5;">
       <tr><td style="padding:20px;">
         <p style="color:#1a1a1a;font-family:Georgia,'Times New Roman',serif;font-size:16px;margin:0 0 8px;line-height:1.4;">One question: What's the first thing you're going to do differently?</p>
         <p style="color:#6b6560;font-size:13px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0;font-style:italic;">Just reply to this email &mdash; it comes directly to me.</p>
@@ -233,12 +233,12 @@ function buildBriefEmail(data) {
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0eeeb;border-radius:4px;">
       <tr><td style="padding:16px;color:#1a1a1a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.5;font-style:italic;">&ldquo;${shareCopy}&rdquo;</td></tr>
     </table>
-    <p style="margin:10px 0 0;"><a href="${shareUrl}" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Share the assessment &rarr; ${shareUrlDisplay}</a></p>
+    <p style="margin:10px 0 0;"><a href="${shareUrl}" style="color:#722F37;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Share the assessment &rarr; ${shareUrlDisplay}</a></p>
   </td></tr>
-  <tr><td style="padding-bottom:28px;"><a href="https://www.nickjewell.ai/framework/#${bindingConstraint || ''}" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Deep dive: Why ${constraintName} breaks AI initiatives &rarr;</a></td></tr>
+  <tr><td style="padding-bottom:28px;"><a href="https://www.nickjewell.ai/framework/#${bindingConstraint || ''}" style="color:#722F37;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">Deep dive: Why ${constraintName} breaks AI initiatives &rarr;</a></td></tr>
   <tr><td style="border-top:1px solid #e0ddd8;padding-top:20px;">
     <p style="color:#1a1a1a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0 0 6px;">Each issue picks apart one constraint — and tells you what to do about it right now.</p>
-    <p style="margin:0 0 16px;"><a href="https://nickjewellai.substack.com" style="color:#c8965a;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">The Binding Constr(ai)nt &rarr;</a></p>
+    <p style="margin:0 0 16px;"><a href="https://nickjewellai.substack.com" style="color:#722F37;font-size:14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;">The Binding Constr(ai)nt &rarr;</a></p>
     <p style="color:#6b6560;font-size:12px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;margin:0;">nickjewell.ai</p>
   </td></tr>
   <tr><td style="height:40px;"></td></tr>

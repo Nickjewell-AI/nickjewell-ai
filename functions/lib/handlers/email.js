@@ -50,18 +50,18 @@ function buildResultsEmailHtml(results) {
 
   const verdictColors = {
     Green: '#4a9c6d',
-    Amber: '#c8965a',
+    Amber: '#722F37',
     Red: '#c75050',
   };
-  const verdictColor = verdictColors[verdict] || '#c8965a';
+  const verdictColor = verdictColors[verdict] || '#722F37';
 
   const layerRows = Object.entries(layerScores || {})
     .map(([key, score]) => {
       const name = LAYER_NAMES[key] || key;
       const isConstraint = key === bindingConstraint;
       const barWidth = score != null ? score : 0;
-      const barColor = score >= 70 ? '#4a9c6d' : score >= 40 ? '#c8965a' : '#c75050';
-      const constraintLabel = isConstraint ? ' <span style="color:#c8965a;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;">BINDING CONSTRAINT</span>' : '';
+      const barColor = score >= 70 ? '#4a9c6d' : score >= 40 ? '#722F37' : '#c75050';
+      const constraintLabel = isConstraint ? ' <span style="color:#722F37;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;">BINDING CONSTRAINT</span>' : '';
       return `
         <tr>
           <td style="padding:6px 0;color:#f0ebe3;font-size:14px;">${name}${constraintLabel}</td>
@@ -101,14 +101,14 @@ function buildResultsEmailHtml(results) {
 
   <!-- Layer Scores -->
   <tr><td style="padding-bottom:32px;">
-    <p style="color:#c8965a;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 16px;">Layer Scores</p>
+    <p style="color:#722F37;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 16px;">Layer Scores</p>
     <table width="100%" cellpadding="0" cellspacing="0">${layerRows}</table>
   </td></tr>
 
   <!-- Taste Signature -->
-  <tr><td style="background:#141414;border-left:3px solid #c8965a;padding:20px 24px;margin-bottom:32px;">
+  <tr><td style="background:#141414;border-left:3px solid #722F37;padding:20px 24px;margin-bottom:32px;">
     <p style="color:#9a9189;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 8px;">Taste Signature</p>
-    <p style="color:#c8965a;font-size:18px;font-weight:600;margin:0;">${tasteSignature || 'N/A'}</p>
+    <p style="color:#722F37;font-size:18px;font-weight:600;margin:0;">${tasteSignature || 'N/A'}</p>
   </td></tr>
 
   <!-- Spacer -->
@@ -117,14 +117,14 @@ function buildResultsEmailHtml(results) {
   <!-- Actions -->
   ${actionItems ? `
   <tr><td style="padding-bottom:32px;">
-    <p style="color:#c8965a;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 16px;">Your Action Plan</p>
+    <p style="color:#722F37;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 16px;">Your Action Plan</p>
     <ul style="padding-left:20px;margin:0;">${actionItems}</ul>
   </td></tr>` : ''}
 
   <!-- Footer -->
   <tr><td style="border-top:1px solid #222019;padding-top:24px;">
     <p style="color:#7a756f;font-size:12px;margin:0;">The Jewell Assessment &mdash; nickjewell.ai</p>
-    <p style="font-size: 13px; color: #9a9189; margin-top: 24px; padding-top: 16px; border-top: 1px solid #2a2a2a;">For ongoing analysis of AI implementation patterns, subscribe to <a href="https://nickjewellai.substack.com/subscribe" style="color: #c8965a; text-decoration: none;">The Binding Constraint</a>.</p>
+    <p style="font-size: 13px; color: #9a9189; margin-top: 24px; padding-top: 16px; border-top: 1px solid #2a2a2a;">For ongoing analysis of AI implementation patterns, subscribe to <a href="https://nickjewellai.substack.com/subscribe" style="color: #722F37; text-decoration: none;">The Binding Constraint</a>.</p>
   </td></tr>
 
 </table>
