@@ -357,6 +357,11 @@ section {
   margin: 0 auto 2.5rem;
 }
 
+.hero .subtext em {
+  font-size: 1.15em;
+  font-weight: 500;
+}
+
 .hero .persona-line,
 .hero .stat-line {
   max-width: 680px;
