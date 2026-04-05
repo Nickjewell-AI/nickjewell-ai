@@ -1,6 +1,6 @@
 /* ============================================
    nickjewell.ai — Design System
-   Dark editorial. Fraunces + DM Sans.
+   Warm editorial. Newsreader + General Sans.
    ============================================ */
 
 /* --- Reset & Base --- */
@@ -10,52 +10,72 @@
   box-sizing: border-box;
 }
 
+/* --- General Sans (self-hosted from Fontshare) --- */
+@font-face {
+  font-family: 'General Sans';
+  src: url('fonts/GeneralSans-Variable.woff2') format('woff2-variations');
+  font-weight: 200 700;
+  font-display: swap;
+}
+
 /* --- Design Tokens --- */
 :root {
   /* Fonts */
-  --font-display: 'Fraunces', serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-body: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Backgrounds */
-  --bg-primary: #080808;
-  --bg-secondary: #0f0f0f;
-  --bg-card: #141414;
-  --bg-card-hover: #1a1a1a;
+  /* Backgrounds — warm paper tones */
+  --bg-primary:     #FAF8F5;
+  --bg-secondary:   #F0ECE6;
+  --bg-card:        #FFFFFF;
+  --bg-card-hover:  #FAFAFA;
+  --bg-dark:        #1a1a2e;  /* NEW — footer, inverted sections */
 
-  /* Text — WCAG 2.1 AA compliant on #080808 */
-  --text-primary: #f0ebe3;
-  --text-secondary: #9a9189;
-  --text-muted: #7a756f;
+  /* Text — navy spectrum */
+  --text-primary:   #1a1a2e;
+  --text-secondary: #4a4a5e;
+  --text-muted:     #8a8a9e;
+  --text-on-dark:   #F0ECE6;  /* NEW — text on --bg-dark */
 
-  /* Accent */
-  --accent: #c8965a;
-  --accent-dim: #c8965a33;
-  --accent-hover: #daa76b;
+  /* Accent — terracotta */
+  --accent:         #B85C38;
+  --accent-dim:     #B85C3812;
+  --accent-hover:   #D4714A;
+  --accent-bg:      #B85C380A;  /* NEW — very subtle tint */
 
-  /* Borders */
-  --border: #222019;
-  --border-light: #2a2720;
+  /* Borders — warm neutral */
+  --border:         #E0DCD6;
+  --border-light:   #EBE8E3;
+  --border-dark:    #C8C3BB;  /* NEW */
 
-  /* Verdict */
-  --verdict-green: #4a9968;
-  --verdict-amber: #c8965a;
-  --verdict-red: #c45a5a;
+  /* Verdict Colors — calibrated for light backgrounds */
+  --verdict-green:  #2D7A4F;
+  --verdict-amber:  #C17D24;
+  --verdict-red:    #B84233;
 
-  /* Taste Signatures */
-  --taste-sophistication: #7a8ec8;
-  --taste-pragmatism: #4a9968;
-  --taste-caution: #c8965a;
-  --taste-momentum: #c45a5a;
+  /* Taste Signature Colors */
+  --taste-sophistication: #4A5E99;
+  --taste-pragmatism:     #2D7A4F;
+  --taste-caution:        #C17D24;
+  --taste-momentum:       #B84233;
 
-  /* Spacing */
+  /* Shadows — NEW */
+  --shadow-sm:  0 1px 2px rgba(26, 26, 46, 0.04);
+  --shadow-md:  0 2px 8px rgba(26, 26, 46, 0.06);
+  --shadow-lg:  0 4px 16px rgba(26, 26, 46, 0.08);
+
+  /* Spacing — unchanged */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;   /* NEW */
   --space-6: 1.5rem;
   --space-8: 2rem;
+  --space-10: 2.5rem;   /* NEW */
   --space-12: 3rem;
   --space-16: 4rem;
+  --space-20: 5rem;     /* NEW */
   --space-24: 6rem;
 }
 
@@ -111,8 +131,8 @@ a:hover {
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--bg-primary);
+  background: #B85C3825;
+  color: var(--text-primary);
 }
 
 /* --- Skip Link --- */
@@ -216,19 +236,6 @@ input:-webkit-autofill {
   color: var(--accent);
 }
 
-/* --- Film Grain Overlay --- */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
-
 /* --- Navigation --- */
 .nav {
   position: fixed;
@@ -237,7 +244,7 @@ body::after {
   right: 0;
   z-index: 100;
   padding: 1.5rem 2rem;
-  background: rgba(8, 8, 8, 0.85);
+  background: rgba(250, 248, 245, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -1261,7 +1268,7 @@ a.logo-card-link {
 }
 
 .taste-dim-label {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.75rem;
   color: var(--text-secondary);
   letter-spacing: 0.02em;
@@ -1284,7 +1291,7 @@ a.logo-card-link {
 }
 
 .taste-dim-value {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.7rem;
   color: var(--text-muted);
   text-align: right;
@@ -1302,7 +1309,7 @@ a.logo-card-link {
 /* ─── Save & Share Form ───────────────────────────────── */
 
 .save-share-subtitle {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--text-secondary);
   line-height: 1.5;
@@ -1327,7 +1334,7 @@ a.logo-card-link {
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text-primary);
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.85rem;
   transition: border-color 0.2s ease;
 }
@@ -1347,7 +1354,7 @@ a.logo-card-link {
   background: transparent;
   border: 1px solid var(--accent);
   color: var(--accent);
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.85rem;
   font-weight: 500;
   border-radius: 6px;
@@ -1367,7 +1374,7 @@ a.logo-card-link {
 }
 
 .save-status {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.8rem;
   line-height: 1.4;
   margin-top: 0.25rem;
@@ -1524,7 +1531,7 @@ a.logo-card-link {
   position: sticky;
   top: 72px;
   z-index: 90;
-  background: rgba(15, 15, 15, 0.95);
+  background: rgba(250, 248, 245, 0.98);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
@@ -1579,10 +1586,6 @@ a.logo-card-link {
   .hero-ctas,
   .retake-wrapper,
   .start-btn {
-    display: none !important;
-  }
-
-  body::after {
     display: none !important;
   }
 
@@ -1653,7 +1656,7 @@ a.logo-card-link {
 .feedback-btn.selected {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(200, 150, 90, 0.08);
+  background: rgba(184, 92, 56, 0.08);
 }
 
 .feedback-thankyou {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#080808">
+  <meta name="theme-color" content="#FAF8F5">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <title>About — Nick Jewell</title>
   <meta name="description" content="Builder and strategic advisor at the intersection of AI implementation and organizational judgment. The person behind the Jewell Assessment framework.">
@@ -43,7 +43,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&family=Newsreader:opsz,wght,ital@6..72,300,1;6..72,400,1;6..72,500,1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <style>
     /* About page styles */
@@ -74,15 +74,15 @@
 
     .about-beat {
       padding: 5rem 0;
-      border-top: 1px solid #222019;
+      border-top: 1px solid var(--border);
     }
 
     .about-beat:nth-child(odd) {
-      background: #0f0f0f;
+      background: var(--bg-secondary);
     }
 
     .about-beat:nth-child(even) {
-      background: #080808;
+      background: var(--bg-primary);
     }
 
     .beat-header {
@@ -90,7 +90,7 @@
     }
 
     .beat-number {
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 0.8125rem;
       font-weight: 600;
       letter-spacing: 0.15em;
@@ -101,7 +101,7 @@
     }
 
     .beat-header h2 {
-      font-family: 'Fraunces', serif;
+      font-family: 'Newsreader', Georgia, serif;
       font-size: clamp(1.75rem, 4vw, 2.5rem);
       font-weight: 400;
       color: var(--text-primary);
@@ -128,7 +128,7 @@
     }
 
     .key-phrase p {
-      font-family: 'Fraunces', serif;
+      font-family: 'Newsreader', Georgia, serif;
       font-size: 1.1rem;
       font-weight: 300;
       font-style: italic;
@@ -138,7 +138,7 @@
 
     .charney-callout {
       border-left: 3px solid var(--accent);
-      background: rgba(200, 150, 90, 0.06);
+      background: rgba(184, 92, 56, 0.06);
       padding: 1.5rem 1.75rem;
       margin: 2rem 0;
       max-width: 720px;
@@ -153,12 +153,12 @@
 
     .first-person-close {
       padding: 4rem 0;
-      border-top: 1px solid #222019;
-      background: #0f0f0f;
+      border-top: 1px solid var(--border);
+      background: var(--bg-secondary);
     }
 
     .first-person-close p {
-      font-family: 'Fraunces', serif;
+      font-family: 'Newsreader', Georgia, serif;
       font-size: clamp(1.0625rem, 2.5vw, 1.25rem);
       font-weight: 300;
       color: var(--text-primary);
@@ -170,11 +170,11 @@
     .about-cta {
       padding: 5rem 0;
       text-align: center;
-      border-top: 1px solid #222019;
+      border-top: 1px solid var(--border);
     }
 
     .about-cta h2 {
-      font-family: 'Fraunces', serif;
+      font-family: 'Newsreader', Georgia, serif;
       font-size: clamp(1.5rem, 3.5vw, 2.25rem);
       font-weight: 400;
       color: var(--text-primary);
@@ -204,7 +204,7 @@
       border: 1px solid #222019;
       color: var(--text-primary);
       text-decoration: none;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 0.9375rem;
       font-weight: 500;
       letter-spacing: 0.02em;
@@ -213,7 +213,7 @@
 
     .about-cta-buttons .btn-secondary:hover {
       border-color: var(--accent);
-      background: rgba(200, 150, 90, 0.06);
+      background: rgba(184, 92, 56, 0.06);
     }
 
     .linkedin-link {
@@ -405,9 +405,9 @@
     </section>
 
     <!-- Contact -->
-    <section id="about-contact" class="about-beat about-contact" style="background: #0f0f0f; text-align: center; padding: 4rem 2rem;">
+    <section id="about-contact" class="about-beat about-contact" style="background: var(--bg-secondary); text-align: center; padding: 4rem 2rem;">
       <div class="container">
-        <p style="font-family: 'DM Sans', sans-serif; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1.5rem;">Get in Touch</p>
+        <p style="font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1.5rem;">Get in Touch</p>
         <p style="font-size: 1.1rem; color: var(--text-secondary); line-height: 1.8;">
           <a href="mailto:nick@nickjewell.ai" style="color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s;">nick@nickjewell.ai</a>
           <span style="margin: 0 1rem; color: var(--text-muted);">/</span>
