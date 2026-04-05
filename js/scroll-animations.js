@@ -64,6 +64,9 @@
       }
     }
 
+    var heroSubtitle = hero.querySelector('.hero-subtitle');
+    if (heroSubtitle) tl.fromTo(heroSubtitle, { opacity: 0 }, { opacity: 1, duration: 0.6 }, '-=0.3');
+
     var subtext = hero.querySelector('.subtext');
     if (subtext) tl.fromTo(subtext, { opacity: 0 }, { opacity: 1, duration: 0.6 }, '-=0.3');
 
