@@ -90,9 +90,9 @@
 
     /* Share card */
     .share-card {
-      background: #111;
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
       padding: 1.5rem;
       margin-top: 2rem;
       border-radius: 2px;
@@ -378,8 +378,9 @@
 
     /* Question cards */
     .question-card {
-      background: var(--bg-secondary);
-      border-left: 3px solid var(--accent);
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
       padding: 2rem;
       margin-bottom: 1.5rem;
       opacity: 0;
@@ -502,10 +503,10 @@
     .option-button.na-option {
       margin-top: 12px;
       padding: 0.65rem 1rem;
-      border-color: #333;
+      border-color: var(--border-dark);
       background: transparent;
       font-size: 0.85em;
-      color: #777;
+      color: var(--text-muted);
     }
 
     .option-button.na-option .option-text {
@@ -698,13 +699,13 @@
     }
 
     .layer-score-label.insufficient-data {
-      color: #777;
+      color: var(--text-muted);
       font-style: italic;
     }
 
     .layer-row-insufficient .layer-bar {
       background: transparent;
-      border: 1px dashed #333;
+      border: 1px dashed var(--border-dark);
     }
 
     .layer-row-insufficient .layer-bar-fill {
@@ -830,8 +831,8 @@
     .follow-up-card {
       margin-top: 1rem;
       padding: 1.25rem;
-      background: var(--bg-card);
-      border-left: 2px solid var(--accent);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
       opacity: 0;
       transform: translateY(8px);
       transition: opacity 0.3s ease, transform 0.3s ease;
@@ -916,8 +917,9 @@
 
     /* Save Results */
     .save-results-card {
-      background: var(--bg-secondary);
-      border-left: 3px solid var(--accent);
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
       padding: 1.5rem 2rem;
     }
     .save-results-text {
@@ -1465,8 +1467,9 @@
       align-items: flex-start;
       gap: 1.25rem;
       background: var(--bg-card);
-      border-left: 3px solid var(--accent);
-      border-radius: 0 6px 6px 0;
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+      border-radius: 6px;
       padding: 1.25rem 1.5rem;
       opacity: 0;
       transform: translateY(10px);
