@@ -240,9 +240,10 @@ export async function runAssessment(page, profile, opts = {}) {
   await page.waitForSelector('#assessment-results:not(.hidden)', { timeout: 30000 });
   await page.waitForTimeout(500);
 
-  // Handle email capture gate if present
+  // Handle email capture gate if present. Callers that need to inspect the
+  // capture-gate state itself pass { skipCapture: true } to stop here.
   const captureForm = await page.$('#capture-form');
-  if (captureForm) {
+  if (captureForm && !opts.skipCapture) {
     await page.fill('#capture-name', 'Test User');
     await page.fill('#capture-email', 'test@playwright.dev');
     await page.fill('#capture-company', 'Test Corp');

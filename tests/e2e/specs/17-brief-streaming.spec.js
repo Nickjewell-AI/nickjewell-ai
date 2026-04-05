@@ -3,6 +3,11 @@ import { runAssessment } from '../helpers/assessment-runner.js';
 import { waitForBriefStream } from '../helpers/wait-utils.js';
 import profiles from '../fixtures/profiles.json';
 
+// Two of the three tests hit real Opus with mockApi:false. Concurrent real
+// streaming from multiple workers can cause Anthropic to truncate streams,
+// so run this file serially.
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Brief — Streaming UX', () => {
   test('brief text appears progressively', async ({ page }) => {
     await runAssessment(page, profiles.sophistication, {
@@ -46,19 +51,19 @@ test.describe('Brief — Streaming UX', () => {
     expect(briefText.length).toBeGreaterThan(500);
   });
 
-  test('brief status indicator shows during generation', async ({ page }) => {
-    await runAssessment(page, profiles.sophistication, {
-      fillBrief: true, mockApi: false,
-      briefData: {
-        name: 'Status Test',
-        email: 'status@test.dev',
-        company: 'Status Corp',
-        role: 'Tester',
-      },
-    });
+  test('brief auto-triggers after capture submit — brief-text-container becomes visible', async ({ page }) => {
+    // Default mocks (cost guard) return a canned SSE stream for type:brief.
+    // After runAssessment submits the capture form, showAllResults() auto-
+    // triggers triggerBriefGeneration() after ~1s, which un-hides
+    // .brief-text-container and starts streaming.
+    await runAssessment(page, profiles.sophistication);
 
-    // Brief status should appear during generation
-    const statusEl = page.locator('.brief-status');
-    await expect(statusEl).toBeVisible({ timeout: 15000 });
+    const briefContainer = page.locator('.brief-text-container');
+    await expect(briefContainer).toBeVisible({ timeout: 15000 });
+
+    // Mock stream populates content within a second or two.
+    await page.waitForTimeout(2000);
+    const text = await briefContainer.textContent();
+    expect(text.length).toBeGreaterThan(10);
   });
 });

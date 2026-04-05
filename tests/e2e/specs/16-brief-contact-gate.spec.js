@@ -2,43 +2,56 @@ import { test, expect } from '@playwright/test';
 import { runAssessment } from '../helpers/assessment-runner.js';
 import profiles from '../fixtures/profiles.json';
 
-test.describe('Brief — Contact Form Gate', () => {
-  test('results visible without filling contact form', async ({ page }) => {
+test.describe('Capture Gate — Results Gating', () => {
+  test('all results sections are visible after capture form is submitted', async ({ page }) => {
+    // runAssessment auto-fills and submits the capture gate — after that,
+    // showAllResults() reveals every results section.
     await runAssessment(page, profiles.sophistication);
 
-    // Results should be visible
     await expect(page.locator('#verdict-label')).toBeVisible();
     await expect(page.locator('#layer-bars')).toBeVisible();
     await expect(page.locator('#taste-signature')).toBeVisible();
     await expect(page.locator('#actions-list')).toBeVisible();
   });
 
-  test('brief does not generate without contact info', async ({ page }) => {
-    await runAssessment(page, profiles.sophistication);
+  test('all capture-form fields have the required HTML attribute', async ({ page }) => {
+    // Run the assessment but stop at the capture gate — do not submit it.
+    await runAssessment(page, profiles.sophistication, { skipCapture: true });
 
-    // Try to submit empty form
-    await page.click('.brief-contact-submit');
-
-    // Brief text should NOT appear
-    await expect(page.locator('.brief-text-container')).toBeHidden();
+    for (const id of ['#capture-name', '#capture-email', '#capture-company', '#capture-role']) {
+      const required = await page.getAttribute(id, 'required');
+      expect(required, `${id} must have required attribute`).not.toBeNull();
+    }
   });
 
-  test('brief generates after filling contact form', async ({ page }) => {
-    await runAssessment(page, profiles.sophistication, {
-      fillBrief: true,
-      briefData: {
-        name: 'Gate Test',
-        email: 'gate@test.dev',
-        company: 'Gate Corp',
-        role: 'Tester',
-      },
-    });
+  test('empty submit leaves results hidden; valid submit reveals them', async ({ page }) => {
+    await runAssessment(page, profiles.sophistication, { skipCapture: true });
 
-    // Wait for brief to start streaming
-    await page.waitForSelector('.brief-text-container:not(.hidden)', { timeout: 30000 });
+    // Capture screen is visible, downstream results sections are still hidden.
+    await expect(page.locator('#email-capture-screen')).toBeVisible();
+    await expect(page.locator('.results-header')).toBeHidden();
+    await expect(page.locator('#detailed-results')).toBeHidden();
+    await expect(page.locator('#executive-brief-section')).toBeHidden();
 
-    // Verify brief has content
-    const briefText = await page.$eval('.brief-text-container', el => el.textContent);
-    expect(briefText.length).toBeGreaterThan(100);
+    // Empty submit: required attributes prevent the submit handler from
+    // advancing — capture screen still showing, results sections still hidden.
+    await page.click('#capture-form button[type="submit"]');
+    await page.waitForTimeout(500);
+    await expect(page.locator('#email-capture-screen')).toBeVisible();
+    await expect(page.locator('.results-header')).toBeHidden();
+    await expect(page.locator('#detailed-results')).toBeHidden();
+
+    // Fill all four fields and submit.
+    await page.fill('#capture-name', 'Gate Test');
+    await page.fill('#capture-email', 'gate@playwright.dev');
+    await page.fill('#capture-company', 'Gate Corp');
+    await page.fill('#capture-role', 'Tester');
+    await page.click('#capture-form button[type="submit"]');
+
+    // Capture screen hides, results sections reveal.
+    await expect(page.locator('#email-capture-screen')).toBeHidden();
+    await expect(page.locator('.results-header')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#detailed-results')).toBeVisible();
+    await expect(page.locator('#executive-brief-section')).toBeVisible();
   });
 });

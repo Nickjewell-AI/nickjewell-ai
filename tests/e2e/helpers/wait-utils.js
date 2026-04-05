@@ -20,22 +20,13 @@ export async function waitForResults(page) {
 }
 
 export async function waitForBriefStream(page) {
-  // Brief streams progressively — wait for container to appear and have content
+  // Brief streams progressively — wait for container to appear, then wait
+  // for the loading indicator (.brief-loading) to be removed, which is the
+  // real completion signal emitted by generateBrief() in assessment-ui.js.
+  // Content-length stabilization is unreliable because real Opus streams
+  // can pause >3s between token bursts and exit the stability check early.
   await page.waitForSelector('.brief-text-container:not(.hidden)', { timeout: 30000 });
-  // Wait for streaming to finish (check for content length stabilization)
-  let lastLength = 0;
-  let stableCount = 0;
-  for (let i = 0; i < 120; i++) {
-    await page.waitForTimeout(1000);
-    const currentLength = await page.$eval('.brief-text-container', el => el.textContent.length).catch(() => 0);
-    if (currentLength > 0 && currentLength === lastLength) {
-      stableCount++;
-      if (stableCount >= 3) break;
-    } else {
-      stableCount = 0;
-    }
-    lastLength = currentLength;
-  }
+  await page.waitForSelector('.brief-loading', { state: 'detached', timeout: 120000 }).catch(() => {});
 }
 
 export async function waitForProgressUpdate(page) {
