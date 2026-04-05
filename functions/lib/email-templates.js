@@ -10,13 +10,13 @@ const LAYER_NAMES = {
 
 const VERDICT_COLORS = {
   Green: '#2d8a4e',
-  Amber: '#722F37',
+  Amber: '#B8860B',
   Red: '#c44536',
 };
 
 function scoreBarColor(score) {
   if (score >= 70) return '#2d8a4e';
-  if (score >= 40) return '#722F37';
+  if (score >= 40) return '#B8860B';
   return '#c44536';
 }
 

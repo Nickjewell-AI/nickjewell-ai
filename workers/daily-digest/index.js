@@ -215,7 +215,7 @@ function buildDigestHtml(data, dateStr) {
       <tr><td>
         <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e5e5;border-radius:4px;">
           ${tableRow('<span style="color:#2d8a4e;">Green</span>', verdictMap.Green || 0)}
-          ${tableRow('<span style="color:#722F37;">Amber</span>', verdictMap.Amber || 0)}
+          ${tableRow('<span style="color:#B8860B;">Amber</span>', verdictMap.Amber || 0)}
           ${tableRow('<span style="color:#c44536;">Red</span>', verdictMap.Red || 0)}
         </table>
       </td></tr>
@@ -272,7 +272,7 @@ function buildDigestHtml(data, dateStr) {
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(r.company)}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(r.role)}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(INDUSTRY_LABELS[r.industry] || r.industry || '-')}</td>
-        <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:${r.verdict === 'Green' ? '#2d8a4e' : r.verdict === 'Red' ? '#c44536' : '#722F37'};font-weight:600;">${esc(r.verdict)}</td>
+        <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:${r.verdict === 'Green' ? '#2d8a4e' : r.verdict === 'Red' ? '#c44536' : '#B8860B'};font-weight:600;">${esc(r.verdict)}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(r.taste_signature)}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;">${esc(r.brief_email_status || '-')}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#999;">${r.timestamp ? r.timestamp.slice(11, 16) : ''}</td>

@@ -50,7 +50,7 @@ function buildResultsEmailHtml(results) {
 
   const verdictColors = {
     Green: '#4a9c6d',
-    Amber: '#722F37',
+    Amber: '#B8860B',
     Red: '#c75050',
   };
   const verdictColor = verdictColors[verdict] || '#722F37';
@@ -60,7 +60,7 @@ function buildResultsEmailHtml(results) {
       const name = LAYER_NAMES[key] || key;
       const isConstraint = key === bindingConstraint;
       const barWidth = score != null ? score : 0;
-      const barColor = score >= 70 ? '#4a9c6d' : score >= 40 ? '#722F37' : '#c75050';
+      const barColor = score >= 70 ? '#4a9c6d' : score >= 40 ? '#B8860B' : '#c75050';
       const constraintLabel = isConstraint ? ' <span style="color:#722F37;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;">BINDING CONSTRAINT</span>' : '';
       return `
         <tr>
