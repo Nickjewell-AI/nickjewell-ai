@@ -1123,6 +1123,14 @@ function initCaptureForm() {
   const freshForm = form.cloneNode(true);
   form.parentNode.replaceChild(freshForm, form);
 
+  // P7=A (Under 50): company field optional — Decision 3, S16
+  const companyField = freshForm.querySelector('#capture-company');
+  const isSmallOrg = session && session.pulseAnswers && session.pulseAnswers.P7 === 'A';
+  if (companyField && isSmallOrg) {
+    companyField.removeAttribute('required');
+    companyField.placeholder = 'Company (or independent)';
+  }
+
   freshForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -1131,7 +1139,8 @@ function initCaptureForm() {
     const company = freshForm.querySelector('#capture-company').value.trim();
     const role = freshForm.querySelector('#capture-role').value.trim();
 
-    if (!name || !email || !company || !role) return;
+    if (!name || !email || !role) return;
+    if (!isSmallOrg && !company) return;
 
     // Store on session for brief generation and email delivery
     session._contactName = name;
